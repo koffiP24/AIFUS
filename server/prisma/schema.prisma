@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  password   String
+  role       Role     @default(USER)
+  nom        String
+  prenom     String
+  telephone  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  inscriptionsGala InscriptionGala[]
+  billetsTombola   BilletTombola[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model InscriptionGala {
+  id                Int                @id @default(autoincrement())
+  userId            Int
+  user              User               @relation(fields: [userId], references: [id])
+  categorie         CategorieInscription
+  nombreInvites     Int                @default(0)
+  montantTotal      Int
+  statutPaiement    StatutPaiement     @default(EN_ATTENTE)
+  referencePaiement String?
+  createdAt         DateTime           @default(now())
+
+  @@unique([userId])
+}
+
+enum CategorieInscription {
+  ACTIF
+  RETRAITE
+  SANS_EMPLOI
+  INVITE
+}
+
+enum StatutPaiement {
+  EN_ATTENTE
+  VALIDE
+  ANNULE
+}
+
+model BilletTombola {
+  id                Int            @id @default(autoincrement())
+  userId            Int
+  user              User           @relation(fields: [userId], references: [id])
+  numeroBillet      String         @unique
+  quantite          Int            @default(1)
+  montant           Int
+  statutPaiement    StatutPaiement @default(EN_ATTENTE)
+  referencePaiement String?
+  createdAt         DateTime       @default(now())
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  nom       String
+  email     String
+  sujet     String
+  message   String   @db.Text
+  lu        Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
