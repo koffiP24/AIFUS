@@ -85,7 +85,7 @@ const Village = () => {
 
         <div className="relative px-8 py-16 md:py-20 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-sm mb-6">
-            <MapPinIcon className="w-4 h-4" />
+            <MapPinIcon className="w-4 h-4 animate-spin" />
             <span>Événement gratuit</span>
           </div>
 
