@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import GoogleSignInButton from "../components/GoogleSignInButton";
 import { getApiErrorMessage } from "../utils/apiError";
 import {
   UserIcon,
@@ -25,27 +24,8 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { register, googleLogin } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
-
-  const handleGoogleSuccess = async (idToken) => {
-    setLoading(true);
-    setError("");
-
-    try {
-      await googleLogin(idToken);
-      navigate("/dashboard");
-    } catch (err) {
-      setError(
-        getApiErrorMessage(
-          err,
-          "Erreur d'inscription avec Google. Veuillez réessayer.",
-        ),
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -126,17 +106,7 @@ const Register = () => {
             </div>
           )}
 
-          <div className="mb-6">
-            <div className="text-center text-sm text-slate-500 dark:text-slate-400 mb-4">
-              Ou utilisez votre compte Google
-            </div>
-            <div className="flex justify-center">
-              <GoogleSignInButton
-                clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
-                onSuccess={handleGoogleSuccess}
-              />
-            </div>
-          </div>
+          
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name Fields */}

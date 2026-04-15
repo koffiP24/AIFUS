@@ -16,6 +16,7 @@ const Tombola = () => {
   const [billets, setBillets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [places, setPlaces] = useState({ totale: 100, restantes: 100 });
 
   const prixBillet = 10000;
   const maxBillets = 10;
@@ -25,6 +26,10 @@ const Tombola = () => {
       api
         .get("/tombola/mes-billets")
         .then((res) => setBillets(res.data))
+        .catch(() => {});
+      api
+        .get("/tombola/places")
+        .then((res) => setPlaces(res.data))
         .catch(() => {});
     }
   }, [user]);
@@ -206,9 +211,18 @@ const Tombola = () => {
               )}
 
               <div className="mb-6">
-                <label className="label">
-                  Nombre de billets (max {maxBillets})
-                </label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="label mb-0">
+                    Nombre de billets (max {maxBillets})
+                  </label>
+                  <span className="text-sm text-slate-500">
+                    {places.restantes > 0 ? (
+                      <span className="text-green-600 font-medium">{places.restantes} billets disponibles</span>
+                    ) : (
+                      <span className="text-red-500 font-medium">Complet</span>
+                    )}
+                  </span>
+                </div>
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setQuantite(Math.max(1, quantite - 1))}

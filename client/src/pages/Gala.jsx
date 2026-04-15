@@ -316,17 +316,16 @@ const Gala = () => {
             {/* Invités */}
             {categorie !== 'INVITE' && (
               <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg mb-6 animate-slide-up">
-                <label className="label">Nombre d'invités (max 3)</label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min="0"
-                    max="3"
-                    {...register('nombreInvites', { valueAsNumber: true })}
-                    className="flex-1 accent-amber-500"
-                  />
-                  <span className="text-2xl font-bold text-primary-600 w-12 text-center">{nbInvites}</span>
-                </div>
+                <label className="label">Nombre d'invités</label>
+                <select
+                  {...register('nombreInvites', { valueAsNumber: true })}
+                  className="input-field"
+                >
+                  <option value={0}>0 invité</option>
+                  <option value={1}>1 invité</option>
+                  <option value={2}>2 invités</option>
+                  <option value={3}>3 invités</option>
+                </select>
                 <p className="text-sm text-slate-500 mt-2">20 000 Fcfa par invité supplémentaire</p>
               </div>
             )}

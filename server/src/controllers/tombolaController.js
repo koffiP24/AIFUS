@@ -1,6 +1,8 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+const MAX_BILLETS = 100;
+
 // Générer un numéro de billet aléatoire au format A1..Z100
 const generateNumeroBillet = () => {
   const lettre = String.fromCharCode(65 + Math.floor(Math.random() * 26));
@@ -19,9 +21,20 @@ const acheterBillets = async (req, res) => {
   }
 
   const prixUnitaire = 10000;
-  const montant = quantite * prixUnitaire;
 
   try {
+    // Vérifier le nombre de billets disponibles
+    const billsVendus = await prisma.billetTombola.count({
+      where: { statutPaiement: 'VALIDE' }
+    });
+    const placesRestantes = MAX_BILLETS - billsVendus;
+    
+    if (placesRestantes < quantite) {
+      return res.status(400).json({ 
+        message: `Plus assez de billets disponibles. Il reste ${placesRestantes} billet(s) sur ${MAX_BILLETS}` 
+      });
+    }
+
     // Simulation de paiement (à remplacer par intégration réelle)
     // On crée un enregistrement pour chaque billet
     const billets = [];
@@ -71,4 +84,18 @@ const getMesBillets = async (req, res) => {
   }
 };
 
-module.exports = { acheterBillets, getMesBillets };
+// @desc    Récupérer le nombre de billets disponibles
+// @route   GET /api/tombola/places
+const getPlaces = async (req, res) => {
+  try {
+    const billsVendus = await prisma.billetTombola.count({
+      where: { statutPaiement: 'VALIDE' }
+    });
+    res.json({ total: MAX_BILLETS, vendues: billsVendus, restantes: MAX_BILLETS - billsVendus });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
+module.exports = { acheterBillets, getMesBillets, getPlaces };
