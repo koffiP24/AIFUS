@@ -8,6 +8,8 @@ import {
   ExclamationCircleIcon,
   TicketIcon,
   SparklesIcon,
+  DevicePhoneMobileIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 const Tombola = () => {
@@ -17,6 +19,10 @@ const Tombola = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [places, setPlaces] = useState({ totale: 100, restantes: 100 });
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentStep, setPaymentStep] = useState("amount");
+  const [paymentPhone, setPaymentPhone] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
 
   const prixBillet = 10000;
   const maxBillets = 10;
@@ -34,20 +40,34 @@ const Tombola = () => {
     }
   }, [user]);
 
-  const acheter = async () => {
-    if (quantite < 1 || quantite > maxBillets) return;
+  const handleInitiatePurchase = () => {
+    setShowPayment(true);
+    setPaymentStep("amount");
+    setPaymentMethod("");
+    setPaymentPhone("");
+  };
+
+  const handleDirectPayment = async () => {
+    if (!paymentPhone || !paymentMethod) {
+      setMessage("Veuillez sélectionner une méthode de paiement et entrer votre numéro");
+      return;
+    }
     setLoading(true);
-    setMessage("");
+    setPaymentStep("processing");
     try {
-      const res = await api.post("/tombola/acheter", { quantite });
-      setMessage(
-        res.data.message || `Achat réussi de ${quantite} billet(s) ! 🎉`,
-      );
+      const res = await api.post("/tombola/payer-direct", {
+        quantite,
+        phone: paymentPhone,
+        method: paymentMethod,
+      });
+      setMessage(res.data.message || `Achat réussi de ${quantite} billet(s) ! 🎉`);
       const billetsRes = await api.get("/tombola/mes-billets");
       setBillets(billetsRes.data);
+      setShowPayment(false);
       setQuantite(1);
     } catch (err) {
-      setMessage(err.response?.data?.message || "Erreur lors de l'achat");
+      setMessage(err.response?.data?.message || "Erreur lors du paiement");
+      setPaymentStep("amount");
     } finally {
       setLoading(false);
     }
@@ -272,7 +292,7 @@ const Tombola = () => {
               </div>
 
               <button
-                onClick={acheter}
+                onClick={handleInitiatePurchase}
                 disabled={loading || quantite < 1}
                 className="w-full btn-primary py-4 text-lg"
               >
@@ -354,6 +374,74 @@ const Tombola = () => {
             </a>
           </div>
         </section>
+      )}
+
+      {/* Modal Paiement */}
+      {showPayment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full animate-scale-in relative">
+            <button onClick={() => setShowPayment(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 absolute top-4 right-4">
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+
+            {paymentStep === "amount" && (
+              <>
+                <h3 className="text-xl font-bold mb-4">Paiement - Orange Money / Wave</h3>
+                <div className="bg-gradient-to-r from-purple-600 to-primary-700 rounded-lg p-4 mb-4 text-white">
+                  <p className="text-sm opacity-90">Montant à payer</p>
+                  <p className="text-3xl font-bold">{(quantite * prixBillet).toLocaleString()} Fcfa</p>
+                </div>
+
+                <div className="mb-4">
+                  <label className="label">Méthode de paiement</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setPaymentMethod("orange")}
+                      className={`p-3 rounded-lg border-2 transition-all ${paymentMethod === "orange" ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20" : "border-slate-200 dark:border-slate-700"}`}
+                    >
+                      <div className="text-2xl mb-1">🟠</div>
+                      <div className="text-sm font-medium">Orange Money</div>
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod("wave")}
+                      className={`p-3 rounded-lg border-2 transition-all ${paymentMethod === "wave" ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-700"}`}
+                    >
+                      <div className="text-2xl mb-1">💙</div>
+                      <div className="text-sm font-medium">Wave</div>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="label">Numéro de téléphone</label>
+                  <div className="relative">
+                    <DevicePhoneMobileIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="tel"
+                      value={paymentPhone}
+                      onChange={(e) => setPaymentPhone(e.target.value)}
+                      placeholder="+225 07 00 00 00 00"
+                      className="input-field pl-12"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">Vous recevrez un code de confirmation sur ce numéro</p>
+                </div>
+
+                <button onClick={handleDirectPayment} disabled={loading} className="w-full btn-primary py-3 hover:scale-105 transition-transform">
+                  {loading ? "Traitement en cours..." : `Payer ${(quantite * prixBillet).toLocaleString()} Fcfa`}
+                </button>
+              </>
+            )}
+
+            {paymentStep === "processing" && (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 mx-auto mb-4 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-lg font-medium">Traitement du paiement...</p>
+                <p className="text-sm text-slate-500">Veuillez patienter</p>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
