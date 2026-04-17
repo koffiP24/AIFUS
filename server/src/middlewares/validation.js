@@ -34,12 +34,20 @@ const loginValidation = [
 ];
 
 const forgotPasswordValidation = [
-  body("email").isEmail().withMessage("Email invalide"),
+  body("identifiant").notEmpty().withMessage("Email ou téléphone requis"),
 ];
 
 const resetPasswordValidation = [
   body("token").notEmpty().withMessage("Token requis"),
   body("password")
+    .isLength({ min: 6 })
+    .withMessage("Mot de passe minimum 6 caractères"),
+];
+
+const smsCodeValidation = [
+  body("phone").notEmpty().withMessage("Téléphone requis"),
+  body("code").isLength({ min: 6, max: 6 }).withMessage("Code à 6 chiffres requis"),
+  body("newPassword")
     .isLength({ min: 6 })
     .withMessage("Mot de passe minimum 6 caractères"),
 ];
@@ -63,6 +71,7 @@ module.exports = {
   loginValidation,
   forgotPasswordValidation,
   resetPasswordValidation,
+  smsCodeValidation,
   googleAuthValidation,
   inscriptionValidation,
 };

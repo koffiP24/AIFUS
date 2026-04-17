@@ -3,12 +3,33 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
 const generateToken = require("../utils/generateToken");
 
 const prisma = new PrismaClient();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const getFrontendUrl = () =>
   process.env.FRONTEND_URL || "http://localhost:5173";
+
+const sendResetSms = async (phone, message) => {
+  const apiKey = process.env.SMS_API_KEY;
+  const senderId = process.env.SMS_SENDER_ID || "AIFUS";
+  
+  if (!apiKey) {
+    console.error("SMS_API_KEY missing, unable to send SMS");
+    return false;
+  }
+  
+  try {
+    const response = await fetch(`https://api.smsarena.ci/api/v1/send?key=${apiKey}&sender=${senderId}&phone=${phone}&message=${encodeURIComponent(message)}`);
+    const data = await response.json();
+    return data.success || data.status === "success" || response.ok;
+  } catch (error) {
+    console.error("SMS send error:", error.message);
+    return false;
+  }
+};
 
 const sendResetPasswordEmail = async (user, resetToken) => {
   const emailUser = process.env.EMAIL_USER;
@@ -49,7 +70,7 @@ const sendResetPasswordEmail = async (user, resetToken) => {
     `,
   };
 
-  try {
+try {
     await transporter.sendMail(mailOptions);
     console.log("Email de réinitialisation envoyé à", user.email);
     return true;
@@ -135,50 +156,149 @@ const login = async (req, res) => {
 // @desc    Envoyer un email pour réinitialiser le mot de passe
 // @route   POST /api/auth/forgot-password
 const forgotPassword = async (req, res) => {
-  const { email } = req.body;
+  const { identifiant } = req.body;
+  
+  if (!identifiant || identifiant.trim() === "") {
+    return res.status(400).json({ message: "Email ou téléphone requis" });
+  }
+  
+  const isEmail = identifiant.includes("@");
 
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = isEmail
+      ? await prisma.user.findUnique({ where: { email: identifiant } })
+      : await prisma.user.findFirst({ where: { telephone: { contains: identifiant } } });
+
     if (!user) {
       return res.json({
-        message:
-          "Si cet email existe, un lien de réinitialisation a été envoyé.",
+        message: isEmail
+          ? "Si cet email existe, un lien de réinitialisation a été envoyé."
+          : "Si ce numéro existe, un code de réinitialisation a été envoyé.",
       });
     }
 
-    if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET missing in environment");
-      return res
-        .status(500)
-        .json({
-          message: "Configuration du serveur incomplète pour l'envoi du lien.",
-        });
+    if (!isEmail && !user.telephone) {
+      return res.json({
+        message: "Si ce numéro existe, un code de réinitialisation a été envoyé.",
+      });
     }
 
-    const resetToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    const emailSent = await sendResetPasswordEmail(user, resetToken);
+    if (isEmail) {
+      if (!process.env.JWT_SECRET || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.error("JWT_SECRET or EMAIL config missing");
+        return res.status(500).json({ message: "Configuration serveur incomplète." });
+      }
 
-    if (!emailSent) {
-      return res
-        .status(500)
-        .json({
-          message:
-            "Impossible d'envoyer le lien de réinitialisation. Vérifiez la configuration du serveur.",
-        });
+      const token = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+      await prisma.passwordReset.deleteMany({ where: { identifier: identifiant } });
+      await prisma.passwordReset.create({
+        data: { identifier: identifiant, token: hashedToken, expiresAt },
+      });
+
+      const resetLink = `${getFrontendUrl()}/reset-password?token=${token}`;
+      const emailSent = await sendResetPasswordEmail(user, resetLink);
+
+      if (!emailSent) {
+        return res.status(500).json({ message: "Impossible d'envoyer l'email." });
+      }
+      res.json({ message: "Un lien de réinitialisation a été envoyé par email." });
+    } else {
+      res.json({
+        message: "Si ce numéro existe, un code de réinitialisation a été envoyé.",
+      });
     }
-
-    res.json({
-      message: "Si cet email existe, un lien de réinitialisation a été envoyé.",
-    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
 
+// @desc    Envoyer un code SMS pour réinitialisation
+// @route   POST /api/auth/send-sms-code
+const sendSmsCode = async (req, res) => {
+  const { phone } = req.body;
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: { telephone: { contains: phone } },
+    });
+
+    if (!user) {
+      return res.json({
+        message: "Si ce numéro existe, un code vous sera envoyé.",
+      });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await prisma.passwordReset.deleteMany({ where: { identifier: phone } });
+    await prisma.passwordReset.create({
+      data: { identifier: phone, code: hashedCode, expiresAt },
+    });
+
+    const smsMessage = `AIFUS: Votre code de réinitialisation est ${code}. Valable 10 minutes.`;
+    const smsSent = await sendResetSms(phone, smsMessage);
+
+    if (!smsSent) {
+      return res.status(500).json({ message: "Erreur lors de l'envoi du SMS." });
+    }
+
+    res.json({ message: "Code envoyé par SMS." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+};
+
+// @desc    Vérifier le code SMS et réinitialiser le mot de passe
+// @route   POST /api/auth/verify-sms-code
+const verifySmsCode = async (req, res) => {
+  const { phone, code, newPassword } = req.body;
+
+  try {
+    const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
+    const resetRequest = await prisma.passwordReset.findFirst({
+      where: {
+        identifier: phone,
+        code: hashedCode,
+        expiresAt: { gt: new Date() },
+      },
+    });
+
+    if (!resetRequest) {
+      return res.status(400).json({ error: "Code invalide ou expiré" });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { telephone: { contains: phone } },
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Utilisateur introuvable" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    await prisma.passwordReset.deleteMany({ where: { identifier: phone } });
+
+    res.json({ message: "Mot de passe mis à jour avec succès" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+};
+
 // @desc    Authentification via Google
+// @route   POST /api/auth/google
 const googleAuth = async (req, res) => {
   const { idToken } = req.body;
 
@@ -193,33 +313,36 @@ const googleAuth = async (req, res) => {
         .json({ message: "Configuration Google manquante côté serveur." });
     }
 
-    const googleResponse = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`,
-    );
-    if (!googleResponse.ok) {
-      return res.status(401).json({ message: "Jeton Google invalide." });
-    }
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
 
-    const payload = await googleResponse.json();
-    if (payload.aud !== process.env.GOOGLE_CLIENT_ID) {
+    if (!payload || payload.aud !== process.env.GOOGLE_CLIENT_ID) {
       return res.status(401).json({ message: "Jeton Google invalide." });
     }
     if (!payload.email_verified) {
       return res.status(401).json({ message: "Email Google non vérifié." });
     }
+    if (!payload.email) {
+      return res.status(400).json({ message: "Email introuvable depuis Google." });
+    }
 
-    let user = await prisma.user.findUnique({
-      where: { email: payload.email },
-    });
+    const email = payload.email;
+    const nom = payload.family_name || payload.name || "Utilisateur";
+    const prenom = payload.given_name || payload.name || "Google";
+
+    let user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       const randomPassword = crypto.randomBytes(16).toString("hex");
       const hashedPassword = await bcrypt.hash(randomPassword, 10);
       user = await prisma.user.create({
         data: {
-          email: payload.email,
+          email,
           password: hashedPassword,
-          nom: payload.family_name || payload.name || "Utilisateur",
-          prenom: payload.given_name || payload.name || "Google",
+          nom,
+          prenom,
           role: "USER",
         },
       });
@@ -234,12 +357,12 @@ const googleAuth = async (req, res) => {
       token: generateToken(user),
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Erreur serveur" });
+    console.error("Erreur de vérification Google:", error);
+    res.status(401).json({ message: "Token Google invalide ou expiré." });
   }
 };
 
-// @desc    Réinitialiser le mot de passe
+// @desc    Réinitialiser le mot de passe (via token email)
 // @route   POST /api/auth/reset-password
 const resetPassword = async (req, res) => {
   const { token, password } = req.body;
@@ -249,32 +372,40 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Token requis" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
-    if (!user) {
-      return res.status(404).json({ message: "Utilisateur introuvable" });
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const resetRequest = await prisma.passwordReset.findFirst({
+      where: {
+        token: hashedToken,
+        expiresAt: { gt: new Date() },
+      },
+    });
+
+    if (!resetRequest) {
+      return res.status(400).json({ error: "Lien invalide ou expiré" });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const user = await prisma.user.findUnique({
+      where: { email: resetRequest.identifier },
+    });
 
+    if (!user) {
+      return res.status(400).json({ error: "Utilisateur introuvable" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
     await prisma.user.update({
       where: { id: user.id },
       data: { password: hashedPassword },
     });
 
-    res.json({ message: "Mot de passe réinitialisé avec succès" });
+    await prisma.passwordReset.deleteMany({
+      where: { identifier: resetRequest.identifier },
+    });
+
+    res.json({ message: "Mot de passe mis à jour avec succès" });
   } catch (error) {
     console.error(error);
-    if (error.name === "TokenExpiredError") {
-      return res
-        .status(400)
-        .json({ message: "Le lien de réinitialisation a expiré." });
-    }
-    if (error.name === "JsonWebTokenError") {
-      return res.status(400).json({ message: "Token invalide." });
-    }
-    res.status(500).json({ message: "Erreur serveur" });
+    res.status(500).json({ error: "Erreur serveur" });
   }
 };
 
@@ -301,5 +432,7 @@ module.exports = {
   googleAuth,
   forgotPassword,
   resetPassword,
+  sendSmsCode,
+  verifySmsCode,
   getMe,
 };

@@ -275,7 +275,7 @@ const Gala = () => {
             )}
             
             {/* Catégories */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               {categories.map((cat, i) => (
                 <label
                   key={cat.value}
@@ -312,10 +312,10 @@ const Gala = () => {
                 </label>
               ))}
             </div>
-            
+
             {/* Invités */}
             {categorie !== 'INVITE' && (
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg mb-6 animate-slide-up">
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg mb-4 animate-slide-up">
                 <label className="label">Nombre d'invités</label>
                 <select
                   {...register('nombreInvites', { valueAsNumber: true })}
@@ -330,10 +330,13 @@ const Gala = () => {
               </div>
             )}
             
-            {/* Total */}
+            {/* Montant dynamique */}
             <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white text-center mb-6 animate-pulse">
               <p className="text-primary-100 mb-2">Montant total à payer</p>
               <p className="text-4xl font-bold">{montant().toLocaleString()} Fcfa</p>
+              {categorie !== 'INVITE' && nbInvites > 0 && (
+                <p className="text-sm text-primary-200 mt-2">({selectedCategory?.price.toLocaleString()} Fcfa + {nbInvites} × 20 000 Fcfa)</p>
+              )}
             </div>
             
             {/* Submit */}

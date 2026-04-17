@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getApiErrorMessage } from "../utils/apiError";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 import {
   UserIcon,
   EnvelopeIcon,
@@ -24,7 +25,8 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
+  const [googleError, setGoogleError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -54,6 +56,22 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setGoogleError("");
+    try {
+      await googleLogin(credentialResponse.credential);
+      navigate("/dashboard");
+    } catch (err) {
+      setGoogleError(
+        getApiErrorMessage(err, "Impossible de se connecter avec Google."),
+      );
+    }
+  };
+
+  const handleGoogleError = () => {
+    setGoogleError("La connexion Google a échoué. Veuillez réessayer.");
   };
 
   const passwordStrength = () => {
@@ -100,6 +118,27 @@ const Register = () => {
 
         {/* Form Card */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
+          <div className="space-y-4 mb-6 text-center">
+            <div className="text-sm uppercase tracking-[0.3em] text-slate-500 mb-3">
+              Inscription simplifiée
+            </div>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              Créer un compte avec Google
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Un accès facile et rapide avec votre compte Google.
+            </p>
+            <GoogleSignInButton
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+            />
+            {googleError && (
+              <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-300">
+                {googleError}
+              </div>
+            )}
+          </div>
+
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>

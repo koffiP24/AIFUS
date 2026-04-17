@@ -250,36 +250,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white py-12 px-8 text-center">
-        <div className="relative z-10">
-          <h2 className="text-3xl font-bold mb-4">
-            Participez aux festivités 2026
-          </h2>
-          <p className="text-amber-100 mb-6 max-w-2xl mx-auto">
-            Inscrivez-vous dès maintenant pour ne pas manquer nos événements
-            exclusifs et bénéficier d'offres spéciales.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              to="/register"
-              className="px-8 py-3 bg-white text-amber-600 font-semibold rounded-lg hover:bg-amber-50 transition-all hover:scale-105"
-            >
-              Créer un compte
-            </Link>
-            <Link
-              to="/login"
-              className="px-8 py-3 bg-amber-700 text-white font-semibold rounded-lg hover:bg-amber-800 transition-all"
-            >
-              Se connecter
-            </Link>
-          </div>
-        </div>
-
-        {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-x-16 -translate-y-16"></div>
-        <div className="absolute bottom-0 right-0 w-48 h-48 bg-white opacity-10 rounded-full translate-x-24 translate-y-24"></div>
-      </section>
     </div>
   );
 };
