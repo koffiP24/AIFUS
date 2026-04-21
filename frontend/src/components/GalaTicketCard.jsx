@@ -23,15 +23,11 @@ const categoriesLabels = {
 };
 
 const buildGalaQrPayload = (inscription) => {
-  if (!inscription?.ticketCode || !inscription?.qrToken) {
+  if (!inscription?.ticketCode) {
     return "";
   }
 
-  return JSON.stringify({
-    type: "AIFUS_GALA_TICKET",
-    ticketCode: inscription.ticketCode,
-    qrToken: inscription.qrToken,
-  });
+  return inscription.ticketCode;
 };
 
 const formatDateTime = (value) => {
@@ -87,7 +83,7 @@ const GalaTicketCard = ({ inscription, participantName }) => {
     return () => {
       isActive = false;
     };
-  }, [inscription?.ticketCode, inscription?.qrToken]);
+  }, [inscription?.ticketCode]);
 
   if (!inscription || inscription.statutPaiement !== "VALIDE") {
     return null;

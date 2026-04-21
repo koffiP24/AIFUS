@@ -267,6 +267,110 @@ const confirmPayment = async (req, res) => {
   }
 };
 
+const simulatePayment = async (req, res) => {
+  const { reservationId, scenario, method } = req.body;
+  const userId = req.user.id;
+
+  if (!Number.isInteger(Number(reservationId))) {
+    return res.status(400).json({ message: "Reservation invalide" });
+  }
+
+  if (!["success", "fail", "cancel"].includes(scenario)) {
+    return res.status(400).json({ message: "Scenario invalide" });
+  }
+
+  try {
+    const reservation = await prisma.inscriptionGala.findUnique({
+      where: { id: Number(reservationId) },
+    });
+
+    if (!reservation) {
+      return res.status(404).json({ message: "Reservation introuvable" });
+    }
+
+    if (reservation.userId !== userId && req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Acces refuse" });
+    }
+
+    if (reservation.statutPaiement === "VALIDE") {
+      return res.status(400).json({
+        message: "Cette reservation est deja confirmee",
+      });
+    }
+
+    const provider =
+      typeof method === "string" && method.trim()
+        ? method.trim().toLowerCase()
+        : "simulation";
+    const providerRef = provider.replace(/[^a-z0-9_-]/gi, "").toUpperCase() || "SIM";
+    const reference = `SIM-${Date.now()}-${providerRef}`;
+
+    if (scenario === "success") {
+      const places = await getValidatedPlaces();
+      const requiredPlaces = 1 + (reservation.nombreInvites || 0);
+
+      if ((places[reservation.categorie] || 0) < requiredPlaces) {
+        return res.status(400).json({
+          message: "Plus assez de places disponibles pour confirmer cette reservation",
+        });
+      }
+
+      let updatedReservation = await prisma.inscriptionGala.update({
+        where: { id: reservation.id },
+        data: {
+          statutPaiement: "VALIDE",
+          referencePaiement: reference,
+        },
+      });
+
+      updatedReservation = await ensureGalaTicket(prisma, updatedReservation.id);
+
+      const user = await prisma.user.findUnique({
+        where: { id: reservation.userId },
+      });
+
+      if (user) {
+        await sendConfirmationEmail(user, updatedReservation);
+      }
+
+      return res.json({
+        success: true,
+        message: "Paiement simule avec succes",
+        payment: {
+          reference: updatedReservation.referencePaiement,
+          reservationId: updatedReservation.id,
+          amount: updatedReservation.montantTotal,
+          currency: "XOF",
+          provider,
+          status: "paid",
+          paidAt: new Date(),
+        },
+        reservation: updatedReservation,
+      });
+    }
+
+    return res.json({
+      success: false,
+      message:
+        scenario === "fail"
+          ? "Paiement simule en echec"
+          : "Paiement simule annule",
+      payment: {
+        reference,
+        reservationId: reservation.id,
+        amount: reservation.montantTotal,
+        currency: "XOF",
+        provider,
+        status: scenario === "fail" ? "failed" : "cancelled",
+      },
+      reservation,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Erreur simulation paiement" });
+  }
+};
+
 const handleDirectPayment = async (req, res) => {
   const { categorie, nombreInvites = 0, montant, method } = req.body;
   const userId = req.user.id;
@@ -314,6 +418,7 @@ module.exports = {
   getMyInscription,
   getPlaces,
   confirmPayment,
+  simulatePayment,
   handleDirectPayment,
   cancelInscription,
 };

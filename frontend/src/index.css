@@ -641,3 +641,46 @@ p {
   background: rgba(2, 132, 199, 0.2);
   color: #0f172a;
 }
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top, rgba(14, 165, 233, 0.14), transparent 34%),
+      radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.12), transparent 30%),
+      linear-gradient(180deg, #f8fafc 0%, #eef4fb 100%);
+  }
+
+  .dark body {
+    background:
+      radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 36%),
+      radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.08), transparent 30%),
+      linear-gradient(180deg, #020617 0%, #0f172a 100%);
+  }
+
+  .input-field {
+    min-height: 3.2rem;
+    border-radius: 1.15rem;
+    font-size: 16px;
+  }
+
+  .btn-primary,
+  .btn-outline,
+  .btn-secondary {
+    min-height: 3.25rem;
+    border-radius: 1.15rem;
+  }
+}

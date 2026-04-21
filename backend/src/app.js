@@ -11,6 +11,7 @@ const inscriptionRoutes = require("./routes/inscriptionRoutes");
 const tombolaRoutes = require("./routes/tombolaRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const eventRoutes = require("./routes/eventRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
@@ -41,6 +42,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/inscriptions", inscriptionRoutes);
 app.use("/api/tombola", tombolaRoutes);
+app.use("/api/payments", paymentRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/admin", adminRoutes);
 
