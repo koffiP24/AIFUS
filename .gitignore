@@ -35,8 +35,8 @@ Thumbs.db
 # Debug
 npm-debug.log
 
-# Server
+# Backend
 /uploads/
 
-# Client
+# Frontend
 *.log
