@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  password        String
+  role            Role      @default(USER)
+  nom             String
+  prenom          String
+  telephone       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  inscriptionsGala    InscriptionGala[] @relation("InscriptionOwner")
+  scannedInscriptions InscriptionGala[] @relation("InscriptionCheckInAdmin")
+  billetsTombola      BilletTombola[]
+}
+
+model EventSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  title       String
+  subtitle    String?
+  description String?  @db.Text
+  location    String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PasswordReset {
+  id          Int      @id @default(autoincrement())
+  identifier  String
+  token       String?
+  code        String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([identifier])
+  @@index([expiresAt])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model InscriptionGala {
+  id                Int                @id @default(autoincrement())
+  userId            Int
+  user              User               @relation("InscriptionOwner", fields: [userId], references: [id])
+  categorie         CategorieInscription
+  nombreInvites     Int                @default(0)
+  montantTotal      Int
+  statutPaiement    StatutPaiement     @default(EN_ATTENTE)
+  referencePaiement String?
+  ticketCode        String?            @unique
+  qrToken           String?            @unique
+  checkedInAt       DateTime?
+  checkedInById     Int?
+  checkedInBy       User?              @relation("InscriptionCheckInAdmin", fields: [checkedInById], references: [id])
+  createdAt         DateTime           @default(now())
+
+  @@unique([userId])
+  @@index([checkedInAt])
+  @@index([checkedInById])
+}
+
+enum CategorieInscription {
+  ACTIF
+  RETRAITE
+  SANS_EMPLOI
+  INVITE
+}
+
+enum StatutPaiement {
+  EN_ATTENTE
+  VALIDE
+  ANNULE
+}
+
+model BilletTombola {
+  id                Int            @id @default(autoincrement())
+  userId            Int
+  user              User           @relation(fields: [userId], references: [id])
+  numeroBillet      String         @unique
+  quantite          Int            @default(1)
+  montant           Int
+  statutPaiement    StatutPaiement @default(EN_ATTENTE)
+  referencePaiement String?
+  createdAt         DateTime       @default(now())
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  nom       String
+  email     String
+  sujet     String
+  message   String   @db.Text
+  lu        Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
