@@ -7,6 +7,7 @@ import Tombola from "./pages/Tombola";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import PaymentReturn from "./pages/PaymentReturn";
 import ResetPassword from "./pages/ResetPassword";
 import Conditions from "./pages/Conditions";
 import Confidentialite from "./pages/Confidentialite";
@@ -40,6 +41,7 @@ function App() {
             }
           />
           <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="payment-return" element={<PaymentReturn />} />
           <Route path="reset-password" element={<ResetPassword />} />
           <Route path="conditions" element={<Conditions />} />
           <Route path="confidentialite" element={<Confidentialite />} />

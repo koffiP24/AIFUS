@@ -5,26 +5,13 @@ import './index.css'
 import { AuthProvider } from './context/AuthContext'
 import { EventProvider } from './context/EventContext'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import { registerPwaServiceWorker } from './utils/pwa'
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const isGoogleConfigured =
   googleClientId && !googleClientId.includes('your-google-client-id');
 
-if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
-    try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map((registration) => registration.unregister()));
-
-      if ("caches" in window) {
-        const cacheKeys = await window.caches.keys();
-        await Promise.all(cacheKeys.map((cacheKey) => window.caches.delete(cacheKey)));
-      }
-    } catch (_error) {
-      // Ignore cleanup issues on restrictive mobile browsers.
-    }
-  });
-}
+registerPwaServiceWorker();
 
 const appTree = (
   <EventProvider>

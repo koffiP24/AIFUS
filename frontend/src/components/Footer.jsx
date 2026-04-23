@@ -7,7 +7,7 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 
-const Footer = () => {
+const Footer = ({ reserveMobileBottomSpace = false }) => {
   const currentYear = new Date().getFullYear();
 
   const quickLinks = [
@@ -42,7 +42,13 @@ const Footer = () => {
 
   return (
     <>
-      <footer className="mt-auto border-t border-slate-200/70 bg-white/75 px-3 py-4 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:hidden">
+      <footer
+        className={`mt-auto border-t border-slate-200/70 bg-white/75 px-3 pt-4 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/70 md:hidden ${
+          reserveMobileBottomSpace
+            ? "pb-[calc(var(--mobile-bottom-nav-space)+0.75rem)]"
+            : "pb-4"
+        }`}
+      >
         <div className="mx-auto max-w-xl rounded-[2rem] border border-white/70 bg-white/90 px-4 py-4 shadow-lg dark:border-white/10 dark:bg-slate-900/88">
           <div className="flex items-center gap-3">
             <img

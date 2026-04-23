@@ -11,6 +11,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../context/AuthContext";
 
+const hiddenRoutes = ["/conditions", "/confidentialite"];
+
+export const isMobileBottomNavHidden = (pathname) =>
+  hiddenRoutes.includes(pathname);
+
 const participantItems = (user) => [
   { label: "Accueil", to: "/", icon: HomeIcon, match: ["/"] },
   { label: "Village", to: "/village", icon: MapPinIcon, match: ["/village"] },
@@ -44,9 +49,7 @@ const adminItems = [
 const MobileBottomNav = () => {
   const location = useLocation();
   const { user } = useAuth();
-
-  const hiddenRoutes = ["/conditions", "/confidentialite"];
-  const shouldHide = hiddenRoutes.includes(location.pathname);
+  const shouldHide = isMobileBottomNavHidden(location.pathname);
 
   if (shouldHide) {
     return null;
@@ -58,7 +61,7 @@ const MobileBottomNav = () => {
       : participantItems(user);
 
   return (
-    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] md:hidden">
+    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[var(--mobile-bottom-nav-offset)] md:hidden">
       <div className="pointer-events-auto mx-auto max-w-xl overflow-hidden rounded-[2rem] border border-white/70 bg-white/88 p-2 shadow-[0_28px_90px_-38px_rgba(15,23,42,0.68)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/88">
         <div
           className="grid gap-1"

@@ -6,9 +6,8 @@ const {
   register,
   login,
   forgotPassword,
+  verifyResetCode,
   resetPassword,
-  sendSmsCode,
-  verifySmsCode,
   getMe,
   googleAuth,
 } = require("../controllers/authController");
@@ -17,9 +16,8 @@ const {
   registerValidation,
   loginValidation,
   forgotPasswordValidation,
-  sendSmsCodeValidation,
+  verifyResetCodeValidation,
   resetPasswordValidation,
-  smsCodeValidation,
   googleAuthValidation,
 } = require("../middlewares/validation");
 const authMiddleware = require("../middlewares/auth");
@@ -33,12 +31,15 @@ router.post(
   forgotPassword,
 );
 router.post(
+  "/verify-reset-code",
+  validate(verifyResetCodeValidation),
+  verifyResetCode,
+);
+router.post(
   "/reset-password",
   validate(resetPasswordValidation),
   resetPassword,
 );
-router.post("/send-sms-code", validate(sendSmsCodeValidation), sendSmsCode);
-router.post("/verify-sms-code", validate(smsCodeValidation), verifySmsCode);
 router.get("/me", authMiddleware, getMe);
 
 module.exports = router;

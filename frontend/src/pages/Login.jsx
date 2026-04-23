@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getApiErrorMessage } from "../utils/apiError";
 import GoogleSignInButton from "../components/GoogleSignInButton";
 import {
+  CheckCircleIcon,
   EnvelopeIcon,
+  ExclamationTriangleIcon,
   LockClosedIcon,
   EyeIcon,
   EyeSlashIcon,
@@ -18,11 +20,13 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const { user, login, googleLogin, loading: authLoading } = useAuth();
   const [googleError, setGoogleError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -30,20 +34,35 @@ const Login = () => {
     }
   }, [authLoading, navigate, user]);
 
+  useEffect(() => {
+    if (!location.state?.successMessage) {
+      return;
+    }
+
+    setSuccessMessage(location.state.successMessage);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSuccessMessage("");
+
     try {
       const userData = await login(email, password, { remember: rememberMe });
       navigate(getPostLoginPath(userData));
     } catch (err) {
-      setError(
-        getApiErrorMessage(
-          err,
-          "Erreur de connexion. Veuillez vérifier vos identifiants.",
-        ),
+      const apiMessage = getApiErrorMessage(
+        err,
+        "Erreur de connexion. Veuillez verifier vos identifiants.",
       );
+
+      if (apiMessage.toLowerCase().includes("mot de passe incorrect")) {
+        setError("Mot de passe incorrect. Verifiez votre saisie puis reessayez.");
+      } else {
+        setError(apiMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -51,6 +70,7 @@ const Login = () => {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setGoogleError("");
+
     try {
       const userData = await googleLogin(credentialResponse.credential, {
         remember: rememberMe,
@@ -64,73 +84,90 @@ const Login = () => {
   };
 
   const handleGoogleError = () => {
-    setGoogleError("La connexion Google a échoué. Veuillez réessayer.");
+    setGoogleError("La connexion Google a echoue. Veuillez reessayer.");
   };
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
-            <img src="/logo.jpg" alt="AIFUS" className="w-16 h-16 object-contain rounded-2xl" />
+        <div className="mb-8 text-center">
+          <div className="inline-flex h-16 w-16 items-center justify-center mb-4">
+            <img
+              src="/logo.jpg"
+              alt="AIFUS"
+              className="h-16 w-16 rounded-2xl object-contain"
+            />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
+          <h1 className="mb-2 text-3xl font-bold text-slate-800 dark:text-white">
             Bienvenue
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            Connectez-vous à votre compte AIFUS
+            Connectez-vous a votre compte AIFUS
           </p>
           <p className="mt-2 text-sm text-slate-400 dark:text-slate-500">
             Participant : espace membre. Admin : dashboard d'administration.
           </p>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+        <div className="rounded-2xl bg-white p-8 shadow-xl dark:bg-slate-800">
+          {successMessage && (
+            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+              <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-semibold">Reinitialisation reussie</p>
+                <p className="text-sm">{successMessage}</p>
+              </div>
             </div>
           )}
 
-          
+          {error && (
+            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+              <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-semibold">Connexion impossible</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </div>
+          )}
 
-          <div className="space-y-4 mb-6">
+          <div className="mb-6 space-y-4">
             <div className="text-center">
-              <div className="text-sm uppercase tracking-[0.3em] text-slate-500 mb-3">
+              <div className="mb-3 text-sm uppercase tracking-[0.3em] text-slate-500">
                 Connexion rapide
               </div>
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                 Se connecter avec Google
               </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Utilisez votre compte Google pour un accès instantané.
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Utilisez votre compte Google pour un acces instantane.
               </p>
             </div>
+
             <GoogleSignInButton
               text="signin_with"
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
             />
+
             {googleError && (
-              <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-300">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
                 {googleError}
               </div>
             )}
           </div>
 
-          <div className="relative text-center text-slate-400 mb-4">
-            <span className="bg-white dark:bg-slate-800 px-4 relative z-10">Ou avec email</span>
+          <div className="relative mb-4 text-center text-slate-400">
+            <span className="relative z-10 bg-white px-4 dark:bg-slate-800">
+              Ou avec email
+            </span>
             <div className="absolute inset-x-0 top-1/2 h-px bg-slate-200 dark:bg-slate-700"></div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email Field */}
             <div>
               <label className="label">Email</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                   <EnvelopeIcon className="h-5 w-5 text-slate-400" />
                 </div>
                 <input
@@ -144,11 +181,10 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Password Field */}
             <div>
               <label className="label">Mot de passe</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                   <LockClosedIcon className="h-5 w-5 text-slate-400" />
                 </div>
                 <input
@@ -162,7 +198,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                  className="absolute inset-y-0 right-0 flex items-center pr-4"
                 >
                   {showPassword ? (
                     <EyeSlashIcon className="h-5 w-5 text-slate-400 hover:text-slate-600" />
@@ -173,24 +209,24 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Remember & Forgot */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-primary-600 rounded border-slate-300 focus:ring-primary-500"
+                  className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                 />
                 <span className="text-sm text-slate-600 dark:text-slate-400">
                   Se souvenir de moi
                 </span>
               </label>
+
               <Link
                 to="/forgot-password"
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                className="text-sm font-medium text-primary-600 hover:text-primary-700"
               >
-                Mot de passe oublié ?
+                Mot de passe oublie ?
               </Link>
             </div>
 
@@ -199,15 +235,14 @@ const Login = () => {
               dans plusieurs onglets.
             </p>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary py-3 text-base"
+              className="btn-primary w-full py-3 text-base"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
                     <circle
                       className="opacity-25"
                       cx="12"
@@ -231,24 +266,22 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Register Link */}
           <div className="mt-6 text-center">
             <p className="text-slate-600 dark:text-slate-400">
               Pas encore de compte ?{" "}
               <Link
                 to="/register"
-                className="text-primary-600 hover:text-primary-700 font-semibold"
+                className="font-semibold text-primary-600 hover:text-primary-700"
               >
-                Créer un compte
+                Creer un compte
               </Link>
             </p>
           </div>
         </div>
 
-        {/* Decorative */}
         <div className="mt-8 text-center">
           <p className="text-sm text-slate-400">
-            Festivités AIFUS 2026 • 65 ans d'excellence
+            Festivites AIFUS 2026 • 65 ans d'excellence
           </p>
         </div>
       </div>

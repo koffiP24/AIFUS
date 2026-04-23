@@ -37,26 +37,44 @@ const loginValidation = [
 ];
 
 const forgotPasswordValidation = [
-  body("identifiant").notEmpty().withMessage("Email ou telephone requis"),
+  body("identifiant")
+    .isEmail()
+    .withMessage("Adresse email invalide"),
 ];
 
-const sendSmsCodeValidation = [
-  body("phone").notEmpty().withMessage("Telephone requis"),
+const verifyResetCodeValidation = [
+  body("identifiant")
+    .isEmail()
+    .withMessage("Adresse email invalide"),
+  body("code")
+    .matches(/^\d{6}$/)
+    .withMessage("Code a 6 chiffres requis"),
 ];
 
 const resetPasswordValidation = [
-  body("token").notEmpty().withMessage("Token requis"),
-  body("password")
-    .isLength({ min: 6 })
-    .withMessage("Mot de passe minimum 6 caracteres"),
-];
+  body().custom((value, { req }) => {
+    const hasLegacyToken = typeof req.body.token === "string" && req.body.token.trim() !== "";
+    const hasCodeFlow =
+      typeof req.body.identifiant === "string" &&
+      req.body.identifiant.trim() !== "" &&
+      typeof req.body.code === "string" &&
+      /^\d{6}$/.test(req.body.code.trim());
 
-const smsCodeValidation = [
-  body("phone").notEmpty().withMessage("Telephone requis"),
+    if (hasLegacyToken || hasCodeFlow) {
+      return true;
+    }
+
+    throw new Error("Token ou couple email + code requis");
+  }),
+  body("identifiant")
+    .optional()
+    .isEmail()
+    .withMessage("Adresse email invalide"),
   body("code")
-    .isLength({ min: 6, max: 6 })
+    .optional()
+    .matches(/^\d{6}$/)
     .withMessage("Code a 6 chiffres requis"),
-  body("newPassword")
+  body("password")
     .isLength({ min: 6 })
     .withMessage("Mot de passe minimum 6 caracteres"),
 ];
@@ -79,9 +97,8 @@ module.exports = {
   registerValidation,
   loginValidation,
   forgotPasswordValidation,
-  sendSmsCodeValidation,
+  verifyResetCodeValidation,
   resetPasswordValidation,
-  smsCodeValidation,
   googleAuthValidation,
   inscriptionValidation,
 };

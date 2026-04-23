@@ -1,10 +1,11 @@
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 
 const authRoutes = require("./routes/authRoutes");
 const inscriptionRoutes = require("./routes/inscriptionRoutes");
@@ -12,6 +13,7 @@ const tombolaRoutes = require("./routes/tombolaRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const ticketingV2Routes = require("./modules/v2/routes");
 const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
@@ -35,7 +37,15 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req, res, buffer) => {
+      if (req.originalUrl?.startsWith("/api/v2/payments/webhook")) {
+        req.rawBody = buffer.toString("utf8");
+      }
+    },
+  }),
+);
 app.use(morgan("dev"));
 
 // Routes
@@ -45,6 +55,7 @@ app.use("/api/tombola", tombolaRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/v2", ticketingV2Routes);
 
 // Route de test
 app.get("/", (req, res) => {

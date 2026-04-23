@@ -21,7 +21,7 @@ const AdminSectionNav = () => {
 
   return (
     <nav className="w-full">
-      <div className="no-scrollbar flex w-full gap-3 overflow-x-auto rounded-[1.75rem] border border-slate-200/80 bg-white/88 p-3 shadow-sm backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/80 lg:flex-wrap lg:justify-start">
+      <div className="no-scrollbar flex w-full gap-3 overflow-x-auto rounded-[1.75rem] border border-slate-200/80 bg-white/88 p-3 shadow-sm backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/80 lg:flex-wrap lg:justify-center">
         {items.map((item) => {
           const isActive = location.pathname === item.to;
 

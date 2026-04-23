@@ -7,8 +7,14 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "prisma:generate": "prisma generate",
+    "prisma:generate:v2": "prisma generate --schema prisma/schema.mysql.prisma",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:validate:v2": "prisma validate --schema prisma/schema.mysql.prisma",
+    "prisma:studio": "prisma studio",
+    "seed:v2": "prisma db execute --file prisma/seeds_v2/ticketing_core.sql --schema prisma/schema.mysql.prisma",
+    "seed:v2:js": "node scripts/seed-ticketing-v2.js",
+    "smoke:v2": "node scripts/smoke-ticketing-v2.js",
+    "smoke:fedapay:v2": "node scripts/smoke-fedapay-v2.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -17,12 +23,18 @@
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "express-validator": "^7.3.2",
+    "fedapay": "^1.2.5",
     "google-auth-library": "^10.0.0",
     "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
     "mysql2": "^3.22.0",
     "nodemailer": "^8.0.5"
+  },
+  "overrides": {
+    "fedapay": {
+      "axios": "1.15.2"
+    }
   },
   "devDependencies": {
     "nodemon": "^3.1.14",

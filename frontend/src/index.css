@@ -59,6 +59,9 @@
   --sans: "Inter", system-ui, -apple-system, sans-serif;
   --heading: "Playfair Display", Georgia, serif;
   --mono: "Fira Code", Consolas, monospace;
+  --mobile-bottom-nav-offset: calc(env(safe-area-inset-bottom) + 0.85rem);
+  --mobile-bottom-nav-space: calc(env(safe-area-inset-bottom) + 7.35rem);
+  --mobile-install-prompt-offset: calc(var(--mobile-bottom-nav-space) + 0.85rem);
 
   font-family: var(--sans);
   font-size: 16px;
@@ -683,4 +686,17 @@ p {
     min-height: 3.25rem;
     border-radius: 1.15rem;
   }
+}
+
+/* Compatibilite globale pour les champs avec icones absolues */
+.input-field.pl-12 {
+  padding-left: 3rem;
+}
+
+.input-field.pr-12 {
+  padding-right: 3rem;
+}
+
+.relative > .pointer-events-none.absolute {
+  z-index: 1;
 }

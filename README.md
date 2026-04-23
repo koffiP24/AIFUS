@@ -39,6 +39,9 @@ npm run dev:backend
 npm run build:frontend
 npm run prisma:generate
 npm run prisma:deploy
+npm run prisma:generate:v2
+npm run prisma:validate:v2
+npm run seed:v2
 ```
 
 ## Base MySQL WAMP
@@ -84,11 +87,10 @@ Le fichier local pointe deja sur MySQL WAMP. Les autres valeurs restent a adapte
 DATABASE_URL="mysql://root:@localhost:3306/aifus_festivites"
 JWT_SECRET=change-this-secret-in-production
 GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_IDS=
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
 FRONTEND_URL=http://localhost:5173
-SMS_API_KEY=your-sms-api-key
-SMS_SENDER_ID=AIFUS
 ```
 
 ### Frontend `frontend/.env`
@@ -100,6 +102,9 @@ VITE_API_BASE_URL=/api
 
 Important :
 - `GOOGLE_CLIENT_ID` et `VITE_GOOGLE_CLIENT_ID` doivent contenir le meme vrai client ID Google pour activer la connexion Google.
+- `GOOGLE_CLIENT_IDS` est optionnel cote backend et permet d'autoriser plusieurs audiences Google sous forme de liste separee par des virgules.
+- apres toute modification de `backend/.env` ou `frontend/.env`, il faut redemarrer le serveur Express et le serveur Vite.
+- la recuperation de mot de passe passe maintenant par email avec un code aleatoire a 6 chiffres.
 - Tant qu'un placeholder est present, le bouton Google reste volontairement desactive.
 
 ## Installation
@@ -200,14 +205,97 @@ Corrections appliquees :
 - flux Google corrige cote frontend avec composant `GoogleLogin`,
 - routes manquantes `/conditions` et `/confidentialite` ajoutees,
 - validations d'auth harmonisees,
-- classes Tailwind dynamiques critiques remplacees dans l'admin.
+- classes Tailwind dynamiques critiques remplacees dans l'admin,
+- nouveau coeur billetterie `v2` ajoute en parallele sur MySQL avec Prisma dedie et routes `/api/v2`.
 
 Verifications effectuees :
 - build frontend OK,
 - verification syntaxique backend OK,
 - tables MySQL creees OK.
 
+## Billetterie V2
+
+Un nouveau coeur billetterie a ete ajoute sans casser l'API historique.
+
+Pieces ajoutees :
+
+- schema Prisma dedie : `backend/prisma/schema.mysql.prisma`
+- migration SQL dediee : `backend/prisma/migrations_v2/20260421143000_ticketing_core/migration.sql`
+- SQL de rattrapage si base partiellement initialisee : `backend/prisma/migrations_v2/20260421150000_ticketing_core_recovery.sql`
+- seed SQL catalogue : `backend/prisma/seeds_v2/ticketing_core.sql`
+- client Prisma dedie : `backend/src/generated/prisma-next-mysql`
+- nouvelles routes : `backend/src/modules/v2/*`
+
+Endpoints exposes :
+
+- `POST /api/v2/auth/register`
+- `POST /api/v2/auth/login`
+- `POST /api/v2/auth/refresh`
+- `POST /api/v2/auth/logout`
+- `GET /api/v2/auth/me`
+- `GET /api/v2/events`
+- `GET /api/v2/events/:slug`
+- `GET /api/v2/ticket-types`
+- `POST /api/v2/orders/preview`
+- `POST /api/v2/orders`
+- `GET /api/v2/orders/:reference`
+- `POST /api/v2/payments/initiate`
+- `GET /api/v2/payments/webhook`
+- `POST /api/v2/payments/webhook`
+- `POST /api/v2/payments/reconcile`
+- `POST /api/v2/payments/simulate`
+- `GET /api/v2/tickets/download/:reference`
+- `POST /api/v2/scans/validate`
+- `GET /api/v2/scans/tickets/:ticketCode`
+
+Notes d'acces :
+
+- les lectures invitees de commande et de billets demandent `customerEmail` si l'utilisateur n'est pas connecte
+- les routes de scan sont reservees aux roles `ADMIN` et `SCANNER`
+- `POST /api/v2/payments/simulate` permet de tester localement le flux complet sans prestataire reel
+- si `FEDAPAY_SECRET_KEY` est renseigne, `POST /api/v2/payments/initiate` utilise FedaPay par defaut et renvoie une `paymentUrl` externe
+- `POST /api/v2/payments/webhook` accepte maintenant les webhooks signes FedaPay via `X-FEDAPAY-SIGNATURE`
+- `POST /api/v2/payments/reconcile` permet de re-synchroniser une transaction FedaPay depuis votre backend si le retour navigateur ou le webhook a manque
+- `GET /api/v2/payments/webhook` permet de verifier rapidement que votre endpoint backend est publiquement joignable
+
+Configuration FedaPay importante :
+
+- le webhook FedaPay doit pointer vers votre backend public, par exemple `https://votre-api-publique.exemple.com/api/v2/payments/webhook`
+- n'utilisez jamais `http://localhost:5173` comme webhook : c'est une URL frontend locale, inaccessible depuis les serveurs FedaPay
+- `FEDAPAY_RETURN_URL` sert au retour navigateur apres paiement, typiquement `https://votre-frontend.exemple.com/payment-return`
+- si vous etes en local, exposez votre backend en `https` via un tunnel public avant de declarer l'URL webhook dans le dashboard FedaPay
+
+Variables utiles pour FedaPay dans [backend/.env.example](backend/.env.example) :
+
+- `FEDAPAY_SECRET_KEY`
+- `FEDAPAY_ENV=sandbox|live`
+- `FEDAPAY_WEBHOOK_SECRET`
+- `FEDAPAY_RETURN_URL`
+- `FEDAPAY_WEBHOOK_URL`
+- `FEDAPAY_CALLBACK_URL` (compat legacy)
+- `FEDAPAY_PHONE_COUNTRY`
+
+Smoke test sandbox :
+
+- `npm run smoke:fedapay:v2 --prefix backend`
+- la commande cree une commande `v2`, initialise une transaction FedaPay et renvoie la `paymentUrl`
+- si `FEDAPAY_SECRET_KEY` ou `FEDAPAY_WEBHOOK_SECRET` manquent, elle s'arrete avant toute creation
+
+Ordre d'activation recommande :
+
+1. generer ou regenera le client avec `npm run prisma:generate:v2`
+2. appliquer le SQL `backend/prisma/migrations_v2/20260421143000_ticketing_core/migration.sql` sur MySQL
+3. peupler les evenements et tarifs avec `npm run seed:v2`
+4. brancher ensuite le frontend React sur `/api/v2`
+
+Note :
+
+- `npm run seed:v2` applique le seed SQL du catalogue
+- `npm run seed:v2 --prefix backend` ou `npm run seed:v2:js --prefix backend` peut servir si vous voulez aussi creer un admin via `V2_ADMIN_*`
+
 ## Documentation complementaire
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Audit technique](docs/AUDIT_TECHNIQUE.md)
+- [Architecture cible NestJS](docs/ARCHITECTURE_CIBLE_NESTJS.md)
+- [Workflows metier](docs/WORKFLOWS_METIER.md)
