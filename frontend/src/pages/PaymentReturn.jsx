@@ -21,7 +21,12 @@ import {
   getPaymentSession,
   removePaymentSession,
 } from "../utils/paymentSession";
-import { FEDAPAY_SANDBOX_MTN_HINT } from "../utils/fedapaySandbox";
+import {
+  DEFAULT_PAYMENT_PROVIDER,
+  getPaymentProviderLabel,
+  normalizePaymentProvider,
+  toPaymentProviderQuery,
+} from "../utils/paymentProviders";
 
 const STATUS_META = {
   PAID: {
@@ -37,7 +42,7 @@ const STATUS_META = {
   PAYMENT_PROCESSING: {
     title: "Paiement en cours de verification",
     description:
-      "Le paiement a ete initie. Nous recontrolons le statut avec FedaPay.",
+      "Le paiement a ete initie. Nous recontrolons le statut avec le prestataire de paiement.",
     icon: ClockIcon,
     accent: "text-amber-700",
     panel:
@@ -103,26 +108,6 @@ const statusLabel = (status) =>
     REFUNDED: "Rembourse",
   })[status] || status || "Inconnu";
 
-const buildSandboxHint = (payment) => {
-  const transactionMode =
-    payment?.callbackPayload?.rawPayload?.transaction?.mode || null;
-  const providerStatus = String(payment?.providerStatus || "").toUpperCase();
-  const paymentUrl = String(payment?.paymentUrl || "");
-  const isSandboxPayment =
-    paymentUrl.includes("sandbox-process.fedapay.com") ||
-    transactionMode === "momo_test";
-
-  if (!isSandboxPayment || providerStatus !== "DECLINED") {
-    return "";
-  }
-
-  if (transactionMode === "momo_test") {
-    return FEDAPAY_SANDBOX_MTN_HINT;
-  }
-
-  return "";
-};
-
 const PaymentReturn = () => {
   const location = useLocation();
   const { user } = useAuth();
@@ -134,18 +119,24 @@ const PaymentReturn = () => {
   const [info, setInfo] = useState("");
 
   const searchParams = new URLSearchParams(location.search);
-  const provider = (searchParams.get("provider") || "fedapay").toLowerCase();
+  const sessionOrderReference = searchParams.get("orderReference") || "";
+  const session = getPaymentSession(sessionOrderReference);
+  const provider = toPaymentProviderQuery(
+    normalizePaymentProvider(
+      searchParams.get("provider") || session?.provider || DEFAULT_PAYMENT_PROVIDER,
+    ),
+  );
   const orderReference = searchParams.get("orderReference") || "";
   const paymentReference = searchParams.get("paymentReference") || "";
-  const session = getPaymentSession(orderReference);
   const customerEmail =
     session?.customerEmail || user?.email || "";
   const sourcePath = session?.sourcePath || "/";
+  const providerLabel = getPaymentProviderLabel(provider);
 
   const loadPaymentState = useEffectEvent(
     async ({ reconcile = true, silent = false } = {}) => {
       if (!orderReference) {
-        setError("Reference de commande absente dans le retour FedaPay.");
+        setError("Reference de commande absente dans le retour de paiement.");
         setLoading(false);
         return;
       }
@@ -160,12 +151,13 @@ const PaymentReturn = () => {
       setInfo("");
 
       try {
-        if (reconcile && provider === "fedapay") {
+        if (reconcile && provider === "cinetpay") {
           try {
             await reconcileTicketingPayment({
               orderReference,
               transactionReference: paymentReference || undefined,
               customerEmail: customerEmail || undefined,
+              provider: provider.toUpperCase(),
             });
           } catch (reconcileError) {
             const message = getApiErrorMessage(
@@ -226,7 +218,6 @@ const PaymentReturn = () => {
   const primaryEvent = getOrderPrimaryEvent(order);
   const latestPayment = getOrderLatestPayment(order);
   const ticketCount = download?.tickets?.length || order?.tickets?.length || 0;
-  const sandboxHint = buildSandboxHint(latestPayment);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 py-6">
@@ -265,12 +256,6 @@ const PaymentReturn = () => {
       {info && !error && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {info}
-        </div>
-      )}
-
-      {sandboxHint && (
-        <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
-          {sandboxHint}
         </div>
       )}
 
@@ -329,7 +314,7 @@ const PaymentReturn = () => {
                     href={latestPayment.paymentUrl}
                     className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                   >
-                    Retourner au paiement FedaPay
+                    Retourner au paiement {providerLabel}
                   </a>
                 )}
             </div>

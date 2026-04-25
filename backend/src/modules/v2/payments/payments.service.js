@@ -11,14 +11,13 @@ const {
 } = require("../common/orderService");
 const { ensureOrderTickets } = require("../tickets/tickets.service");
 const {
-  hasFedapayConfig,
-  createFedapayPaymentSession,
-  parseFedapayWebhook,
-  retrieveFedapayTransaction,
-  isFedapayTransactionEvent,
-  buildFedapayWebhookPayload,
-  sanitizeForJson,
-} = require("./fedapay.client");
+  hasCinetpayConfig,
+  createCinetpayPaymentSession,
+  retrieveCinetpayTransaction,
+  verifyCinetpayNotificationToken,
+  buildCinetpayWebhookPayload,
+} = require("./cinetpay.client");
+const { sanitizeForJson } = require("./paymentSerialization");
 
 const SUCCESS_STATUSES = new Set([
   "SUCCESS",
@@ -29,8 +28,16 @@ const SUCCESS_STATUSES = new Set([
   "REFUNDED",
   "APPROVED_PARTIALLY_REFUNDED",
   "TRANSFERRED_PARTIALLY_REFUNDED",
+  "ACCEPTED",
 ]);
-const FAILED_STATUSES = new Set(["FAILED", "FAIL", "ERROR", "DECLINED"]);
+const FAILED_STATUSES = new Set([
+  "FAILED",
+  "FAIL",
+  "ERROR",
+  "DECLINED",
+  "REFUSED",
+  "REJECTED",
+]);
 const CANCELLED_STATUSES = new Set([
   "CANCELLED",
   "CANCELED",
@@ -52,10 +59,18 @@ const resolveProvider = (provider) => {
   const requestedProvider = String(provider || "").trim().toUpperCase();
 
   if (requestedProvider) {
+    if (requestedProvider !== "CINETPAY" && requestedProvider !== "SIMULATION") {
+      throw new HttpError(400, `Prestataire de paiement non supporte: ${requestedProvider}`);
+    }
+
     return requestedProvider;
   }
 
-  return hasFedapayConfig() ? "FEDAPAY" : "SIMULATION";
+  if (hasCinetpayConfig()) {
+    return "CINETPAY";
+  }
+
+  return "SIMULATION";
 };
 
 const toSerializableObject = (value) => sanitizeForJson(value);
@@ -142,7 +157,7 @@ const verifyWebhookSignature = (payload, signature) => {
 };
 
 const buildPaymentInstructions = (payment, orderReference) => {
-  if (payment.provider === "FEDAPAY") {
+  if (payment.provider === "CINETPAY") {
     return {
       provider: payment.provider,
       transactionReference: payment.transactionReference,
@@ -150,6 +165,7 @@ const buildPaymentInstructions = (payment, orderReference) => {
       paymentUrl: payment.paymentUrl,
       webhookEndpoint: "/api/v2/payments/webhook",
       reconcileEndpoint: "/api/v2/payments/reconcile",
+      returnEndpoint: "/api/v2/payments/return",
       redirectMode: "EXTERNAL",
       orderReference,
     };
@@ -263,12 +279,12 @@ const markPaymentFailure = async (tx, { orderId, paymentId, status, providerPayl
 };
 
 const createExternalPaymentSession = async ({ provider, order, paymentId, transactionReference }) => {
-  if (provider !== "FEDAPAY") {
+  if (provider !== "CINETPAY") {
     return null;
   }
 
   try {
-    const session = await createFedapayPaymentSession({
+    const session = await createCinetpayPaymentSession({
       order,
       paymentReference: transactionReference,
     });
@@ -276,16 +292,21 @@ const createExternalPaymentSession = async ({ provider, order, paymentId, transa
     const updatedPayment = await prismaTicketing.payment.update({
       where: { id: paymentId },
       data: {
-        providerPaymentId: session.transactionId,
+        providerPaymentId:
+          session.paymentToken ||
+          session.apiResponseId ||
+          session.transactionId,
         paymentUrl: session.paymentUrl,
         providerStatus: normalizeStatus(session.status || "PENDING"),
         callbackPayload: {
-          provider: "FEDAPAY",
-          createTransaction: toSerializableObject(session.rawTransaction),
-          paymentToken: toSerializableObject(session.rawToken),
-          callbackUrl: session.callbackUrl,
+          provider: "CINETPAY",
+          createTransaction: toSerializableObject(session.rawResponse),
+          requestPayload: toSerializableObject(session.rawRequest),
+          paymentToken: session.paymentToken,
+          returnUrl: session.returnUrl,
+          notifyUrl: session.notifyUrl,
           providerReference: session.transactionReference,
-          phoneFallbackUsed: Boolean(session.phoneFallbackUsed),
+          apiResponseId: session.apiResponseId,
         },
       },
     });
@@ -297,7 +318,7 @@ const createExternalPaymentSession = async ({ provider, order, paymentId, transa
   } catch (error) {
     const failureReason = formatProviderError(
       error,
-      "Impossible d'initialiser le paiement FedaPay.",
+      "Impossible d'initialiser le paiement CinetPay.",
     );
 
     await prismaTicketing.$transaction(
@@ -311,7 +332,7 @@ const createExternalPaymentSession = async ({ provider, order, paymentId, transa
             providerStatus: "INIT_ERROR",
             failureReason,
             callbackPayload: {
-              provider: "FEDAPAY",
+              provider,
               initError: {
                 message: failureReason,
               },
@@ -437,7 +458,7 @@ const initiatePayment = async (payload, { user = null } = {}) => {
   if (
     response &&
     !response.alreadyPaid &&
-    provider === "FEDAPAY" &&
+    provider !== "SIMULATION" &&
     pendingExternalSession &&
     response.payment?.status === "PENDING"
   ) {
@@ -728,45 +749,66 @@ const processWebhook = async (payload, signature = null, options = {}) => {
   return response;
 };
 
-const processFedapayWebhook = async ({ rawBody, signature }) => {
-  const event = parseFedapayWebhook(rawBody, signature);
-
-  if (!isFedapayTransactionEvent(event)) {
-    return {
-      message: "Evenement FedaPay ignore",
-      ignored: true,
-      eventName: event?.name || event?.type || null,
-    };
-  }
-
-  const transactionId = event?.entity?.id || event?.object_id || null;
-
-  if (!transactionId) {
-    throw new HttpError(400, "Webhook FedaPay sans identifiant de transaction");
-  }
-
-  const transaction = await retrieveFedapayTransaction(transactionId);
-  const fallbackTransactionReference = String(
-    transaction?.merchant_reference || event?.entity?.merchant_reference || "",
+const processCinetpayWebhook = async ({ body, signature }) => {
+  const transactionReference = String(
+    body?.cpm_trans_id || body?.transaction_id || "",
   ).trim();
 
-  if (!fallbackTransactionReference) {
-    throw new HttpError(
-      400,
-      "Reference marchand FedaPay absente pour rapprocher le paiement local",
-    );
+  if (!transactionReference) {
+    throw new HttpError(400, "Webhook CinetPay sans transaction_id");
   }
 
-  const localPayment = await prismaTicketing.payment.findUnique({
-    where: { transactionReference: fallbackTransactionReference },
+  const payment = await prismaTicketing.payment.findUnique({
+    where: { transactionReference },
   });
 
-  const normalizedPayload = buildFedapayWebhookPayload({
-    event,
-    transaction,
-    fallbackTransactionReference,
-    fallbackAmount: localPayment?.amount,
-    fallbackCurrency: localPayment?.currency || "XOF",
+  const preliminaryPayload = {
+    provider: "CINETPAY",
+    eventReference: `CINETPAY-${transactionReference}-NOTIFY`,
+    transactionReference,
+    status: "NOTIFIED",
+    amount:
+      payment?.amount ||
+      Number.parseInt(body?.cpm_amount, 10) ||
+      0,
+    currency: String(payment?.currency || body?.cpm_currency || "XOF")
+      .trim()
+      .toUpperCase(),
+    providerPaymentId: null,
+    failureReason: body?.cpm_error_message ? String(body.cpm_error_message) : null,
+    rawPayload: {
+      notification: sanitizeForJson(body),
+    },
+  };
+
+  const signatureValid = verifyCinetpayNotificationToken(body, signature);
+
+  if (!signatureValid) {
+    const webhookEvent = await persistWebhookEvent(preliminaryPayload, {
+      signatureValid: false,
+    });
+
+    await prismaTicketing.paymentWebhookEvent.update({
+      where: { id: webhookEvent.id },
+      data: {
+        processingStatus: "REJECTED",
+        signatureValid: false,
+        errorMessage: "Signature x-token CinetPay invalide",
+        paymentId: payment?.id || null,
+        orderId: payment?.orderId || null,
+      },
+    });
+
+    throw new HttpError(401, "Signature webhook CinetPay invalide");
+  }
+
+  const verification = await retrieveCinetpayTransaction(transactionReference);
+  const normalizedPayload = buildCinetpayWebhookPayload({
+    verification,
+    transactionReference,
+    notificationBody: body,
+    fallbackAmount: payment?.amount,
+    fallbackCurrency: payment?.currency || body?.cpm_currency || "XOF",
   });
 
   return processWebhook(normalizedPayload, null, {
@@ -781,6 +823,9 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
   }
 
   let payment = null;
+  const requestedProvider = payload.provider
+    ? resolveProvider(payload.provider)
+    : null;
 
   if (payload.transactionReference) {
     payment = await prismaTicketing.payment.findUnique({
@@ -796,7 +841,9 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
     payment = await prismaTicketing.payment.findFirst({
       where: {
         orderId: order.id,
-        provider: "FEDAPAY",
+        provider: requestedProvider || {
+          in: ["CINETPAY"],
+        },
       },
       orderBy: { createdAt: "desc" },
       include: { order: true },
@@ -804,7 +851,7 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
   }
 
   if (!payment) {
-    throw new HttpError(404, "Paiement FedaPay introuvable");
+    throw new HttpError(404, "Paiement externe introuvable");
   }
 
   await loadAndAuthorizeOrder(prismaTicketing, payment.order.reference, {
@@ -812,37 +859,26 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
     customerEmail: payload.customerEmail,
   });
 
-  if (payment.provider !== "FEDAPAY") {
-    throw new HttpError(409, "La reconciliation n'est disponible que pour FedaPay");
+  if (payment.provider === "CINETPAY") {
+    const verification = await retrieveCinetpayTransaction(payment.transactionReference);
+    const normalizedPayload = buildCinetpayWebhookPayload({
+      verification,
+      transactionReference: payment.transactionReference,
+      fallbackAmount: payment.amount,
+      fallbackCurrency: payment.currency,
+      eventReference: `RECONCILE-${Date.now()}-${payment.transactionReference}`,
+    });
+
+    return processWebhook(normalizedPayload, null, {
+      skipSignatureVerification: true,
+      signatureValid: true,
+    });
   }
 
-  if (!payment.providerPaymentId) {
-    throw new HttpError(
-      409,
-      "Aucun identifiant FedaPay n'est enregistre pour ce paiement",
-    );
-  }
-
-  const transaction = await retrieveFedapayTransaction(payment.providerPaymentId);
-  const normalizedPayload = buildFedapayWebhookPayload({
-    event: {
-      id: `RECONCILE-${Date.now()}-${payment.providerPaymentId}`,
-      name: `transaction.${String(transaction.status || "pending").trim().toLowerCase()}`,
-      entity: {
-        id: transaction.id,
-        merchant_reference: transaction.merchant_reference,
-      },
-    },
-    transaction,
-    fallbackTransactionReference: payment.transactionReference,
-    fallbackAmount: payment.amount,
-    fallbackCurrency: payment.currency,
-  });
-
-  return processWebhook(normalizedPayload, null, {
-    skipSignatureVerification: true,
-    signatureValid: true,
-  });
+  throw new HttpError(
+    409,
+    "La reconciliation n'est disponible que pour CinetPay",
+  );
 };
 
 const simulatePayment = async (payload, { user = null } = {}) => {
@@ -911,7 +947,7 @@ const simulatePayment = async (payload, { user = null } = {}) => {
 module.exports = {
   initiatePayment,
   processWebhook,
-  processFedapayWebhook,
+  processCinetpayWebhook,
   reconcilePayment,
   simulatePayment,
   buildWebhookSignature,

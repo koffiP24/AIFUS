@@ -4,7 +4,12 @@ const initiatePaymentValidation = [
   body("orderReference").notEmpty().withMessage("orderReference requis"),
   body("provider")
     .optional()
-    .isIn(["SIMULATION", "FEDAPAY", "simulation", "fedapay"])
+    .isIn([
+      "SIMULATION",
+      "CINETPAY",
+      "simulation",
+      "cinetpay",
+    ])
     .withMessage("provider invalide"),
   body("customerEmail")
     .optional()
@@ -14,7 +19,7 @@ const initiatePaymentValidation = [
 
 const webhookValidation = [
   body().custom((value, { req }) => {
-    if (req.headers["x-fedapay-signature"]) {
+    if (req.headers["x-token"] || req.body?.cpm_trans_id || req.body?.transaction_id) {
       return true;
     }
 
@@ -35,6 +40,10 @@ const reconcilePaymentValidation = [
     .optional()
     .isString()
     .withMessage("transactionReference invalide"),
+  body("provider")
+    .optional()
+    .isIn(["CINETPAY", "cinetpay"])
+    .withMessage("provider invalide"),
   body().custom((value, { req }) => {
     if (!req.body?.orderReference && !req.body?.transactionReference) {
       throw new Error("orderReference ou transactionReference requis");

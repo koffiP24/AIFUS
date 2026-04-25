@@ -37,9 +37,12 @@ import {
   formatEventTimeRange,
 } from "../utils/eventSettings";
 import {
-  FEDAPAY_SANDBOX_MTN_HINT,
-  isLikelyFedapaySandbox,
-} from "../utils/fedapaySandbox";
+  DEFAULT_PAYMENT_PROVIDER,
+  getPaymentProviderDescription,
+  getPaymentProviderLabel,
+  PAYMENT_PROVIDER_OPTIONS,
+  toPaymentProviderQuery,
+} from "../utils/paymentProviders";
 
 const schema = z.object({
   categorie: z.enum(["ACTIF", "RETRAITE", "SANS_EMPLOI", "INVITE"]),
@@ -111,6 +114,7 @@ const Gala = () => {
   });
   const [paymentStep, setPaymentStep] = useState("details");
   const [paymentPhone, setPaymentPhone] = useState("");
+  const [paymentProvider, setPaymentProvider] = useState(DEFAULT_PAYMENT_PROVIDER);
   const [checkoutDraft, setCheckoutDraft] = useState({
     categorie: "ACTIF",
     nombreInvites: 0,
@@ -138,7 +142,10 @@ const Gala = () => {
     message,
   );
   const SelectedCategoryIcon = selectedCategory?.icon;
-  const showSandboxHint = isLikelyFedapaySandbox();
+  const paymentProviderLabel = getPaymentProviderLabel(paymentProvider);
+  const paymentProviderDescription =
+    getPaymentProviderDescription(paymentProvider);
+  const showPaymentProviderSelector = PAYMENT_PROVIDER_OPTIONS.length > 1;
 
   const montant = (categoryValue = categorie, invitesValue = nbInvites) => {
     const category = categories.find((item) => item.value === categoryValue);
@@ -245,7 +252,7 @@ const Gala = () => {
     return items;
   };
 
-  const handleFedapayCheckout = async () => {
+  const handlePaymentCheckout = async () => {
     setLoading(true);
     setPaymentStep("processing");
     setMessage("");
@@ -268,14 +275,14 @@ const Gala = () => {
       const payment = await initiateTicketingPayment({
         orderReference: order.reference,
         customerEmail: customer.email,
-        provider: "FEDAPAY",
+        provider: paymentProvider,
       });
 
       const paymentUrl =
         payment?.instructions?.paymentUrl || payment?.payment?.paymentUrl;
 
       if (!paymentUrl) {
-        throw new Error("Aucun lien de paiement FedaPay n'a ete retourne.");
+        throw new Error("Aucun lien de paiement n'a ete retourne.");
       }
 
       const session = {
@@ -284,18 +291,19 @@ const Gala = () => {
         customerEmail: customer.email,
         sourcePath: "/gala",
         label: "Gala des Alumni",
+        provider: toPaymentProviderQuery(paymentProvider),
       };
 
       savePaymentSession(session);
       setRecentSession(session);
-      setMessage("Redirection vers FedaPay en cours...");
+      setMessage(`Redirection vers ${paymentProviderLabel} en cours...`);
       window.location.assign(paymentUrl);
     } catch (error) {
       setPaymentStep("details");
       setMessage(
         getApiErrorMessage(
           error,
-          "Impossible de lancer le paiement FedaPay pour le moment.",
+          `Impossible de lancer le paiement ${paymentProviderLabel} pour le moment.`,
         ),
       );
     } finally {
@@ -421,7 +429,7 @@ const Gala = () => {
 
         <div className="prose max-w-none text-sm text-amber-700 dark:prose-invert dark:text-amber-400">
           <p className="mb-4">
-            Le paiement est maintenant gere par un vrai tunnel FedaPay. La place est reservee
+            Le paiement est maintenant gere par un vrai tunnel securise. La place est reservee
             temporairement, puis confirmee seulement apres validation du paiement.
           </p>
 
@@ -449,7 +457,7 @@ const Gala = () => {
           </ul>
 
           <p className="font-semibold text-amber-800 dark:text-amber-200">
-            Paiement securise via FedaPay - premier paye, premier servi
+            Paiement securise via CinetPay - premier paye, premier servi
           </p>
         </div>
       </section>
@@ -467,7 +475,7 @@ const Gala = () => {
             </div>
             <Link
               to={buildPaymentReturnPath({
-                provider: "fedapay",
+                provider: recentSession.provider || DEFAULT_PAYMENT_PROVIDER,
                 orderReference: recentSession.orderReference,
                 paymentReference: recentSession.paymentReference,
               })}
@@ -496,7 +504,7 @@ const Gala = () => {
           <div className="mb-8 text-center animate-fade-in">
             <h2 className="mb-2 text-3xl font-bold">Reservation du Gala</h2>
             <p className="text-slate-500">
-              Choisissez votre categorie puis continuez vers le paiement FedaPay.
+              Choisissez votre categorie puis continuez vers le paiement securise.
             </p>
           </div>
 
@@ -590,7 +598,7 @@ const Gala = () => {
             >
               {catalogLoading
                 ? "Chargement du stock..."
-                : "Continuer vers FedaPay"}
+                : "Continuer vers le paiement"}
             </button>
           </form>
         </section>
@@ -628,7 +636,9 @@ const Gala = () => {
 
             {paymentStep === "details" && (
               <>
-                <h3 className="mb-4 text-xl font-bold">Paiement securise FedaPay</h3>
+                <h3 className="mb-4 text-xl font-bold">
+                  Paiement securise {paymentProviderLabel}
+                </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
                   <p className="text-3xl font-bold">
@@ -667,6 +677,37 @@ const Gala = () => {
                   </div>
                 </div>
 
+                {showPaymentProviderSelector && (
+                  <div className="mb-4">
+                    <label className="label">Prestataire de paiement</label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {PAYMENT_PROVIDER_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setPaymentProvider(option.value)}
+                          className={`rounded-xl border px-4 py-3 text-left transition ${
+                            paymentProvider === option.value
+                              ? "border-slate-900 bg-slate-900 text-white"
+                              : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                          }`}
+                        >
+                          <p className="text-sm font-semibold">{option.label}</p>
+                          <p
+                            className={`mt-1 text-xs ${
+                              paymentProvider === option.value
+                                ? "text-slate-200"
+                                : "text-slate-500"
+                            }`}
+                          >
+                            {option.description}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="mb-4">
                   <label className="label">Numero de telephone</label>
                   <div className="relative">
@@ -680,18 +721,13 @@ const Gala = () => {
                     />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    Orange Money, Wave et les moyens compatibles seront proposes sur la page FedaPay.
+                    {paymentProviderDescription}
                   </p>
-                  {showSandboxHint && (
-                    <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
-                      {FEDAPAY_SANDBOX_MTN_HINT}
-                    </div>
-                  )}
                 </div>
 
                 <button
                   type="button"
-                  onClick={handleFedapayCheckout}
+                  onClick={handlePaymentCheckout}
                   disabled={loading}
                   className="w-full btn-primary py-3 transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -700,7 +736,7 @@ const Gala = () => {
                     : `Payer ${montant(
                         checkoutDraft.categorie,
                         checkoutDraft.nombreInvites,
-                      ).toLocaleString()} Fcfa avec FedaPay`}
+                      ).toLocaleString()} Fcfa avec ${paymentProviderLabel}`}
                 </button>
               </>
             )}
@@ -710,7 +746,7 @@ const Gala = () => {
                 <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
                 <p className="text-lg font-medium">Creation du paiement...</p>
                 <p className="text-sm text-slate-500">
-                  Vous allez etre redirige vers FedaPay.
+                  Vous allez etre redirige vers {paymentProviderLabel}.
                 </p>
               </div>
             )}

@@ -1,4 +1,5 @@
 import api from "./api";
+import { DEFAULT_PAYMENT_PROVIDER } from "../utils/paymentProviders";
 
 export const GALA_EVENT_SLUG = "gala-aifus-2026";
 export const TOMBOLA_EVENT_SLUG = "tombola-aifus-2026";
@@ -31,7 +32,7 @@ export const createTicketingOrder = async ({ items, customer }) => {
 export const initiateTicketingPayment = async ({
   orderReference,
   customerEmail,
-  provider = "FEDAPAY",
+  provider = DEFAULT_PAYMENT_PROVIDER,
 }) => {
   const { data } = await api.post("/v2/payments/initiate", {
     orderReference,
@@ -46,11 +47,13 @@ export const reconcileTicketingPayment = async ({
   orderReference,
   transactionReference,
   customerEmail,
+  provider,
 }) => {
   const { data } = await api.post("/v2/payments/reconcile", {
     orderReference,
     transactionReference,
     customerEmail,
+    provider,
   });
 
   return data;

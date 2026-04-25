@@ -46,6 +46,19 @@ app.use(
     },
   }),
 );
+app.use(
+  express.urlencoded({
+    extended: true,
+    verify: (req, res, buffer) => {
+      if (
+        req.originalUrl?.startsWith("/api/v2/payments/webhook") ||
+        req.originalUrl?.startsWith("/api/v2/payments/return")
+      ) {
+        req.rawBody = buffer.toString("utf8");
+      }
+    },
+  }),
+);
 app.use(morgan("dev"));
 
 // Routes

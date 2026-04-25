@@ -13,6 +13,8 @@ const {
 const router = express.Router();
 
 router.get("/webhook", controller.webhookHealth);
+router.get("/return", controller.handleReturnRedirect);
+router.post("/return", controller.handleReturnRedirect);
 router.post(
   "/initiate",
   optionalTicketingAuth,

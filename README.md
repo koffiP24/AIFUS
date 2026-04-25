@@ -253,33 +253,30 @@ Notes d'acces :
 - les lectures invitees de commande et de billets demandent `customerEmail` si l'utilisateur n'est pas connecte
 - les routes de scan sont reservees aux roles `ADMIN` et `SCANNER`
 - `POST /api/v2/payments/simulate` permet de tester localement le flux complet sans prestataire reel
-- si `FEDAPAY_SECRET_KEY` est renseigne, `POST /api/v2/payments/initiate` utilise FedaPay par defaut et renvoie une `paymentUrl` externe
-- `POST /api/v2/payments/webhook` accepte maintenant les webhooks signes FedaPay via `X-FEDAPAY-SIGNATURE`
-- `POST /api/v2/payments/reconcile` permet de re-synchroniser une transaction FedaPay depuis votre backend si le retour navigateur ou le webhook a manque
+- si `CINETPAY_API_KEY` et `CINETPAY_SITE_ID` sont renseignes, `POST /api/v2/payments/initiate` utilise CinetPay par defaut et renvoie une `paymentUrl` externe
+- `POST /api/v2/payments/webhook` accepte les notifications CinetPay via `x-token`
+- `POST /api/v2/payments/reconcile` permet de re-synchroniser une transaction CinetPay depuis votre backend si le retour navigateur ou le webhook a manque
 - `GET /api/v2/payments/webhook` permet de verifier rapidement que votre endpoint backend est publiquement joignable
 
-Configuration FedaPay importante :
+Configuration CinetPay importante :
 
-- le webhook FedaPay doit pointer vers votre backend public, par exemple `https://votre-api-publique.exemple.com/api/v2/payments/webhook`
-- n'utilisez jamais `http://localhost:5173` comme webhook : c'est une URL frontend locale, inaccessible depuis les serveurs FedaPay
-- `FEDAPAY_RETURN_URL` sert au retour navigateur apres paiement, typiquement `https://votre-frontend.exemple.com/payment-return`
-- si vous etes en local, exposez votre backend en `https` via un tunnel public avant de declarer l'URL webhook dans le dashboard FedaPay
+- le webhook CinetPay doit pointer vers votre backend public, par exemple `https://votre-api-publique.exemple.com/api/v2/payments/webhook`
+- n'utilisez jamais `http://localhost:5173` comme webhook ou return URL : c'est une URL frontend locale, inaccessible depuis les serveurs CinetPay
+- `CINETPAY_RETURN_URL` doit pointer vers votre backend, par exemple `https://votre-api-publique.exemple.com/api/v2/payments/return`
+- `CINETPAY_NOTIFY_URL` doit pointer vers votre backend, par exemple `https://votre-api-publique.exemple.com/api/v2/payments/webhook`
+- si vous etes en local, exposez votre backend en `https` via un tunnel public avant de declarer les URLs dans le dashboard CinetPay
 
-Variables utiles pour FedaPay dans [backend/.env.example](backend/.env.example) :
+Variables utiles pour CinetPay dans [backend/.env.example](backend/.env.example) :
 
-- `FEDAPAY_SECRET_KEY`
-- `FEDAPAY_ENV=sandbox|live`
-- `FEDAPAY_WEBHOOK_SECRET`
-- `FEDAPAY_RETURN_URL`
-- `FEDAPAY_WEBHOOK_URL`
-- `FEDAPAY_CALLBACK_URL` (compat legacy)
-- `FEDAPAY_PHONE_COUNTRY`
-
-Smoke test sandbox :
-
-- `npm run smoke:fedapay:v2 --prefix backend`
-- la commande cree une commande `v2`, initialise une transaction FedaPay et renvoie la `paymentUrl`
-- si `FEDAPAY_SECRET_KEY` ou `FEDAPAY_WEBHOOK_SECRET` manquent, elle s'arrete avant toute creation
+- `CINETPAY_API_KEY`
+- `CINETPAY_SITE_ID`
+- `CINETPAY_SECRET_KEY`
+- `CINETPAY_RETURN_URL`
+- `CINETPAY_NOTIFY_URL`
+- `CINETPAY_WEBHOOK_URL`
+- `CINETPAY_CHANNELS`
+- `CINETPAY_LANG`
+- `CINETPAY_COUNTRY_CODE`
 
 Ordre d'activation recommande :
 

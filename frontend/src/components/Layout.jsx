@@ -13,7 +13,7 @@ const Layout = () => {
   const orderReference = searchParams.get('orderReference');
 
   if (
-    provider === 'fedapay' &&
+    provider === 'cinetpay' &&
     orderReference &&
     location.pathname !== '/payment-return'
   ) {

@@ -1,3 +1,9 @@
+import {
+  DEFAULT_PAYMENT_PROVIDER,
+  normalizePaymentProvider,
+  toPaymentProviderQuery,
+} from "./paymentProviders";
+
 const PAYMENT_SESSION_STORAGE_KEY = "aifus.ticketing.paymentSessions";
 const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 48;
 
@@ -101,14 +107,15 @@ export const removePaymentSession = (orderReference) => {
 };
 
 export const buildPaymentReturnPath = ({
-  provider = "fedapay",
+  provider = DEFAULT_PAYMENT_PROVIDER,
   orderReference,
   paymentReference,
 } = {}) => {
   const searchParams = new URLSearchParams();
+  const normalizedProvider = normalizePaymentProvider(provider);
 
-  if (provider) {
-    searchParams.set("provider", provider);
+  if (normalizedProvider) {
+    searchParams.set("provider", toPaymentProviderQuery(normalizedProvider));
   }
 
   if (orderReference) {
