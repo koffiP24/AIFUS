@@ -139,7 +139,7 @@ const Tombola = () => {
 
       if (!customer.firstName || !customer.lastName || !customer.email) {
         throw new Error(
-          "Votre profil est incomplet. Ajoutez votre nom, prenom et email avant le paiement.",
+          "Votre profil est incomplet. Ajoutez votre nom, prénom et email avant le paiement.",
         );
       }
 
@@ -167,7 +167,7 @@ const Tombola = () => {
         payment?.instructions?.paymentUrl || payment?.payment?.paymentUrl;
 
       if (!paymentUrl) {
-        throw new Error("Aucun lien de paiement FedaPay n'a ete retourne.");
+        throw new Error("Aucun lien de paiement FedaPay n'a été retourné.");
       }
 
       const session = {
@@ -294,8 +294,8 @@ const Tombola = () => {
 
       <section>
         <div className="mb-10 text-center">
-          <h2 className="mb-3 text-3xl font-bold">Les lots a gagner</h2>
-          <p className="text-slate-500">Plus de 50 lots a remporter !</p>
+          <h2 className="mb-3 text-3xl font-bold">Les lots à gagner</h2>
+          <p className="text-slate-500">Plus de 50 lots à remporter !</p>
         </div>
 
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-5">
@@ -337,10 +337,10 @@ const Tombola = () => {
         <section className="rounded-2xl border border-sky-200 bg-sky-50 p-5 dark:border-sky-800 dark:bg-sky-900/20">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">
-                Un paiement Tombola est deja en cours ou recent sur cet
-                appareil.
-              </p>
+             <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">
+               Un paiement Tombola est déjà en cours ou récent sur cet
+               appareil.
+             </p>
               <p className="mt-1 text-sm text-sky-700 dark:text-sky-200">
                 Reference:{" "}
                 <span className="font-mono">
@@ -390,11 +390,11 @@ const Tombola = () => {
                   <label className="label mb-0">
                     Nombre de billets (max {maxBillets})
                   </label>
-                  <span className="text-sm text-slate-500">
-                    {catalogLoading ? (
-                      <span className="font-medium text-slate-500">
-                        Verification du stock...
-                      </span>
+                       <span className="text-sm text-slate-500">
+                         {catalogLoading ? (
+                           <span className="font-medium text-slate-500">
+                             Vérification du stock...
+                           </span>
                     ) : places.restantes > 0 ? (
                       <span className="font-medium text-green-600">
                         {places.restantes} billets disponibles
@@ -476,14 +476,14 @@ const Tombola = () => {
           <ExclamationCircleIcon className="mx-auto mb-4 h-12 w-12 text-amber-500" />
           <h3 className="mb-2 text-xl font-semibold">Connexion requise</h3>
           <p className="mb-6 text-slate-500">
-            Veuillez vous connecter ou creer un compte pour acheter des billets.
+            Veuillez vous connecter ou créer un compte pour acheter des billets.
           </p>
           <div className="flex justify-center gap-4">
             <Link to="/login" className="btn-primary">
               Se connecter
             </Link>
             <Link to="/register" className="btn-outline">
-              Creer un compte
+              Créer un compte
             </Link>
           </div>
         </section>
@@ -503,7 +503,7 @@ const Tombola = () => {
             {paymentStep === "details" && (
               <>
                 <h3 className="mb-4 text-xl font-bold">
-                  Paiement securise FedaPay
+                  Paiement sécurisé FedaPay
                 </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-purple-600 to-primary-700 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
@@ -524,10 +524,10 @@ const Tombola = () => {
                       className="input-field pl-12"
                     />
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Orange Money, Wave et les moyens compatibles seront proposes
-                    sur FedaPay.
-                  </p>
+                   <p className="mt-1 text-xs text-slate-500">
+                     Orange Money, Wave et les moyens compatibles seront proposés
+                     sur FedaPay.
+                   </p>
                   {showSandboxHint && (
                     <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
                       {FEDAPAY_SANDBOX_MTN_HINT}
@@ -551,10 +551,10 @@ const Tombola = () => {
             {paymentStep === "processing" && (
               <div className="py-8 text-center">
                 <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
-                <p className="text-lg font-medium">Creation du paiement...</p>
-                <p className="text-sm text-slate-500">
-                  Vous allez etre redirige vers FedaPay.
-                </p>
+                 <p className="text-lg font-medium">Création du paiement...</p>
+                 <p className="text-sm text-slate-500">
+                   Vous allez être redirigé vers FedaPay.
+                 </p>
               </div>
             )}
           </div>

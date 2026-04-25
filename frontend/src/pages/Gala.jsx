@@ -62,7 +62,7 @@ const categories = [
     ticketCode: "GALA_RETRAITE",
     label: "Retraite",
     price: 25000,
-    description: "Pour les alumni a la retraite",
+    description: "Pour les alumni à la retraite",
     icon: UserIcon,
     iconColor: "text-emerald-600",
     iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
@@ -72,7 +72,7 @@ const categories = [
     ticketCode: "GALA_SANS_EMPLOI",
     label: "Sans emploi",
     price: 15000,
-    description: "Pour les alumni en quete d'emploi",
+    description: "Pour les alumni en quête d'emploi",
     icon: MagnifyingGlassIcon,
     iconColor: "text-amber-600",
     iconBg: "bg-amber-100 dark:bg-amber-900/30",
@@ -82,7 +82,7 @@ const categories = [
     ticketCode: "GALA_INVITE",
     label: "Invite",
     price: 20000,
-    description: "Pour les personnes invitees par un membre",
+    description: "Pour les personnes invitées par un membre",
     icon: GiftIcon,
     iconColor: "text-purple-600",
     iconBg: "bg-purple-100 dark:bg-purple-900/30",
@@ -223,7 +223,7 @@ const Gala = () => {
     const inviteTicketType = ticketTypesByCode.GALA_INVITE;
 
     if (!mainTicketType) {
-      throw new Error("Le billet selectionne n'est pas disponible.");
+      throw new Error("Le billet sélectionné n'est pas disponible.");
     }
 
     const items = [
@@ -235,7 +235,7 @@ const Gala = () => {
 
     if (draft.categorie !== "INVITE" && Number(draft.nombreInvites || 0) > 0) {
       if (!inviteTicketType) {
-        throw new Error("Le billet invite n'est pas disponible.");
+        throw new Error("Le billet invité n'est pas disponible.");
       }
 
       items.push({
@@ -257,7 +257,7 @@ const Gala = () => {
 
       if (!customer.firstName || !customer.lastName || !customer.email) {
         throw new Error(
-          "Votre profil est incomplet. Ajoutez votre nom, prenom et email avant le paiement.",
+          "Votre profil est incomplet. Ajoutez votre nom, prénom et email avant le paiement.",
         );
       }
 
@@ -277,7 +277,7 @@ const Gala = () => {
         payment?.instructions?.paymentUrl || payment?.payment?.paymentUrl;
 
       if (!paymentUrl) {
-        throw new Error("Aucun lien de paiement FedaPay n'a ete retourne.");
+        throw new Error("Aucun lien de paiement FedaPay n'a été retourné.");
       }
 
       const session = {
@@ -319,7 +319,7 @@ const Gala = () => {
         <div className="relative px-8 py-16 text-center md:py-20">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm animate-fade-in">
             <SparklesIcon className="h-4 w-4 animate-spin" />
-            <span>Evenement exclusif</span>
+            <span>Événement exclusif</span>
           </div>
 
           <h1 className="mb-4 text-4xl font-bold animate-slide-up md:text-5xl">
@@ -332,8 +332,8 @@ const Gala = () => {
 
           <div className="flex flex-col items-center justify-center text-center w-full">
             <p className="text-xl md:text-2xl">
-              Une soiree de celebration, de reconnaissance et de reseautage
-              intergenerationnel
+              Une soirée de célébration, de reconnaissance et de réseautage
+              intergénérationnel
             </p>
           </div>
 
@@ -351,7 +351,7 @@ const Gala = () => {
             >
               <MapPinIcon className="mx-auto mb-2 h-8 w-8 text-amber-300" />
               <p className="font-semibold">
-                {galaEvent?.location || "Lieu a confirmer"}
+                {galaEvent?.location || "Lieu à confirmer"}
               </p>
             </div>
             <div
@@ -374,11 +374,11 @@ const Gala = () => {
           <ul className="space-y-3">
             {[
               "Cocktail de bienvenue",
-              "Diner gala gastronomique",
-              "Discours et temoignages",
+              "Dîner gala gastronomique",
+              "Discours et témoignages",
               "Remise de distinctions",
               "Animation musicale",
-              "Networking intergenerationnel",
+              "Networking intergénérationnel",
             ].map((item, index) => (
               <li
                 key={item}
@@ -399,10 +399,10 @@ const Gala = () => {
           </h3>
           <ul className="space-y-3">
             {[
-              "Rencontrer les generations d'alumni",
-              "Echanger avec les partenaires",
-              "Participer a la vie de l'association",
-              "Profiter d'une soiree inoubliable",
+              "Rencontrer les générations d'alumni",
+              "Échanger avec les partenaires",
+              "Participer à la vie de l'association",
+              "Profiter d'une soirée inoubliable",
             ].map((item, index) => (
               <li
                 key={item}
@@ -425,17 +425,17 @@ const Gala = () => {
 
         <div className="prose max-w-none text-sm text-amber-700 dark:prose-invert dark:text-amber-400">
           <p className="mb-4">
-            Le paiement est maintenant gere par un vrai tunnel FedaPay. La place
-            est reservee temporairement, puis confirmee seulement apres
+            Le paiement est maintenant géré par un vrai tunnel FedaPay. La place
+            est réservée temporairement, puis confirmée seulement après
             validation du paiement.
           </p>
 
           <div className="mb-4 rounded-lg bg-amber-100 p-4 dark:bg-amber-900/40">
             <p className="mb-2 font-semibold">
-              Acces au Gala (places limitees)
+              Accès au Gala (places limitées)
             </p>
             <p className="text-xs">
-              La participation au Gala est strictement limitee a 300 personnes.
+              La participation au Gala est strictement limitée à 300 personnes.
             </p>
           </div>
 
@@ -456,7 +456,7 @@ const Gala = () => {
           </ul>
 
           <p className="font-semibold text-amber-800 dark:text-amber-200">
-            Paiement securise via FedaPay - premier paye, premier servi
+            Paiement sécurisé via FedaPay - premier payé, premier servi
           </p>
         </div>
       </section>
@@ -466,7 +466,7 @@ const Gala = () => {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">
-                Un paiement Gala est deja en cours ou recent sur cet appareil.
+                Un paiement Gala est déjà en cours ou récent sur cet appareil.
               </p>
               <p className="mt-1 text-sm text-sky-700 dark:text-sky-200">
                 Reference:{" "}
@@ -506,7 +506,7 @@ const Gala = () => {
           <div className="mb-8 text-center animate-fade-in">
             <h2 className="mb-2 text-3xl font-bold">Reservation du Gala</h2>
             <p className="text-slate-500">
-              Choisissez votre categorie puis continuez vers le paiement
+              Choisissez votre catégorie puis continuez vers le paiement
               FedaPay.
             </p>
           </div>
@@ -544,7 +544,7 @@ const Gala = () => {
                 <div className="mt-2 text-xs font-medium">
                   {catalogLoading ? (
                     <span className="text-slate-500">
-                      Verification du stock...
+                      Vérification du stock...
                     </span>
                   ) : places[cat.value] > 0 ? (
                     <span className="text-green-600">
@@ -621,7 +621,7 @@ const Gala = () => {
           <ExclamationCircleIcon className="mx-auto mb-4 h-12 w-12 text-amber-500" />
           <h3 className="mb-2 text-xl font-semibold">Connexion requise</h3>
           <p className="mb-6 text-slate-500">
-            Veuillez vous connecter ou creer un compte pour reserver votre
+            Veuillez vous connecter ou créer un compte pour réserver votre
             place.
           </p>
           <div className="flex justify-center gap-4">
@@ -629,7 +629,7 @@ const Gala = () => {
               Se connecter
             </Link>
             <Link to="/register" className="btn-outline">
-              Creer un compte
+              Créer un compte
             </Link>
           </div>
         </section>
@@ -652,7 +652,7 @@ const Gala = () => {
             {paymentStep === "details" && (
               <>
                 <h3 className="mb-4 text-xl font-bold">
-                  Paiement securise FedaPay
+                  Paiement sécurisé FedaPay
                 </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
@@ -705,7 +705,7 @@ const Gala = () => {
                     />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    Orange Money, Wave et les moyens compatibles seront proposes
+                    Orange Money, Wave et les moyens compatibles seront proposés
                     sur la page FedaPay.
                   </p>
                   {showSandboxHint && (
@@ -734,9 +734,9 @@ const Gala = () => {
             {paymentStep === "processing" && (
               <div className="py-8 text-center">
                 <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
-                <p className="text-lg font-medium">Creation du paiement...</p>
+                <p className="text-lg font-medium">Création du paiement...</p>
                 <p className="text-sm text-slate-500">
-                  Vous allez etre redirige vers FedaPay.
+                  Vous allez être redirigé vers FedaPay.
                 </p>
               </div>
             )}

@@ -17,9 +17,9 @@ import {
 
 const categoriesLabels = {
   ACTIF: "Alumni en fonction",
-  RETRAITE: "Retraite",
+  RETRAITE: "Retrait",
   SANS_EMPLOI: "Sans emploi",
-  INVITE: "Invite",
+  INVITE: "Invité",
 };
 
 const buildGalaQrPayload = (inscription) => {
@@ -99,9 +99,9 @@ const GalaTicketCard = ({ inscription, participantName }) => {
               Ticket gala
             </p>
             <h3 className="text-2xl font-semibold">Acces officiel AIFUS 2026</h3>
-            <p className="mt-2 text-sm text-slate-300">
-              Presentez ce QR code a l'entree pour le check-in admin.
-            </p>
+             <p className="mt-2 text-sm text-slate-300">
+               Présentez ce QR code à l'entrée pour le check-in admin.
+             </p>
           </div>
 
           <div
@@ -116,7 +116,7 @@ const GalaTicketCard = ({ inscription, participantName }) => {
             ) : (
               <ClockIcon className="h-5 w-5" />
             )}
-            {inscription.checkedInAt ? "Deja scanne" : "Non scanne"}
+            {inscription.checkedInAt ? "Déjà scanné" : "Non scanné"}
           </div>
         </div>
       </div>
@@ -161,7 +161,7 @@ const GalaTicketCard = ({ inscription, participantName }) => {
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
                   Lieu
                 </p>
-                <p className="font-medium">{galaEvent?.location || "Lieu a confirmer"}</p>
+                 <p className="font-medium">{galaEvent?.location || "Lieu à confirmer"}</p>
               </div>
             </div>
 
@@ -172,9 +172,9 @@ const GalaTicketCard = ({ inscription, participantName }) => {
                   Categorie
                 </p>
                 <p className="font-medium">
-                  {categoriesLabels[inscription.categorie] || inscription.categorie}
-                  {" · "}
-                  {inscription.nombreInvites} invite(s)
+                   {categoriesLabels[inscription.categorie] || inscription.categorie}
+                   {" · "}
+                   {inscription.nombreInvites} invité(s)
                 </p>
               </div>
             </div>
@@ -196,9 +196,9 @@ const GalaTicketCard = ({ inscription, participantName }) => {
             <QrCodeIcon className="h-6 w-6" />
           </div>
 
-          <p className="mt-4 text-sm font-medium text-slate-500">
-            QR code a scanner
-          </p>
+           <p className="mt-4 text-sm font-medium text-slate-500">
+             QR code à scanner
+           </p>
 
           <div className="mx-auto mt-4 flex min-h-[260px] items-center justify-center rounded-3xl bg-white p-5 shadow-inner">
             {qrDataUrl ? (
@@ -210,7 +210,7 @@ const GalaTicketCard = ({ inscription, participantName }) => {
             ) : (
               <div className="space-y-3 text-center text-slate-500">
                 <QrCodeIcon className="mx-auto h-12 w-12" />
-                <p className="text-sm">Generation du QR code...</p>
+                <p className="text-sm">Génération du QR code...</p>
               </div>
             )}
           </div>

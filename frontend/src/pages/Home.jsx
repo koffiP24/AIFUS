@@ -48,19 +48,19 @@ const Home = () => {
     },
   ];
 
-  evenements[0] = {
-    ...evenements[0],
-    title: "Village Opportunites",
-    description: villageEvent?.description || evenements[0].description,
-  };
+   evenements[0] = {
+     ...evenements[0],
+     title: "Village Opportunités",
+     description: villageEvent?.description || evenements[0].description,
+   };
   evenements[1] = {
     ...evenements[1],
-    description: `Soirée de prestige reunissant toutes les generations d'alumni le ${formatEventShortDate(galaEvent)}.`,
+    description: `Soirée de prestige réunissant toutes les générations d'alumni le ${formatEventShortDate(galaEvent)}.`,
     badge: formatEventShortDate(galaEvent),
   };
   evenements[2] = {
     ...evenements[2],
-    description: `Tentez de gagner une voiture et de nombreux lots. Tirage prevu le ${formatEventShortDate(tombolaEvent)}.`,
+    description: `Tentez de gagner une voiture et de nombreux lots. Tirage prévu le ${formatEventShortDate(tombolaEvent)}.`,
   };
 
   const stats = [
@@ -144,7 +144,7 @@ const Home = () => {
           <h2 className="text-3xl font-bold mb-3">Les temps forts</h2>
           <div className="flex flex-col items-center justify-center text-center w-full">
             <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Trois événements exceptionnels pour celebrate notre communauté et
+              Trois événements exceptionnels pour célébrer notre communauté et
               créer de nouvelles connexions
             </p>
           </div>

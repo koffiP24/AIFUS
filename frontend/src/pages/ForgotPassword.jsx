@@ -19,7 +19,7 @@ const requestSchema = z.object({
 });
 
 const verifySchema = z.object({
-  code: z.string().regex(/^\d{6}$/, "Code a 6 chiffres"),
+  code: z.string().regex(/^\d{6}$/, "Code à 6 chiffres"),
 });
 
 const passwordSchema = z
@@ -45,7 +45,7 @@ const stepMeta = {
   },
   password: {
     title: "Nouveau mot de passe",
-    description: "Definissez maintenant votre nouveau mot de passe.",
+    description: "Définissez maintenant votre nouveau mot de passe.",
     icon: LockClosedIcon,
   },
 };
@@ -124,7 +124,7 @@ const ForgotPassword = () => {
       setStep("password");
       setMessage(
         res.data.message ||
-          "Code verifie. Vous pouvez maintenant definir un nouveau mot de passe.",
+          "Code vérifié. Vous pouvez maintenant définir un nouveau mot de passe.",
       );
     } catch (err) {
       setError(getApiErrorMessage(err, "Code invalide ou expire."));
@@ -146,14 +146,14 @@ const ForgotPassword = () => {
       });
 
       setMessage(
-        "Mot de passe reinitialise avec succes. Redirection vers la connexion...",
+        "Mot de passe réinitialisé avec succès. Redirection vers la connexion...",
       );
       setTimeout(
         () =>
           navigate("/login", {
             state: {
               successMessage:
-                "Votre mot de passe a ete reinitialise avec succes. Connectez-vous avec votre nouveau mot de passe.",
+                "Votre mot de passe a été réinitialisé avec succès. Connectez-vous avec votre nouveau mot de passe.",
             },
           }),
         1400,
@@ -162,7 +162,7 @@ const ForgotPassword = () => {
       setError(
         getApiErrorMessage(
           err,
-          "Impossible de mettre a jour le mot de passe. Verifiez a nouveau votre code.",
+          "Impossible de mettre à jour le mot de passe. Vérifiez à nouveau votre code.",
         ),
       );
     } finally {
@@ -245,7 +245,7 @@ const ForgotPassword = () => {
                       : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400"
                 }`}
               >
-                Etape {index + 1}
+                Étape {index + 1}
               </div>
             );
           })}
@@ -321,12 +321,12 @@ const ForgotPassword = () => {
               )}
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full py-3">
-              <span className="inline-flex items-center gap-2">
-                <KeyIcon className="h-5 w-5" />
-                {loading ? "Verification..." : "Verifier le code"}
-              </span>
-            </button>
+                <button type="submit" disabled={loading} className="btn-primary w-full py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <KeyIcon className="h-5 w-5" />
+                    {loading ? "Vérification..." : "Vérifier le code"}
+                  </span>
+                </button>
 
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <button
@@ -393,26 +393,26 @@ const ForgotPassword = () => {
               )}
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full py-3">
-              <span className="inline-flex items-center gap-2">
-                <LockClosedIcon className="h-5 w-5" />
-                {loading ? "Mise a jour..." : "Changer mon mot de passe"}
-              </span>
-            </button>
+                <button type="submit" disabled={loading} className="btn-primary w-full py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <LockClosedIcon className="h-5 w-5" />
+                    {loading ? "Mise à jour..." : "Changer mon mot de passe"}
+                  </span>
+                </button>
 
-            <button
-              type="button"
-              onClick={goBackToCode}
-              className="text-sm font-medium text-primary-600 hover:underline"
-            >
-              Revenir a la saisie du code
-            </button>
+              <button
+                type="button"
+                onClick={goBackToCode}
+                className="text-sm font-medium text-primary-600 hover:underline"
+              >
+                Revenir à la saisie du code
+              </button>
           </form>
         )}
 
         <div className="mt-6 border-t border-slate-200 pt-6 dark:border-slate-700">
           <Link to="/login" className="text-primary-600 hover:underline">
-            Retour a la connexion
+            Retour à la connexion
           </Link>
         </div>
       </div>
