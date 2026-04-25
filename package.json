@@ -3,8 +3,8 @@
   "private": true,
   "scripts": {
     "start": "npm start --prefix backend",
-    "render:build": "npm run render:build --prefix backend",
-    "render:predeploy": "npm run render:predeploy --prefix backend",
+    "render:build": "npm install --prefix backend && npm run render:build --prefix backend",
+    "render:predeploy": "npm install --prefix backend && npm run render:predeploy --prefix backend",
     "render:start": "npm start --prefix backend",
     "install:frontend": "npm install --prefix frontend",
     "install:backend": "npm install --prefix backend",
