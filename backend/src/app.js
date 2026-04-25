@@ -82,6 +82,7 @@ const isAllowedOrigin = (origin) => {
 
   return false;
 };
+ HEAD
 
 const parseOrigin = (value) => {
   if (!value) {
