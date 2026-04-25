@@ -15,8 +15,73 @@ const eventRoutes = require("./routes/eventRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const ticketingV2Routes = require("./modules/v2/routes");
 const errorHandler = require("./middlewares/errorHandler");
+const { prisma } = require("./lib/prisma");
+const { prismaTicketing } = require("./lib/prismaTicketing");
 
 const app = express();
+app.set("trust proxy", true);
+
+const parseOrigin = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value);
+  } catch (error) {
+    return null;
+  }
+};
+
+const configuredOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URLS,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+  "https://unporticoed-jayceon-unwebbing.ngrok-free.dev",
+]
+  .flatMap((value) => String(value || "").split(","))
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+const allowedOrigins = new Set(configuredOrigins);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) {
+    return true;
+  }
+
+  const parsedOrigin = parseOrigin(origin);
+
+  if (!parsedOrigin) {
+    return false;
+  }
+
+  if (allowedOrigins.has(origin)) {
+    return true;
+  }
+
+  const { protocol, hostname } = parsedOrigin;
+
+  if (
+    (protocol === "http:" || protocol === "https:") &&
+    (hostname === "localhost" || hostname === "127.0.0.1")
+  ) {
+    return true;
+  }
+
+  if (hostname.endsWith(".ngrok-free.dev")) {
+    return true;
+  }
+
+  if (hostname.endsWith(".vercel.app")) {
+    return true;
+  }
+
+  return false;
+};
 
 const parseOrigin = (value) => {
   if (!value) {
@@ -103,6 +168,25 @@ app.use(
 app.use(morgan("dev"));
 
 // Routes
+app.get("/healthz", async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    await prismaTicketing.$queryRaw`SELECT 1`;
+
+    res.status(200).json({
+      ok: true,
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      ok: false,
+      status: "unhealthy",
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/inscriptions", inscriptionRoutes);
 app.use("/api/tombola", tombolaRoutes);

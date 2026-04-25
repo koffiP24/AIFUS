@@ -1,0 +1,95 @@
+x-backend-env: &backend-env
+  NODE_ENV: production
+  PORT: "5000"
+  DATABASE_URL: "${DATABASE_URL:-mysql://root:root@mysql:3306/aifus_festivites}"
+  JWT_SECRET: "${JWT_SECRET:-change-this-secret-in-production}"
+  GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+  GOOGLE_CLIENT_IDS: "${GOOGLE_CLIENT_IDS:-}"
+  EMAIL_USER: "${EMAIL_USER:-}"
+  EMAIL_PASS: "${EMAIL_PASS:-}"
+  SMS_API_KEY: "${SMS_API_KEY:-}"
+  SMS_SENDER_ID: "${SMS_SENDER_ID:-AIFUS}"
+  FRONTEND_URL: "${FRONTEND_URL:-http://localhost:8080}"
+  V2_ACCESS_TOKEN_EXPIRES_IN: "${V2_ACCESS_TOKEN_EXPIRES_IN:-15m}"
+  V2_REFRESH_TOKEN_TTL_DAYS: "${V2_REFRESH_TOKEN_TTL_DAYS:-30}"
+  ORDER_RESERVATION_TTL_MINUTES: "${ORDER_RESERVATION_TTL_MINUTES:-10}"
+  PAYMENT_WEBHOOK_SECRET: "${PAYMENT_WEBHOOK_SECRET:-change-this-payment-secret}"
+  FEDAPAY_SECRET_KEY: "${FEDAPAY_SECRET_KEY:-}"
+  FEDAPAY_ENV: "${FEDAPAY_ENV:-sandbox}"
+  FEDAPAY_WEBHOOK_SECRET: "${FEDAPAY_WEBHOOK_SECRET:-}"
+  FEDAPAY_RETURN_URL: "${FEDAPAY_RETURN_URL:-http://localhost:8080/payment-return}"
+  FEDAPAY_CALLBACK_URL: "${FEDAPAY_CALLBACK_URL:-}"
+  FEDAPAY_WEBHOOK_URL: "${FEDAPAY_WEBHOOK_URL:-http://localhost:8080/api/v2/payments/webhook}"
+  FEDAPAY_PHONE_COUNTRY: "${FEDAPAY_PHONE_COUNTRY:-ci}"
+  QR_SIGNING_SECRET: "${QR_SIGNING_SECRET:-change-this-qr-secret}"
+  V2_ADMIN_EMAIL: "${V2_ADMIN_EMAIL:-admin@example.com}"
+  V2_ADMIN_PASSWORD: "${V2_ADMIN_PASSWORD:-change-me}"
+  V2_ADMIN_FIRST_NAME: "${V2_ADMIN_FIRST_NAME:-Admin}"
+  V2_ADMIN_LAST_NAME: "${V2_ADMIN_LAST_NAME:-AIFUS}"
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DATABASE:-aifus_festivites}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-root}"
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment: *backend-env
+    expose:
+      - "5000"
+
+  bootstrap:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    profiles: ["setup"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment: *backend-env
+    command: >
+      sh -c "
+      npx prisma migrate deploy &&
+      npx prisma db execute --file prisma/migrations_v2/20260421143000_ticketing_core/migration.sql --schema prisma/schema.mysql.prisma &&
+      npx prisma db execute --file prisma/migrations_v2/20260421150000_ticketing_core_recovery.sql --schema prisma/schema.mysql.prisma &&
+      npm run seed:v2
+      "
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: "${VITE_API_BASE_URL:-/api}"
+        VITE_GOOGLE_CLIENT_ID: "${VITE_GOOGLE_CLIENT_ID:-}"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${WEB_PORT:-8080}:80"
+
+volumes:
+  mysql_data:

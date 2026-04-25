@@ -164,6 +164,140 @@ Application attendue sur :
 
 Le frontend utilise un proxy Vite vers `/api`, donc il doit tourner en meme temps que le backend.
 
+## Deploiement Render + Vercel
+
+Le projet est maintenant prepare pour :
+
+- backend Express sur Render
+- frontend React/Vite sur Vercel
+
+Fichiers ajoutes :
+
+- `render.yaml`
+- `backend/scripts/render-predeploy.js`
+- `frontend/vercel.json`
+- `frontend/.env.example`
+
+### Backend sur Render
+
+Configuration recommandee :
+
+- Root Directory : `backend`
+- Runtime : `Node`
+- Build Command : `npm run render:build`
+- Pre-Deploy Command : `npm run render:predeploy`
+- Start Command : `npm start`
+- Health Check Path : `/healthz`
+
+Variables Render a definir :
+
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `FRONTEND_URL`
+- `FRONTEND_URLS` si vous voulez lister des domaines supplementaires
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_IDS`
+- `EMAIL_USER`
+- `EMAIL_PASS`
+- `PAYMENT_WEBHOOK_SECRET`
+- `FEDAPAY_SECRET_KEY`
+- `FEDAPAY_ENV`
+- `FEDAPAY_WEBHOOK_SECRET`
+- `FEDAPAY_RETURN_URL`
+- `FEDAPAY_WEBHOOK_URL`
+- `FEDAPAY_PHONE_COUNTRY`
+- `QR_SIGNING_SECRET`
+
+Important :
+
+- Render attend un service qui ecoute sur `0.0.0.0` et sur le port `PORT`
+- le backend expose maintenant `/healthz`
+- `render:predeploy` applique les migrations Prisma historiques, complete le schema `v2` si necessaire et rejoue le seed `v2`
+
+### Frontend sur Vercel
+
+Configuration recommandee :
+
+- Root Directory : `frontend`
+- Framework Preset : `Vite`
+- Build Command : `npm run build`
+- Output Directory : `dist`
+
+Variables Vercel a definir :
+
+- `VITE_GOOGLE_CLIENT_ID`
+- `VITE_API_BASE_URL=https://your-render-service.onrender.com/api`
+
+Le fichier `frontend/vercel.json` gere le fallback SPA pour React Router.
+
+## Docker + Nginx
+
+Une stack Docker deploiement est maintenant incluse pour :
+
+- MySQL 8
+- l'API Express
+- le frontend buildé puis servi par Nginx
+- un reverse proxy Nginx vers `/api`
+
+Fichiers ajoutes :
+
+- `docker-compose.yml`
+- `.env.docker.example`
+- `backend/Dockerfile`
+- `frontend/Dockerfile`
+- `frontend/nginx/default.conf`
+
+### Preparation
+
+Copiez `.env.docker.example` vers `.env.docker`, puis adaptez au minimum :
+
+- `JWT_SECRET`
+- `EMAIL_USER`
+- `EMAIL_PASS`
+- `FEDAPAY_SECRET_KEY`
+- `FEDAPAY_WEBHOOK_SECRET`
+- `FRONTEND_URL`, `FEDAPAY_RETURN_URL` et `FEDAPAY_WEBHOOK_URL` si vous exposez l'app sur un domaine public
+
+### Commandes
+
+Depuis la racine :
+
+```bash
+npm run docker:build
+npm run docker:init
+npm run docker:up
+```
+
+Application attendue :
+
+- frontend + Nginx : `http://localhost:8080`
+- backend interne : `http://backend:5000`
+- MySQL expose localement sur `localhost:3307`
+
+`npm run docker:init` prepare la base Docker avec :
+
+- les migrations Prisma historiques
+- le schema ticketing `v2`
+- le seed `v2`
+
+Pour suivre les logs :
+
+```bash
+npm run docker:logs
+```
+
+Pour arreter la stack :
+
+```bash
+npm run docker:down
+```
+
+Important :
+
+- en Docker, le frontend appelle l'API via Nginx avec `VITE_API_BASE_URL=/api`
+- les callbacks/webhooks FedaPay exigent une URL publique en `https`, donc `localhost` ne suffit pas pour un vrai test provider
+- si vous utilisez ngrok ou un domaine, alignez aussi `FRONTEND_URL`, `FEDAPAY_RETURN_URL` et `FEDAPAY_WEBHOOK_URL` dans `.env.docker`
+
 ## Scripts utiles
 
 ### Backend

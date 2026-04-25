@@ -2,12 +2,21 @@
   "name": "aifus",
   "private": true,
   "scripts": {
+    "start": "npm start --prefix backend",
+    "render:build": "npm install --prefix backend && npm run render:build --prefix backend",
+    "render:predeploy": "npm install --prefix backend && npm run render:predeploy --prefix backend",
+    "render:start": "npm start --prefix backend",
     "install:frontend": "npm install --prefix frontend",
     "install:backend": "npm install --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "npm run dev --prefix backend",
     "build:frontend": "npm run build --prefix frontend",
     "lint:frontend": "npm run lint --prefix frontend",
+    "docker:build": "docker compose --env-file .env.docker build",
+    "docker:init": "docker compose --env-file .env.docker run --rm bootstrap",
+    "docker:up": "docker compose --env-file .env.docker up --build -d",
+    "docker:down": "docker compose --env-file .env.docker down",
+    "docker:logs": "docker compose --env-file .env.docker logs -f",
     "prisma:generate": "npm run prisma:generate --prefix backend",
     "prisma:generate:v2": "npm run prisma:generate:v2 --prefix backend",
     "prisma:migrate": "npm run prisma:migrate --prefix backend",
@@ -17,5 +26,8 @@
   },
   "dependencies": {
     "fedapay": "^1.2.5"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
