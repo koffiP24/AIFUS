@@ -3,6 +3,7 @@ const { prisma } = require("./lib/prisma");
 const { prismaTicketing } = require("./lib/prismaTicketing");
 
 const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || "0.0.0.0";
 
 async function main() {
   try {
@@ -10,8 +11,8 @@ async function main() {
     await prismaTicketing.$connect();
     console.log('[OK] Connecte a la base de donnees MySQL');
     
-    app.listen(PORT, () => {
-      console.log(`[START] Serveur demarre sur http://localhost:${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`[START] Serveur demarre sur http://${HOST}:${PORT}`);
     });
   } catch (error) {
     console.error('[ERROR] Erreur de connexion a la base de donnees:', error);
