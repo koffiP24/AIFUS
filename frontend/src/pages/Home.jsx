@@ -55,7 +55,7 @@ const Home = () => {
   };
   evenements[1] = {
     ...evenements[1],
-    description: `Soiree de prestige reunissant toutes les generations d'alumni le ${formatEventShortDate(galaEvent)}.`,
+    description: `Soirée de prestige reunissant toutes les generations d'alumni le ${formatEventShortDate(galaEvent)}.`,
     badge: formatEventShortDate(galaEvent),
   };
   evenements[2] = {
@@ -94,8 +94,8 @@ const Home = () => {
             2026
           </h1>
 
-          <div className="flex flex-col items-center justify-center text-center">
-            <p className="text-xl md:text-2xl ...">
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <p className="text-xl md:text-2xl">
               Célébration des 65 ans des Alumni Ivoiriens formés en ex-URSS et
               en Russie
             </p>
@@ -142,10 +142,12 @@ const Home = () => {
       <section>
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold mb-3">Les temps forts</h2>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Trois événements exceptionnels pour celebrate notre communauté et
-            créer de nouvelles connexions
-          </p>
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+              Trois événements exceptionnels pour celebrate notre communauté et
+              créer de nouvelles connexions
+            </p>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -271,7 +273,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
     </div>
   );
 };

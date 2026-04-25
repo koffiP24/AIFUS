@@ -19,7 +19,7 @@ const Footer = ({ reserveMobileBottomSpace = false }) => {
 
   const legalLinks = [
     { name: "Conditions", href: "/conditions" },
-    { name: "Confidentialite", href: "/confidentialite" },
+    { name: "Confidentialité", href: "/confidentialite" },
   ];
 
   const contacts = [
@@ -35,7 +35,7 @@ const Footer = ({ reserveMobileBottomSpace = false }) => {
     },
     {
       icon: MapPinIcon,
-      text: "Abidjan, Cote d'Ivoire",
+      text: "Abidjan, Côte d'Ivoire",
       href: "#",
     },
   ];
@@ -79,7 +79,7 @@ const Footer = ({ reserveMobileBottomSpace = false }) => {
           </div>
 
           <p className="mt-4 text-center text-xs text-slate-400">
-            {currentYear} AIFUS. Experience mobile optimisee.
+            {currentYear} AIFUS. Expérience mobile optimisée.
           </p>
         </div>
       </footer>
@@ -101,9 +101,9 @@ const Footer = ({ reserveMobileBottomSpace = false }) => {
                 </div>
               </Link>
               <p className="max-w-md text-slate-400">
-                Association des Ivoiriens formes en ex-URSS et en Russie. Un
-                reseau de competences pour la cooperation academique et
-                scientifique entre la Cote d'Ivoire et la Russie.
+                Association des Ivoiriens formés en ex-URSS et en Russie. Un
+                réseau de compétences pour la coopération académique et
+                scientifique entre la Côte d'Ivoire et la Russie.
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-slate-400">
                 <div className="flex items-center gap-2">

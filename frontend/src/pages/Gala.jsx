@@ -92,7 +92,9 @@ const categories = [
 const buildCustomerFromUser = (user, phoneOverride) => ({
   firstName: String(user?.prenom || user?.firstName || "").trim(),
   lastName: String(user?.nom || user?.lastName || "").trim(),
-  email: String(user?.email || "").trim().toLowerCase(),
+  email: String(user?.email || "")
+    .trim()
+    .toLowerCase(),
   phone: String(phoneOverride || user?.telephone || user?.phone || "").trim(),
 });
 
@@ -328,12 +330,12 @@ const Gala = () => {
             des Alumni
           </h1>
 
-          <p
-            className="mx-auto mb-8 max-w-2xl text-xl text-amber-100 animate-fade-in"
-            style={{ animationDelay: "0.2s" }}
-          >
-            Une soiree de celebration, de reconnaissance et de reseautage intergenerationnel
-          </p>
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <p className="text-xl md:text-2xl">
+              Une soiree de celebration, de reconnaissance et de reseautage
+              intergenerationnel
+            </p>
+          </div>
 
           <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-3">
             <div
@@ -348,7 +350,9 @@ const Gala = () => {
               style={{ animationDelay: "0.4s" }}
             >
               <MapPinIcon className="mx-auto mb-2 h-8 w-8 text-amber-300" />
-              <p className="font-semibold">{galaEvent?.location || "Lieu a confirmer"}</p>
+              <p className="font-semibold">
+                {galaEvent?.location || "Lieu a confirmer"}
+              </p>
             </div>
             <div
               className="rounded-xl bg-white/10 p-4 backdrop-blur animate-slide-up"
@@ -421,12 +425,15 @@ const Gala = () => {
 
         <div className="prose max-w-none text-sm text-amber-700 dark:prose-invert dark:text-amber-400">
           <p className="mb-4">
-            Le paiement est maintenant gere par un vrai tunnel FedaPay. La place est reservee
-            temporairement, puis confirmee seulement apres validation du paiement.
+            Le paiement est maintenant gere par un vrai tunnel FedaPay. La place
+            est reservee temporairement, puis confirmee seulement apres
+            validation du paiement.
           </p>
 
           <div className="mb-4 rounded-lg bg-amber-100 p-4 dark:bg-amber-900/40">
-            <p className="mb-2 font-semibold">Acces au Gala (places limitees)</p>
+            <p className="mb-2 font-semibold">
+              Acces au Gala (places limitees)
+            </p>
             <p className="text-xs">
               La participation au Gala est strictement limitee a 300 personnes.
             </p>
@@ -462,7 +469,10 @@ const Gala = () => {
                 Un paiement Gala est deja en cours ou recent sur cet appareil.
               </p>
               <p className="mt-1 text-sm text-sky-700 dark:text-sky-200">
-                Reference: <span className="font-mono">{recentSession.orderReference}</span>
+                Reference:{" "}
+                <span className="font-mono">
+                  {recentSession.orderReference}
+                </span>
               </p>
             </div>
             <Link
@@ -496,7 +506,8 @@ const Gala = () => {
           <div className="mb-8 text-center animate-fade-in">
             <h2 className="mb-2 text-3xl font-bold">Reservation du Gala</h2>
             <p className="text-slate-500">
-              Choisissez votre categorie puis continuez vers le paiement FedaPay.
+              Choisissez votre categorie puis continuez vers le paiement
+              FedaPay.
             </p>
           </div>
 
@@ -527,10 +538,14 @@ const Gala = () => {
                 <div className="font-bold text-amber-600">
                   {cat.price.toLocaleString()} Fcfa
                 </div>
-                <div className="mt-1 text-xs text-slate-500">{cat.description}</div>
+                <div className="mt-1 text-xs text-slate-500">
+                  {cat.description}
+                </div>
                 <div className="mt-2 text-xs font-medium">
                   {catalogLoading ? (
-                    <span className="text-slate-500">Verification du stock...</span>
+                    <span className="text-slate-500">
+                      Verification du stock...
+                    </span>
                   ) : places[cat.value] > 0 ? (
                     <span className="text-green-600">
                       {places[cat.value]} places restantes
@@ -568,21 +583,28 @@ const Gala = () => {
 
           <div className="mb-6 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-center text-white animate-pulse">
             <p className="mb-2 text-primary-100">Montant total a payer</p>
-            <p className="text-4xl font-bold">{montant().toLocaleString()} Fcfa</p>
+            <p className="text-4xl font-bold">
+              {montant().toLocaleString()} Fcfa
+            </p>
             {categorie !== "INVITE" && nbInvites > 0 && (
               <p className="mt-2 text-sm text-primary-200">
-                ({selectedCategory?.price.toLocaleString()} Fcfa + {nbInvites} x 20 000 Fcfa)
+                ({selectedCategory?.price.toLocaleString()} Fcfa + {nbInvites} x
+                20 000 Fcfa)
               </p>
             )}
           </div>
 
           {!hasEnoughInviteStock && (
             <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Le stock disponible pour les billets invites ne couvre pas encore cette quantite.
+              Le stock disponible pour les billets invites ne couvre pas encore
+              cette quantite.
             </div>
           )}
 
-          <form onSubmit={handleSubmit(openPaymentModal)} className="text-center">
+          <form
+            onSubmit={handleSubmit(openPaymentModal)}
+            className="text-center"
+          >
             <button
               type="submit"
               disabled={!canContinueToPayment}
@@ -599,7 +621,8 @@ const Gala = () => {
           <ExclamationCircleIcon className="mx-auto mb-4 h-12 w-12 text-amber-500" />
           <h3 className="mb-2 text-xl font-semibold">Connexion requise</h3>
           <p className="mb-6 text-slate-500">
-            Veuillez vous connecter ou creer un compte pour reserver votre place.
+            Veuillez vous connecter ou creer un compte pour reserver votre
+            place.
           </p>
           <div className="flex justify-center gap-4">
             <Link to="/login" className="btn-primary">
@@ -628,7 +651,9 @@ const Gala = () => {
 
             {paymentStep === "details" && (
               <>
-                <h3 className="mb-4 text-xl font-bold">Paiement securise FedaPay</h3>
+                <h3 className="mb-4 text-xl font-bold">
+                  Paiement securise FedaPay
+                </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
                   <p className="text-3xl font-bold">
@@ -680,7 +705,8 @@ const Gala = () => {
                     />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    Orange Money, Wave et les moyens compatibles seront proposes sur la page FedaPay.
+                    Orange Money, Wave et les moyens compatibles seront proposes
+                    sur la page FedaPay.
                   </p>
                   {showSandboxHint && (
                     <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">

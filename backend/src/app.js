@@ -41,6 +41,8 @@ const configuredOrigins = [
   "http://localhost:4173",
   "http://127.0.0.1:4173",
   "https://unporticoed-jayceon-unwebbing.ngrok-free.dev",
+  "https://ariyah-infiltrative-thriftlessly.ngrok-free.dev",
+  "https://aifus.onrender.com",
 ]
   .flatMap((value) => String(value || "").split(","))
   .map((value) => value.trim())
@@ -82,65 +84,6 @@ const isAllowedOrigin = (origin) => {
 
   return false;
 };
- HEAD
-
-const parseOrigin = (value) => {
-  if (!value) {
-    return null;
-  }
-
-  try {
-    return new URL(value);
-  } catch (error) {
-    return null;
-  }
-};
-
-const configuredOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.FRONTEND_URLS,
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  "http://localhost:4173",
-  "http://127.0.0.1:4173",
-  "https://unporticoed-jayceon-unwebbing.ngrok-free.dev",
-]
-  .flatMap((value) => String(value || "").split(","))
-  .map((value) => value.trim())
-  .filter(Boolean);
-
-const allowedOrigins = new Set(configuredOrigins);
-
-const isAllowedOrigin = (origin) => {
-  if (!origin) {
-    return true;
-  }
-
-  const parsedOrigin = parseOrigin(origin);
-
-  if (!parsedOrigin) {
-    return false;
-  }
-
-  if (allowedOrigins.has(origin)) {
-    return true;
-  }
-
-  const { protocol, hostname } = parsedOrigin;
-
-  if (
-    (protocol === "http:" || protocol === "https:") &&
-    (hostname === "localhost" || hostname === "127.0.0.1")
-  ) {
-    return true;
-  }
-
-  if (hostname.endsWith(".ngrok-free.dev")) {
-    return true;
-  }
-
-  return false;
-};
 
 // Middlewares globaux
 app.use(helmet());
@@ -152,7 +95,7 @@ app.use(
         return;
       }
 
-      callback(new Error(`CORS non autorise pour l'origine ${origin}`));
+      callback(new Error(`CORS non autorisé pour l'origine ${origin}`));
     },
     credentials: true,
   }),

@@ -35,7 +35,9 @@ import {
 const buildCustomerFromUser = (user, phoneOverride) => ({
   firstName: String(user?.prenom || user?.firstName || "").trim(),
   lastName: String(user?.nom || user?.lastName || "").trim(),
-  email: String(user?.email || "").trim().toLowerCase(),
+  email: String(user?.email || "")
+    .trim()
+    .toLowerCase(),
   phone: String(phoneOverride || user?.telephone || user?.phone || "").trim(),
 });
 
@@ -259,7 +261,9 @@ const Tombola = () => {
         <div className="relative px-8 py-16 text-center md:py-20">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm">
             <SparklesIcon className="h-4 w-4 animate-spin" />
-            <span>Tirage lors du Gala - {formatEventShortDate(tombolaEvent)}</span>
+            <span>
+              Tirage lors du Gala - {formatEventShortDate(tombolaEvent)}
+            </span>
           </div>
 
           <h1 className="mb-4 text-4xl font-bold md:text-5xl">
@@ -270,15 +274,18 @@ const Tombola = () => {
             AIFUS 2026
           </h1>
 
-          <p className="mx-auto max-w-2xl text-xl text-purple-100">
-            Tentez de gagner une voiture et de nombreux lots exceptionnels
-          </p>
-
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <p className="text-xl md:text-2xl">
+              Tentez de gagner une voiture et de nombreux lots exceptionnels
+            </p>
+          </div>
+          
           <div className="mt-8 inline-block">
             <div className="rounded-2xl bg-white/10 px-8 py-4 backdrop-blur">
               <p className="mb-1 text-sm text-purple-200">Prix du billet</p>
               <p className="text-4xl font-bold text-white">
-                {prixBillet.toLocaleString()} <span className="text-lg">Fcfa</span>
+                {prixBillet.toLocaleString()}{" "}
+                <span className="text-lg">Fcfa</span>
               </p>
             </div>
           </div>
@@ -304,7 +311,9 @@ const Tombola = () => {
               </div>
               <div className="mb-1 text-xs text-slate-500">Rang {lot.rang}</div>
               <div className="mb-1 text-sm font-bold">{lot.libelle}</div>
-              <div className="text-sm font-semibold text-primary-600">{lot.valeur}</div>
+              <div className="text-sm font-semibold text-primary-600">
+                {lot.valeur}
+              </div>
             </div>
           ))}
         </div>
@@ -329,10 +338,14 @@ const Tombola = () => {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">
-                Un paiement Tombola est deja en cours ou recent sur cet appareil.
+                Un paiement Tombola est deja en cours ou recent sur cet
+                appareil.
               </p>
               <p className="mt-1 text-sm text-sky-700 dark:text-sky-200">
-                Reference: <span className="font-mono">{recentSession.orderReference}</span>
+                Reference:{" "}
+                <span className="font-mono">
+                  {recentSession.orderReference}
+                </span>
               </p>
             </div>
             <Link
@@ -429,7 +442,9 @@ const Tombola = () => {
               <div className="mb-6 flex items-center justify-between rounded-xl bg-slate-50 p-4 dark:bg-slate-700/50">
                 <div>
                   <p className="text-sm text-slate-500">Prix unitaire</p>
-                  <p className="font-semibold">{prixBillet.toLocaleString()} Fcfa</p>
+                  <p className="font-semibold">
+                    {prixBillet.toLocaleString()} Fcfa
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-slate-500">Total</p>
@@ -487,7 +502,9 @@ const Tombola = () => {
 
             {paymentStep === "details" && (
               <>
-                <h3 className="mb-4 text-xl font-bold">Paiement securise FedaPay</h3>
+                <h3 className="mb-4 text-xl font-bold">
+                  Paiement securise FedaPay
+                </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-purple-600 to-primary-700 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
                   <p className="text-3xl font-bold">
@@ -508,7 +525,8 @@ const Tombola = () => {
                     />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    Orange Money, Wave et les moyens compatibles seront proposes sur FedaPay.
+                    Orange Money, Wave et les moyens compatibles seront proposes
+                    sur FedaPay.
                   </p>
                   {showSandboxHint && (
                     <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">

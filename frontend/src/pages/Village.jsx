@@ -103,11 +103,13 @@ const Village = () => {
             </span>
           </h1>
 
-          <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-            Plateforme d'information, d'orientation et de coopération entre la
-            Côte d'Ivoire et la Russie
-          </p>
-
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <p className="text-xl md:text-2xl">
+              Plateforme d'information, d'orientation et de coopération entre la
+              Côte d'Ivoire et la Russie
+            </p>
+          </div>
+          
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
               to="/register"
@@ -240,7 +242,8 @@ const Village = () => {
               <div>
                 <p className="font-medium">Date</p>
                 <p className="text-slate-500">
-                  {formatEventDateLabel(villageEvent)} - {formatEventTimeRange(villageEvent)}
+                  {formatEventDateLabel(villageEvent)} -{" "}
+                  {formatEventTimeRange(villageEvent)}
                 </p>
                 <p className="hidden text-slate-500">
                   À confirmer - Durée : 1 journée complète
@@ -251,7 +254,9 @@ const Village = () => {
               <CheckCircleIcon className="w-5 h-5 text-green-500 mt-0.5" />
               <div>
                 <p className="font-medium">Lieu</p>
-                <p className="text-slate-500">{villageEvent?.location || "Lieu a confirmer"}</p>
+                <p className="text-slate-500">
+                  {villageEvent?.location || "Lieu a confirmer"}
+                </p>
                 <p className="hidden text-slate-500">Abidjan (à confirmer)</p>
               </div>
             </div>
