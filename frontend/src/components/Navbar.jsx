@@ -53,30 +53,31 @@ const Navbar = () => {
   return (
     <Disclosure
       as="nav"
-      className="sticky top-0 z-50 border-b border-white/60 bg-white/82 shadow-[0_18px_60px_-35px_rgba(15,23,42,0.5)] backdrop-blur-2xl dark:border-white/5 dark:bg-slate-950/82"
+      className="sticky top-0 z-50 border-b border-white/30 bg-white/90 backdrop-blur-xl shadow-lg dark:border-slate-800/50 dark:bg-slate-950/90"
     >
       {({ open, close }) => (
         <>
-          <div className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
-            <div className="flex h-[4.5rem] items-center justify-between md:h-20">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex h-16 items-center justify-between md:h-20">
+              {/* Logo */}
               <div className="flex min-w-0 items-center gap-3">
                 <Link to="/" className="flex items-center gap-3">
                   <img
                     src="/logo.jpg"
                     alt="AIFUS"
-                    className="h-11 w-11 rounded-2xl object-contain shadow-sm"
+                    className="h-10 w-10 rounded-xl object-contain shadow-lg transition-transform hover:scale-105"
                   />
                   <div className="hidden sm:block">
-                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-slate-400">
+                    <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-primary-600">
                       AIFUS
                     </p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-white">
-                      Festivites 2026
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                      Festivités 2026
                     </p>
                   </div>
                   <div className="min-w-0 sm:hidden">
-                    <p className="truncate text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                      Mobile
+                    <p className="truncate text-[0.68rem] font-bold uppercase tracking-[0.2em] text-slate-500">
+                      AIFUS
                     </p>
                     <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
                       {mobileTitle}
@@ -85,29 +86,34 @@ const Navbar = () => {
                 </Link>
               </div>
 
-              <div className="hidden items-center gap-1 md:flex">
+              {/* Desktop Navigation */}
+              <div className="hidden items-center gap-2 md:flex">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium transition-all ${
+                    className={`group relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
                       isActive(item.href)
-                        ? "bg-slate-900 text-white shadow-lg dark:bg-white dark:text-slate-900"
+                        ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md"
                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                     }`}
                   >
                     <item.icon className="h-4 w-4" />
                     {item.name}
+                    {isActive(item.href) && (
+                      <div className="absolute -bottom-1 left-2 right-2 h-0.5 rounded-full bg-white"></div>
+                    )}
                   </Link>
                 ))}
               </div>
 
+              {/* Desktop Auth Buttons */}
               <div className="hidden items-center gap-3 md:flex">
                 {user ? (
                   <>
                     <Link
                       to={userHomePath}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                      className="inline-flex items-center gap-2 rounded-full border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                     >
                       <UserCircleIcon className="h-5 w-5" />
                       <span>{user.prenom}</span>
@@ -116,7 +122,7 @@ const Navbar = () => {
                     {user.role === "ADMIN" && (
                       <Link
                         to="/admin/monitoring"
-                        className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2.5 text-sm font-medium text-white transition hover:from-slate-800 hover:to-slate-600 dark:from-white dark:to-slate-200 dark:text-slate-900"
+                        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:from-slate-800 hover:to-slate-600 dark:from-white dark:to-slate-200 dark:text-slate-900"
                       >
                         <ShieldCheckIcon className="h-4 w-4" />
                         Admin
@@ -125,23 +131,22 @@ const Navbar = () => {
 
                     <button
                       onClick={handleLogout}
-                      className="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600 dark:text-slate-300 dark:hover:bg-red-950/30 dark:hover:text-red-300"
+                      className="rounded-full px-4 py-2.5 text-sm font-semibold text-slate-500 transition-all hover:bg-red-50 hover:text-red-600 dark:text-slate-300 dark:hover:bg-red-950/30 dark:hover:text-red-300"
                     >
-                      <ArrowRightOnRectangleIcon className="h-4 w-4" />
-                      Deconnexion
+                      Déconnexion
                     </button>
                   </>
                 ) : (
                   <>
                     <Link
                       to="/login"
-                      className="px-5 py-2.5 text-sm font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                      className="px-5 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
                     >
                       Connexion
                     </Link>
                     <Link
                       to="/register"
-                      className="rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-md transition hover:from-primary-600 hover:to-primary-700"
+                      className="rounded-full bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:from-primary-600 hover:to-primary-700 hover:scale-105"
                     >
                       Inscription
                     </Link>
@@ -149,6 +154,7 @@ const Navbar = () => {
                 )}
               </div>
 
+              {/* Mobile Menu Button */}
               <div className="flex items-center gap-2 md:hidden">
                 {user && (
                   <Link
@@ -160,14 +166,19 @@ const Navbar = () => {
                   </Link>
                 )}
 
-                <Disclosure.Button className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white/90 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800">
+                <Disclosure.Button className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800">
                   <span className="sr-only">Ouvrir le menu</span>
-                  {open ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
+                  {open ? (
+                    <XMarkIcon className="h-6 w-6" />
+                  ) : (
+                    <Bars3Icon className="h-6 w-6" />
+                  )}
                 </Disclosure.Button>
               </div>
             </div>
           </div>
 
+          {/* Mobile Menu */}
           <Transition
             enter="transition duration-200 ease-out"
             enterFrom="opacity-0 -translate-y-2"
@@ -178,17 +189,17 @@ const Navbar = () => {
           >
             <Disclosure.Panel className="md:hidden">
               <div className="border-t border-slate-200/70 bg-white/96 px-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-2xl backdrop-blur-2xl dark:border-slate-800 dark:bg-slate-950/96">
-                <div className="rounded-[2rem] border border-slate-200 bg-slate-50 p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-                  <div className="grid gap-2">
+                <div className="rounded-[2rem] border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                  <div className="grid gap-3">
                     {navigation.map((item) => (
                       <Disclosure.Button
                         key={item.name}
                         as={Link}
                         to={item.href}
                         onClick={() => close()}
-                        className={`flex w-full items-center gap-3 rounded-[1.35rem] px-4 py-4 text-sm font-medium transition ${
+                        className={`flex w-full items-center gap-3 rounded-[1.35rem] px-5 py-4 text-base font-semibold transition-all ${
                           isActive(item.href)
-                            ? "bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900"
+                            ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg"
                             : "bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"
                         }`}
                       >
@@ -198,14 +209,14 @@ const Navbar = () => {
                     ))}
                   </div>
 
-                  <div className="mt-3 rounded-[1.5rem] bg-white px-4 py-4 dark:bg-slate-950">
+                  <div className="mt-4 rounded-[1.5rem] bg-white px-4 py-4 dark:bg-slate-950">
                     {user ? (
                       <div className="space-y-3">
                         <div>
-                          <p className="text-xs uppercase tracking-[0.24em] text-slate-400">
-                            Connecte en tant que
+                          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                            Connecté en tant que
                           </p>
-                          <p className="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+                          <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">
                             {user.prenom} {user.nom}
                           </p>
                         </div>
@@ -214,7 +225,7 @@ const Navbar = () => {
                           as={Link}
                           to={userHomePath}
                           onClick={() => close()}
-                          className="flex w-full items-center gap-3 rounded-[1.3rem] border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                          className="flex w-full items-center gap-3 rounded-[1.3rem] border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                         >
                           <UserCircleIcon className="h-5 w-5" />
                           {userHomeLabel}
@@ -225,7 +236,7 @@ const Navbar = () => {
                             as={Link}
                             to="/admin/monitoring"
                             onClick={() => close()}
-                            className="flex w-full items-center gap-3 rounded-[1.3rem] bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+                            className="flex w-full items-center gap-3 rounded-[1.3rem] bg-gradient-to-r from-slate-900 to-slate-700 px-4 py-3 text-sm font-semibold text-white transition-all hover:from-slate-800 hover:to-slate-600 dark:from-white dark:to-slate-200 dark:text-slate-900"
                           >
                             <ShieldCheckIcon className="h-5 w-5" />
                             Outils admin
@@ -234,10 +245,10 @@ const Navbar = () => {
 
                         <button
                           onClick={handleLogout}
-                          className="flex w-full items-center gap-3 rounded-[1.3rem] border border-red-200 px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-950/30"
+                          className="flex w-full items-center gap-3 rounded-[1.3rem] border border-red-200 px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-950/30"
                         >
                           <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                          Deconnexion
+                          Déconnexion
                         </button>
                       </div>
                     ) : (
@@ -246,7 +257,7 @@ const Navbar = () => {
                           as={Link}
                           to="/login"
                           onClick={() => close()}
-                          className="inline-flex items-center justify-center rounded-[1.25rem] border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                          className="inline-flex items-center justify-center rounded-[1.25rem] border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                         >
                           Connexion
                         </Disclosure.Button>
@@ -254,7 +265,7 @@ const Navbar = () => {
                           as={Link}
                           to="/register"
                           onClick={() => close()}
-                          className="inline-flex items-center justify-center rounded-[1.25rem] bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-3 text-sm font-medium text-white transition hover:from-primary-600 hover:to-primary-700"
+                          className="inline-flex items-center justify-center rounded-[1.25rem] bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:from-primary-600 hover:to-primary-700"
                         >
                           Inscription
                         </Disclosure.Button>
@@ -262,20 +273,20 @@ const Navbar = () => {
                     )}
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-500 dark:text-slate-400">
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-500 dark:text-slate-400">
                     <Link
                       to="/conditions"
                       onClick={() => close()}
-                      className="rounded-2xl bg-white px-3 py-3 text-center transition hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800"
+                      className="rounded-2xl bg-white px-3 py-3 text-center transition-colors hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800"
                     >
                       Conditions
                     </Link>
                     <Link
                       to="/confidentialite"
                       onClick={() => close()}
-                      className="rounded-2xl bg-white px-3 py-3 text-center transition hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800"
+                      className="rounded-2xl bg-white px-3 py-3 text-center transition-colors hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800"
                     >
-                      Confidentialite
+                      Confidentialité
                     </Link>
                   </div>
                 </div>

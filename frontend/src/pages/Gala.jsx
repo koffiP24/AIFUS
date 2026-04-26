@@ -304,323 +304,450 @@ const Gala = () => {
   };
 
   return (
-    <div className="space-y-16">
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 text-white">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute left-0 top-0 h-64 w-64 animate-pulse rounded-full bg-white blur-3xl"></div>
-          <div
-            className="absolute bottom-0 right-0 h-96 w-96 animate-pulse rounded-full bg-yellow-300 blur-3xl"
-            style={{ animationDelay: "1s" }}
-          ></div>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-40 h-80 w-80 animate-pulse-slow rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 blur-3xl"></div>
+          <div className="absolute -bottom-40 -right-40 h-96 w-96 animate-pulse-slow rounded-full bg-gradient-to-br from-yellow-400/20 to-amber-500/20 blur-3xl" style={{animationDelay: '1.5s'}}></div>
+          <div className="absolute top-1/3 right-1/4 h-48 w-48 animate-float rounded-full bg-gradient-to-br from-white/5 to-white/10 blur-xl" style={{animationDelay: '2.5s'}}></div>
+
+          {/* Sparkle Pattern */}
+          <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
         </div>
 
-        <div className="relative px-8 py-16 text-center md:py-20">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm animate-fade-in">
-            <SparklesIcon className="h-4 w-4 animate-spin" />
-            <span>Evenement exclusif</span>
-          </div>
-
-          <h1 className="mb-4 text-4xl font-bold animate-slide-up md:text-5xl">
-            Grand{" "}
-            <span className="bg-gradient-to-r from-yellow-200 to-orange-200 bg-clip-text text-transparent">
-              Gala
-            </span>{" "}
-            des Alumni
-          </h1>
-
-          <p
-            className="mx-auto mb-8 max-w-2xl text-xl text-amber-100 animate-fade-in"
-            style={{ animationDelay: "0.2s" }}
-          >
-            Une soiree de celebration, de reconnaissance et de reseautage intergenerationnel
-          </p>
-
-          <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-3">
-            <div
-              className="rounded-xl bg-white/10 p-4 backdrop-blur animate-slide-up"
-              style={{ animationDelay: "0.3s" }}
-            >
-              <CalendarIcon className="mx-auto mb-2 h-8 w-8 text-amber-300" />
-              <p className="font-semibold">{formatEventDateLabel(galaEvent)}</p>
+        <div className="relative px-6 py-20 md:px-12 md:py-28">
+          <div className="mx-auto max-w-7xl">
+            {/* Badge */}
+            <div className="mb-8 flex justify-center animate-fade-in">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/40 bg-amber-500/15 px-6 py-3 backdrop-blur-sm">
+                <SparklesIcon className="h-5 w-5 text-amber-300 animate-pulse" />
+                <span className="text-sm font-bold tracking-wide uppercase">Événement exclusif</span>
+              </div>
             </div>
-            <div
-              className="rounded-xl bg-white/10 p-4 backdrop-blur animate-slide-up"
-              style={{ animationDelay: "0.4s" }}
-            >
-              <MapPinIcon className="mx-auto mb-2 h-8 w-8 text-amber-300" />
-              <p className="font-semibold">{galaEvent?.location || "Lieu a confirmer"}</p>
-            </div>
-            <div
-              className="rounded-xl bg-white/10 p-4 backdrop-blur animate-slide-up"
-              style={{ animationDelay: "0.5s" }}
-            >
-              <ClockIcon className="mx-auto mb-2 h-8 w-8 text-amber-300" />
-              <p className="font-semibold">{formatEventTimeRange(galaEvent)}</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="grid gap-8 md:grid-cols-2">
-        <div className="rounded-xl bg-white p-6 shadow-lg transition-shadow duration-300 hover:shadow-xl dark:bg-slate-800">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-            <SparklesIcon className="h-5 w-5 text-amber-500" />
-            Au programme
-          </h3>
-          <ul className="space-y-3">
-            {[
-              "Cocktail de bienvenue",
-              "Diner gala gastronomique",
-              "Discours et temoignages",
-              "Remise de distinctions",
-              "Animation musicale",
-              "Networking intergenerationnel",
-            ].map((item, index) => (
-              <li
-                key={item}
-                className="flex items-center gap-3 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+            {/* Main Title */}
+            <h1 className="mb-6 animate-slide-up text-center text-5xl font-bold tracking-tight md:text-6xl">
+              <div className="mb-2">Grand</div>
+              <div className="bg-gradient-to-r from-yellow-200 via-amber-300 to-orange-300 bg-clip-text text-transparent">
+                Gala des Alumni
+              </div>
+            </h1>
 
-        <div className="rounded-xl bg-white p-6 shadow-lg transition-shadow duration-300 hover:shadow-xl dark:bg-slate-800">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-            <UserGroupIcon className="h-5 w-5 text-primary-500" />
-            Pourquoi participer ?
-          </h3>
-          <ul className="space-y-3">
-            {[
-              "Rencontrer les generations d'alumni",
-              "Echanger avec les partenaires",
-              "Participer a la vie de l'association",
-              "Profiter d'une soiree inoubliable",
-            ].map((item, index) => (
-              <li
-                key={item}
-                className="flex items-center gap-3 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CheckCircleIcon className="h-5 w-5 text-primary-500" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-amber-200 bg-amber-50 p-6 animate-fade-in dark:border-amber-800 dark:bg-amber-900/20">
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-amber-800 dark:text-amber-300">
-          <ExclamationCircleIcon className="h-5 w-5" />
-          Informations importantes - Gala des Alumni AIFUS
-        </h3>
-
-        <div className="prose max-w-none text-sm text-amber-700 dark:prose-invert dark:text-amber-400">
-          <p className="mb-4">
-            Le paiement est maintenant gere par un vrai tunnel FedaPay. La place est reservee
-            temporairement, puis confirmee seulement apres validation du paiement.
-          </p>
-
-          <div className="mb-4 rounded-lg bg-amber-100 p-4 dark:bg-amber-900/40">
-            <p className="mb-2 font-semibold">Acces au Gala (places limitees)</p>
-            <p className="text-xs">
-              La participation au Gala est strictement limitee a 300 personnes.
+            {/* Subtitle */}
+            <p className="mx-auto mb-12 max-w-3xl animate-slide-up text-center text-xl leading-relaxed text-amber-100 md:text-2xl" style={{animationDelay: '0.2s'}}>
+              Une soirée de célébration, de reconnaissance et de réseautage intergénérationnel
             </p>
+
+            {/* Info Cards */}
+            <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-3">
+              <div
+                className="group rounded-2xl bg-white/10 p-6 backdrop-blur-sm border border-white/20 transition-all duration-300 hover:scale-105 hover:bg-white/15 animate-slide-up"
+                style={{animationDelay: '0.3s'}}
+              >
+                <CalendarIcon className="mx-auto mb-3 h-10 w-10 text-amber-300" />
+                <p className="text-center font-bold">{formatEventDateLabel(galaEvent)}</p>
+              </div>
+              <div
+                className="group rounded-2xl bg-white/10 p-6 backdrop-blur-sm border border-white/20 transition-all duration-300 hover:scale-105 hover:bg-white/15 animate-slide-up"
+                style={{animationDelay: '0.4s'}}
+              >
+                <MapPinIcon className="mx-auto mb-3 h-10 w-10 text-amber-300" />
+                <p className="text-center font-bold">{galaEvent?.location || "Lieu à confirmer"}</p>
+              </div>
+              <div
+                className="group rounded-2xl bg-white/10 p-6 backdrop-blur-sm border border-white/20 transition-all duration-300 hover:scale-105 hover:bg-white/15 animate-slide-up"
+                style={{animationDelay: '0.5s'}}
+              >
+                <ClockIcon className="mx-auto mb-3 h-10 w-10 text-amber-300" />
+                <p className="text-center font-bold">{formatEventTimeRange(galaEvent)}</p>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <p className="mb-2 font-semibold">Tarifs en vigueur :</p>
-          <ul className="mb-4 list-inside list-disc space-y-1">
-            <li>
-              Personnes en fonctions : <strong>40 000 FCFA</strong>
-            </li>
-            <li>
-              Retraites : <strong>25 000 FCFA</strong>
-            </li>
-            <li>
-              Sans emploi : <strong>15 000 FCFA</strong>
-            </li>
-            <li>
-              Invites : <strong>20 000 FCFA</strong>
-            </li>
-          </ul>
+        {/* Bottom Gradient Fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-50 to-transparent dark:from-slate-900 dark:to-transparent"></div>
+      </section>
 
-          <p className="font-semibold text-amber-800 dark:text-amber-200">
-            Paiement securise via FedaPay - premier paye, premier servi
-          </p>
+      {/* Main Content */}
+      <section className="py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid gap-12 md:grid-cols-2">
+            {/* Program Section */}
+            <div className="group overflow-hidden rounded-3xl bg-white p-8 shadow-xl transition-all duration-300 hover:shadow-2xl dark:bg-slate-800">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600">
+                  <SparklesIcon className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold">Au programme</h3>
+              </div>
+              <ul className="space-y-4">
+                {[
+                  "Cocktail de bienvenue",
+                  "Dîner gala gastronomique",
+                  "Discours et témoignages",
+                  "Remise de distinctions",
+                  "Animation musicale",
+                  "Networking intergénérationnel",
+                ].map((item, index) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition-all duration-300 hover:border-amber-200 hover:bg-amber-50/50 dark:border-slate-700 dark:hover:bg-amber-900/20"
+                    style={{animationDelay: `${index * 0.08}s`}}
+                  >
+                    <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                      <CheckCircleIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    <span className="font-medium">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Why Participate Section */}
+            <div className="group overflow-hidden rounded-3xl bg-white p-8 shadow-xl transition-all duration-300 hover:shadow-2xl dark:bg-slate-800">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700">
+                  <UserGroupIcon className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold">Pourquoi participer ?</h3>
+              </div>
+              <ul className="space-y-4">
+                {[
+                  "Rencontrer les générations d'alumni",
+                  "Échanger avec les partenaires",
+                  "Participer à la vie de l'association",
+                  "Profiter d'une soirée inoubliable",
+                ].map((item, index) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-4 rounded-xl border border-slate-200 p-4 transition-all duration-300 hover:border-primary-200 hover:bg-primary-50/50 dark:border-slate-700 dark:hover:bg-primary-900/20"
+                    style={{animationDelay: `${index * 0.08}s`}}
+                  >
+                    <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30">
+                      <CheckCircleIcon className="h-4 w-4 text-primary-600 dark:text-primary-400" />
+                    </div>
+                    <span className="font-medium">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
-      {recentSession && (
-        <section className="rounded-2xl border border-sky-200 bg-sky-50 p-5 dark:border-sky-800 dark:bg-sky-900/20">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">
-                Un paiement Gala est deja en cours ou recent sur cet appareil.
-              </p>
-              <p className="mt-1 text-sm text-sky-700 dark:text-sky-200">
-                Reference: <span className="font-mono">{recentSession.orderReference}</span>
-              </p>
+      {/* Important Notice */}
+      <section className="py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="relative overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-8 shadow-xl dark:border-amber-800 dark:from-amber-900/20 dark:to-orange-900/20">
+            {/* Decorative Elements */}
+            <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-amber-200/20 blur-2xl"></div>
+            <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-orange-200/20 blur-2xl"></div>
+
+            <div className="relative">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/40">
+                  <ExclamationCircleIcon className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-amber-900 dark:text-amber-300">
+                  Informations importantes - Gala des Alumni AIFUS
+                </h3>
+              </div>
+
+              <div className="prose max-w-none text-slate-700 dark:text-slate-300">
+                <p className="mb-6 text-lg">
+                  Le paiement est maintenant géré par un vrai tunnel FedaPay. La place est réservée temporairement, puis confirmée seulement après validation du paiement.
+                </p>
+
+                <div className="mb-6 rounded-2xl border border-amber-200 bg-white/60 p-6 backdrop-blur-sm dark:bg-amber-900/30">
+                  <p className="mb-2 font-bold text-amber-900 dark:text-amber-300">Accès au Gala (places limitées)</p>
+                  <p className="text-sm text-amber-800 dark:text-amber-400">
+                    La participation au Gala est strictement limitée à 300 personnes.
+                  </p>
+                </div>
+
+                <p className="mb-4 font-semibold text-amber-900 dark:text-amber-300">Tarifs en vigueur :</p>
+                <ul className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <li className="flex items-center gap-3 rounded-xl bg-white/70 p-4 backdrop-blur-sm dark:bg-amber-900/30">
+                    <span className="text-slate-600 dark:text-slate-300">Personnes en fonction :</span>
+                    <strong className="ml-auto text-amber-600 dark:text-amber-400">40 000 Fcfa</strong>
+                  </li>
+                  <li className="flex items-center gap-3 rounded-xl bg-white/70 p-4 backdrop-blur-sm dark:bg-amber-900/30">
+                    <span className="text-slate-600 dark:text-slate-300">Retraités :</span>
+                    <strong className="ml-auto text-amber-600 dark:text-amber-400">25 000 Fcfa</strong>
+                  </li>
+                  <li className="flex items-center gap-3 rounded-xl bg-white/70 p-4 backdrop-blur-sm dark:bg-amber-900/30">
+                    <span className="text-slate-600 dark:text-slate-300">Sans emploi :</span>
+                    <strong className="ml-auto text-amber-600 dark:text-amber-400">15 000 Fcfa</strong>
+                  </li>
+                  <li className="flex items-center gap-3 rounded-xl bg-white/70 p-4 backdrop-blur-sm dark:bg-amber-900/30">
+                    <span className="text-slate-600 dark:text-slate-300">Invités :</span>
+                    <strong className="ml-auto text-amber-600 dark:text-amber-400">20 000 Fcfa</strong>
+                  </li>
+                </ul>
+
+                <div className="flex items-center justify-center gap-3 rounded-2xl bg-amber-100 p-5 text-center dark:bg-amber-900/40">
+                  <SparklesIcon className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                  <p className="font-bold text-amber-900 dark:text-amber-300">
+                    Paiement sécurisé via FedaPay - premier payé, premier servi
+                  </p>
+                </div>
+              </div>
             </div>
-            <Link
-              to={buildPaymentReturnPath({
-                provider: "fedapay",
-                orderReference: recentSession.orderReference,
-                paymentReference: recentSession.paymentReference,
-              })}
-              className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
-            >
-              Verifier mon paiement
-            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Recent Session Warning */}
+      {recentSession && (
+        <section className="py-20">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="group overflow-hidden rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50 p-6 shadow-lg transition-all hover:shadow-xl dark:border-sky-700 dark:from-sky-900/30 dark:to-blue-900/30">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-bold text-sky-800 dark:text-sky-300">
+                    Un paiement Gala est déjà en cours ou récent sur cet appareil.
+                  </p>
+                  <p className="mt-1 text-sm text-sky-700 dark:text-sky-200">
+                    Référence : <span className="font-mono">{recentSession.orderReference}</span>
+                  </p>
+                </div>
+                <Link
+                  to={buildPaymentReturnPath({
+                    provider: "fedapay",
+                    orderReference: recentSession.orderReference,
+                    paymentReference: recentSession.paymentReference,
+                  })}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-sky-700 hover:scale-105"
+                >
+                  Vérifier mon paiement
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       )}
 
+      {/* Message Display */}
       {message && (
-        <div
-          className={`rounded-lg border p-4 animate-fade-in ${
-            isPositiveMessage
-              ? "border-green-200 bg-green-50 text-green-800"
-              : "border-red-200 bg-red-50 text-red-800"
-          }`}
-        >
-          {message}
-        </div>
+        <section className="py-20">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className={`overflow-hidden rounded-2xl border-2 p-6 animate-fade-in ${
+              isPositiveMessage
+                ? "border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 text-green-800 dark:border-green-800 dark:from-green-900/30 dark:to-emerald-900/30"
+                : "border-red-200 bg-gradient-to-br from-red-50 to-rose-50 text-red-800 dark:border-red-800 dark:from-red-900/30 dark:to-rose-900/30"
+            }`}>
+              <div className="flex items-center gap-3">
+                {isPositiveMessage ? (
+                  <CheckCircleIcon className="h-6 w-6 flex-shrink-0" />
+                ) : (
+                  <ExclamationCircleIcon className="h-6 w-6 flex-shrink-0" />
+                )}
+                <p className="text-lg font-medium">{message}</p>
+              </div>
+            </div>
+          </div>
+        </section>
       )}
 
+      {/* Reservation Section */}
       {user ? (
-        <section>
-          <div className="mb-8 text-center animate-fade-in">
-            <h2 className="mb-2 text-3xl font-bold">Reservation du Gala</h2>
-            <p className="text-slate-500">
-              Choisissez votre categorie puis continuez vers le paiement FedaPay.
-            </p>
-          </div>
+        <section className="py-20">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="mb-12 text-center animate-fade-in">
+              <div className="mb-4 inline-block rounded-full bg-gradient-to-r from-primary-100 to-primary-50 px-4 py-2 text-sm font-bold text-primary-700 dark:from-primary-900/30 dark:to-primary-800/30 dark:text-primary-300">
+                Réservation
+              </div>
+              <h2 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl">
+                Réservez votre place au Gala
+              </h2>
+              <p className="mx-auto max-w-2xl text-slate-600 dark:text-slate-400">
+                Choisissez votre catégorie puis continuez vers le paiement sécurisé FedaPay
+              </p>
+            </div>
 
-          <div className="mb-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {categories.map((cat, index) => (
-              <label
-                key={cat.value}
-                className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 hover:scale-105 ${
-                  categorie === cat.value
-                    ? "border-amber-500 bg-amber-50 shadow-lg dark:bg-amber-900/20"
-                    : "border-slate-200 hover:border-slate-300 dark:border-slate-700"
-                } ${places[cat.value] <= 0 ? "cursor-not-allowed opacity-50" : ""}`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <input
-                  type="radio"
-                  value={cat.value}
-                  {...register("categorie")}
-                  disabled={places[cat.value] <= 0}
-                  className="sr-only"
-                />
-                <div
-                  className={`mb-3 flex h-12 w-12 items-center justify-center rounded-xl ${cat.iconBg}`}
+            {/* Category Selection */}
+            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {categories.map((cat, index) => (
+                <label
+                  key={cat.value}
+                  className={`group relative cursor-pointer rounded-2xl border-2 p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${
+                    categorie === cat.value
+                      ? "border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 shadow-xl dark:from-amber-900/20 dark:to-orange-900/20"
+                      : "border-slate-200 hover:border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800"
+                  } ${places[cat.value] <= 0 ? "cursor-not-allowed opacity-50" : ""}`}
+                  style={{animationDelay: `${index * 0.08}s`}}
                 >
-                  <cat.icon className={`h-6 w-6 ${cat.iconColor}`} />
+                  <input
+                    type="radio"
+                    value={cat.value}
+                    {...register("categorie")}
+                    disabled={places[cat.value] <= 0}
+                    className="sr-only"
+                  />
+
+                  {/* Icon */}
+                  <div className={`mb-5 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ${cat.iconBg}`}>
+                    <cat.icon className={`h-8 w-8 ${cat.iconColor}`} />
+                  </div>
+
+                  {/* Content */}
+                  <div className="mb-3 text-lg font-bold">{cat.label}</div>
+                  <div className="mb-2 text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    {cat.price.toLocaleString()} Fcfa
+                  </div>
+                  <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">{cat.description}</p>
+
+                  {/* Stock Status */}
+                  <div className="mb-3 text-sm">
+                    {catalogLoading ? (
+                      <span className="flex items-center gap-2 text-slate-500">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600"></div>
+                        Vérification du stock...
+                      </span>
+                    ) : places[cat.value] > 0 ? (
+                      <span className="flex items-center gap-2 font-semibold text-green-600 dark:text-green-400">
+                        {places[cat.value]} places restantes
+                      </span>
+                    ) : (
+                      <span className="font-semibold text-red-500">Complet</span>
+                    )}
+                  </div>
+
+                  {/* Selected Indicator */}
+                  {categorie === cat.value && (
+                    <div className="absolute right-3 top-3 animate-bounce">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 shadow-lg">
+                        <CheckCircleIcon className="h-5 w-5 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </label>
+              ))}
+            </div>
+
+            {/* Invite Selection */}
+            {categorie !== "INVITE" && (
+              <div className="mb-8 overflow-hidden rounded-3xl bg-white p-8 shadow-xl transition-all duration-300 hover:shadow-2xl dark:bg-slate-800 animate-slide-up">
+                <label className="mb-4 block text-lg font-bold">Nombre d'invités</label>
+                <div className="flex flex-wrap items-center gap-6">
+                  <div className="w-full max-w-xs">
+                    <select
+                      {...register("nombreInvites", { valueAsNumber: true })}
+                      className="input-field py-3 text-lg"
+                    >
+                      <option value={0}>0 invité</option>
+                      <option value={1}>1 invité</option>
+                      <option value={2}>2 invités</option>
+                      <option value={3}>3 invités</option>
+                    </select>
+                  </div>
+                  <div className="text-slate-600 dark:text-slate-400">
+                    <span className="font-semibold">20 000 Fcfa</span> par invité supplémentaire
+                  </div>
                 </div>
-                <div className="mb-1 font-semibold">{cat.label}</div>
-                <div className="font-bold text-amber-600">
-                  {cat.price.toLocaleString()} Fcfa
-                </div>
-                <div className="mt-1 text-xs text-slate-500">{cat.description}</div>
-                <div className="mt-2 text-xs font-medium">
-                  {catalogLoading ? (
-                    <span className="text-slate-500">Verification du stock...</span>
-                  ) : places[cat.value] > 0 ? (
-                    <span className="text-green-600">
-                      {places[cat.value]} places restantes
-                    </span>
-                  ) : (
-                    <span className="text-red-500">Complet</span>
+              </div>
+            )}
+
+            {/* Price Summary */}
+            <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 p-8 shadow-2xl animate-pulse-slow">
+              <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+                <div>
+                  <p className="mb-2 text-primary-100">Montant total à payer</p>
+                  <p className="text-5xl font-bold text-white">
+                    {montant().toLocaleString()} <span className="text-2xl text-primary-200">Fcfa</span>
+                  </p>
+                  {categorie !== "INVITE" && nbInvites > 0 && (
+                    <p className="mt-2 text-sm text-primary-200">
+                      ({selectedCategory?.price.toLocaleString()} Fcfa + {nbInvites} x 20 000 Fcfa)
+                    </p>
                   )}
                 </div>
-                {categorie === cat.value && (
-                  <div className="absolute right-2 top-2 animate-bounce">
-                    <CheckCircleIcon className="h-5 w-5 text-amber-500" />
-                  </div>
-                )}
-              </label>
-            ))}
-          </div>
-
-          {categorie !== "INVITE" && (
-            <div className="mb-4 rounded-xl bg-white p-6 shadow-lg animate-slide-up dark:bg-slate-800">
-              <label className="label">Nombre d'invites</label>
-              <select
-                {...register("nombreInvites", { valueAsNumber: true })}
-                className="input-field"
-              >
-                <option value={0}>0 invite</option>
-                <option value={1}>1 invite</option>
-                <option value={2}>2 invites</option>
-                <option value={3}>3 invites</option>
-              </select>
-              <p className="mt-2 text-sm text-slate-500">
-                20 000 Fcfa par invite supplementaire
-              </p>
+                <div className="shrink-0">
+                  <img src="/payment-icons.png" alt="Paiement sécurisé" className="h-12 opacity-80" />
+                </div>
+              </div>
             </div>
-          )}
 
-          <div className="mb-6 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-center text-white animate-pulse">
-            <p className="mb-2 text-primary-100">Montant total a payer</p>
-            <p className="text-4xl font-bold">{montant().toLocaleString()} Fcfa</p>
-            {categorie !== "INVITE" && nbInvites > 0 && (
-              <p className="mt-2 text-sm text-primary-200">
-                ({selectedCategory?.price.toLocaleString()} Fcfa + {nbInvites} x 20 000 Fcfa)
-              </p>
+            {/* Invite Stock Warning */}
+            {!hasEnoughInviteStock && (
+              <div className="mb-8 overflow-hidden rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/30">
+                Le stock disponible pour les billets invités ne couvre pas encore cette quantité.
+              </div>
             )}
-          </div>
 
-          {!hasEnoughInviteStock && (
-            <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Le stock disponible pour les billets invites ne couvre pas encore cette quantite.
+            {/* Submit Button */}
+            <div className="text-center">
+              <button
+                type="submit"
+                onClick={handleSubmit(openPaymentModal)}
+                disabled={!canContinueToPayment}
+                className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-12 py-5 text-xl font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105 hover:from-amber-400 hover:to-orange-500 disabled:cursor-not-allowed disabled:scale-100 disabled:opacity-60"
+              >
+                <span className="relative z-10 flex items-center gap-3">
+                  {catalogLoading ? (
+                    <>
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+                      Chargement du stock...
+                    </>
+                  ) : (
+                    <>
+                      <SparklesIcon className="h-6 w-6" />
+                      Continuer vers FedaPay
+                    </>
+                  )}
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 opacity-0 transition-opacity group-hover:opacity-100"></div>
+              </button>
+              <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+                Paiement 100% sécurisé via FedaPay
+              </p>
             </div>
-          )}
-
-          <form onSubmit={handleSubmit(openPaymentModal)} className="text-center">
-            <button
-              type="submit"
-              disabled={!canContinueToPayment}
-              className="btn-primary px-8 py-4 text-lg transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {catalogLoading
-                ? "Chargement du stock..."
-                : "Continuer vers FedaPay"}
-            </button>
-          </form>
+          </div>
         </section>
       ) : (
-        <section className="rounded-2xl bg-slate-50 p-8 text-center animate-fade-in dark:bg-slate-800/50">
-          <ExclamationCircleIcon className="mx-auto mb-4 h-12 w-12 text-amber-500" />
-          <h3 className="mb-2 text-xl font-semibold">Connexion requise</h3>
-          <p className="mb-6 text-slate-500">
-            Veuillez vous connecter ou creer un compte pour reserver votre place.
-          </p>
-          <div className="flex justify-center gap-4">
-            <Link to="/login" className="btn-primary">
-              Se connecter
-            </Link>
-            <Link to="/register" className="btn-outline">
-              Creer un compte
-            </Link>
+        /* Login Required */
+        <section className="py-20">
+          <div className="mx-auto max-w-2xl px-6">
+            <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-slate-50 to-slate-100 p-10 text-center shadow-2xl dark:from-slate-800 dark:to-slate-900">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-900/30">
+                <ExclamationCircleIcon className="h-10 w-10 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="mb-3 text-2xl font-bold">Connexion requise</h3>
+              <p className="mb-8 text-slate-600 dark:text-slate-400">
+                Veuillez vous connecter ou créer un compte pour réserver votre place au Gala.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <Link
+                  to="/login"
+                  className="rounded-full bg-gradient-to-r from-primary-500 to-primary-600 px-8 py-3 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:from-primary-600 hover:to-primary-700 hover:scale-105"
+                >
+                  Se connecter
+                </Link>
+                <Link
+                  to="/register"
+                  className="rounded-full border-2 border-primary-500 px-8 py-3 text-lg font-semibold text-primary-600 transition-all duration-300 hover:bg-primary-50 hover:scale-105"
+                >
+                  Créer un compte
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       )}
 
+      {/* Payment Modal */}
       {showPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 animate-scale-in dark:bg-slate-800">
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-8 animate-scale-in shadow-2xl dark:bg-slate-800">
             <button
               onClick={() => {
                 setShowPayment(false);
                 setPaymentStep("details");
               }}
-              className="absolute right-4 top-4 text-slate-400 transition-colors hover:text-slate-600"
+              className="absolute right-5 top-5 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
               type="button"
             >
               <XMarkIcon className="h-6 w-6" />
@@ -628,10 +755,10 @@ const Gala = () => {
 
             {paymentStep === "details" && (
               <>
-                <h3 className="mb-4 text-xl font-bold">Paiement securise FedaPay</h3>
-                <div className="mb-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white">
-                  <p className="text-sm opacity-90">Montant a payer</p>
-                  <p className="text-3xl font-bold">
+                <h3 className="mb-6 text-2xl font-bold">Paiement sécurisé FedaPay</h3>
+                <div className="mb-6 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 p-6 text-white shadow-lg">
+                  <p className="mb-2 text-amber-100">Montant à payer</p>
+                  <p className="text-4xl font-bold">
                     {montant(
                       checkoutDraft.categorie,
                       checkoutDraft.nombreInvites,
@@ -640,15 +767,14 @@ const Gala = () => {
                   </p>
                 </div>
 
-                <div className="mb-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-700 dark:bg-slate-700/50 dark:text-slate-200">
-                  <p className="font-semibold">Recapitulatif</p>
-                  <div className="mt-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span>Categorie</span>
-                      <span className="flex items-center gap-2 font-medium">
-                        {SelectedCategoryIcon ? (
+                <div className="mb-6 overflow-hidden rounded-2xl bg-slate-50 p-6 dark:bg-slate-700/50">
+                  <p className="mb-4 font-bold text-slate-900 dark:text-white">Récapitulatif</p>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-xl bg-white p-3 dark:bg-slate-800">
+                      <span className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-200">
+                        {SelectedCategoryIcon && (
                           <SelectedCategoryIcon className="h-4 w-4 text-amber-600" />
-                        ) : null}
+                        )}
                         {
                           categories.find(
                             (item) => item.value === checkoutDraft.categorie,
@@ -657,9 +783,9 @@ const Gala = () => {
                       </span>
                     </div>
                     {checkoutDraft.categorie !== "INVITE" && (
-                      <div className="flex items-center justify-between">
-                        <span>Invites</span>
-                        <span className="font-medium">
+                      <div className="flex items-center justify-between rounded-xl bg-white p-3 dark:bg-slate-800">
+                        <span className="font-medium text-slate-700 dark:text-slate-200">Invités</span>
+                        <span className="font-bold text-amber-600 dark:text-amber-400">
                           {checkoutDraft.nombreInvites}
                         </span>
                       </div>
@@ -667,23 +793,23 @@ const Gala = () => {
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  <label className="label">Numero de telephone</label>
+                <div className="mb-6">
+                  <label className="mb-2 block font-bold">Numéro de téléphone</label>
                   <div className="relative">
-                    <DevicePhoneMobileIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <DevicePhoneMobileIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                     <input
                       type="tel"
                       value={paymentPhone}
                       onChange={(event) => setPaymentPhone(event.target.value)}
                       placeholder="+225 07 00 00 00 00"
-                      className="input-field pl-12"
+                      className="input-field py-3 pl-12 text-lg"
                     />
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Orange Money, Wave et les moyens compatibles seront proposes sur la page FedaPay.
+                  <p className="mt-2 text-xs text-slate-500">
+                    Orange Money, Wave et les moyens compatibles seront proposés sur la page FedaPay.
                   </p>
                   {showSandboxHint && (
-                    <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
+                    <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800">
                       {FEDAPAY_SANDBOX_MTN_HINT}
                     </div>
                   )}
@@ -693,24 +819,35 @@ const Gala = () => {
                   type="button"
                   onClick={handleFedapayCheckout}
                   disabled={loading}
-                  className="w-full btn-primary py-3 transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-amber-400 hover:to-orange-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {loading
-                    ? "Preparation du paiement..."
-                    : `Payer ${montant(
-                        checkoutDraft.categorie,
-                        checkoutDraft.nombreInvites,
-                      ).toLocaleString()} Fcfa avec FedaPay`}
+                  <span className="relative z-10 flex items-center justify-center gap-3">
+                    {loading ? (
+                      <>
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+                        Préparation du paiement...
+                      </>
+                    ) : (
+                      <>
+                        <SparklesIcon className="h-5 w-5" />
+                        Payer {montant(
+                          checkoutDraft.categorie,
+                          checkoutDraft.nombreInvites,
+                        ).toLocaleString()} Fcfa avec FedaPay
+                      </>
+                    )}
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 opacity-0 transition-opacity group-hover:opacity-100"></div>
                 </button>
               </>
             )}
 
             {paymentStep === "processing" && (
-              <div className="py-8 text-center">
-                <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
-                <p className="text-lg font-medium">Creation du paiement...</p>
-                <p className="text-sm text-slate-500">
-                  Vous allez etre redirige vers FedaPay.
+              <div className="py-12 text-center">
+                <div className="mx-auto mb-6 h-20 w-20 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
+                <p className="mb-2 text-xl font-medium">Création du paiement...</p>
+                <p className="text-slate-500">
+                  Vous allez être redirigé vers FedaPay.
                 </p>
               </div>
             )}
