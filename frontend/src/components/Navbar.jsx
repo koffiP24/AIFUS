@@ -71,7 +71,7 @@ const Navbar = () => {
                       AIFUS
                     </p>
                     <p className="text-lg font-semibold text-slate-900 dark:text-white">
-                      Festivites 2026
+                      Festivités 2026
                     </p>
                   </div>
                   <div className="min-w-0 sm:hidden">
