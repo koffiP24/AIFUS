@@ -22,63 +22,128 @@ const Village = () => {
     {
       icon: AcademicCapIcon,
       title: "Informer",
-      description: "Sur les possibilités d'études en Russie",
+      description:
+        "Élèves et étudiants sur les possibilités d'études en Russie et ex-URSS",
     },
     {
       icon: UserGroupIcon,
       title: "Valoriser",
-      description: "Les parcours des alumni",
+      description: "Les parcours des alumni formés en Russie",
     },
     {
       icon: BuildingOfficeIcon,
       title: "Faciliter",
-      description: "L'insertion professionnelle",
+      description: "L'insertion professionnelle des nouveaux diplômés",
     },
     {
       icon: GlobeAltIcon,
       title: "Orienter",
-      description: "Vers les filières stratégiques",
+      description:
+        "Vers les filières stratégiques pour le développement de la Côte d'Ivoire",
     },
+  ];
+
+  const publicCible = [
+    "Élèves en classe de terminale",
+    "Étudiants des universités et grandes écoles",
+    "Parents d'élèves",
+    "Alumni formés en Russie/ex-URSS",
+    "Nouveaux diplômés",
+    "Universités et institutions académiques",
+    "Entreprises ivoiriennes et russes",
+    "Institutions publiques",
+  ];
+
+  const activites = [
+    {
+      title: "Conférences & Panels",
+      description:
+        "Conditions d'accès, filières, bourses, vie étudiante, perspectives professionnelles",
+    },
+    {
+      title: "Témoignages d'alumni",
+      description:
+        "Partage d'expériences académiques et professionnelles pour inspirer",
+    },
+    {
+      title: "Forum des entreprises",
+      description: "Stands, présentation d'activités, recrutement, networking",
+    },
+    {
+      title: "Présentation universités",
+      description: "Programmes, admission, bourses, coopération académique",
+    },
+  ];
+
+  const filieresStrategiques = [
+    "Ingénierie et infrastructures",
+    "Technologies numériques et IA",
+    "Génie rural et machinisme agricole",
+    "Énergie et ressources naturelles",
+    "Agriculture et agro-industrie",
+    "Sciences médicales et pharmaceutiques",
+    "Industrie et production",
+    "Environnement et développement durable",
+    "Recherche scientifique et innovation",
   ];
 
   const espaces = [
     {
       title: "Espace Universités russes",
       description:
-        "Orientation académique et présentation des universités partenaires",
+        "Stands, supports documentaires, entretiens personnalisés, mini-conférences, conseils pratiques (inscription, visa, logement)",
       icon: AcademicCapIcon,
       color: "from-blue-500 to-blue-700",
     },
     {
       title: "Espace Alumni",
-      description: "Témoignages, mentoring et networking intergénérationnel",
+      description:
+        "Portraits, présentation secteurs d'activité, témoignages directs, mentoring express",
       icon: UserGroupIcon,
       color: "from-purple-500 to-purple-700",
     },
     {
       title: "Espace Entreprises",
-      description: "Opportunités professionnelles et partenariats",
+      description:
+        "Stands, démonstrations, identification de talents, échanges avec alumni et étudiants",
       icon: BuildingOfficeIcon,
       color: "from-green-500 to-green-700",
     },
     {
       title: "Espace Culture Russie",
-      description: "Immersion culturelle, langue et traditions",
+      description:
+        "Objets traditionnels, galerie photo, projections, espace souvenirs",
       icon: GlobeAltIcon,
       color: "from-red-500 to-red-700",
     },
     {
       title: "Espace Conférences",
-      description: "Panels, présentations et tables rondes",
+      description:
+        "Panels, témoignages, interventions institutionnelles, annonces officielles",
       icon: CalendarIcon,
       color: "from-amber-500 to-amber-700",
     },
     {
-      title: "Restauration & Networking",
-      description: "Moments de partage et de découverte gastronomique",
+      title: "Restauration",
+      description: "5 stands partenaires, plats locaux, snacks, boissons",
       icon: MapPinIcon,
       color: "from-rose-500 to-rose-700",
     },
+    {
+      title: "Espace Networking",
+      description:
+        "Discussions, rencontres B2B, échanges informels, projets professionnels",
+      icon: CheckCircleIcon,
+      color: "from-emerald-500 to-emerald-700",
+    },
+  ];
+
+  const retombees = [
+    "Meilleure information des jeunes sur les études en Russie",
+    "Renforcement de la visibilité des alumni",
+    "Développement de nouveaux partenariats académiques",
+    "Identification de talents par les entreprises",
+    "Renforcement des relations économiques et éducatives CI-Russie",
   ];
 
   return (
@@ -135,12 +200,29 @@ const Village = () => {
         </p>
       </section>
 
+      {/* Contexte */}
+      <section className="max-w-4xl mx-auto">
+        <div className="bg-gradient-to-r from-blue-50 to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-8 border border-blue-100 dark:border-slate-700">
+          <h3 className="text-2xl font-bold mb-4 text-center">Contexte</h3>
+          <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+            Plus de six décennies de coopération académique entre la Côte
+            d'Ivoire et les universités soviétiques/russes. Beaucoup d'alumni
+            ont contribué au développement national, mais les jeunes générations
+            et parents disposent de peu d'informations sur les études en Russie.
+            Le village vise à combler ce déficit d'information par des échanges
+            directs entre alumni et jeunes, et à renforcer la visibilité des
+            relations académiques et scientifiques ivoiro-russes.
+          </p>
+        </div>
+      </section>
+
       {/* Objectifs */}
       <section>
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold mb-3">Nos objectifs</h2>
+          <h2 className="text-3xl font-bold mb-3">Objectifs</h2>
           <p className="text-slate-500">
-            Pourquoi participer au Village Opportunités
+            Promouvoir les opportunités d'études, de coopération académique et
+            économique entre la Côte d'Ivoire et la Russie
           </p>
         </div>
 
@@ -160,16 +242,84 @@ const Village = () => {
         </div>
       </section>
 
+      {/* Public Cible */}
+      <section className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-3">Public Cible</h2>
+          <p className="text-slate-500">Qui peut participer au Village ?</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {publicCible.map((item, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl shadow"
+            >
+              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0" />
+              <span className="text-slate-700 dark:text-slate-300">{item}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Activités */}
+      <section>
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold mb-3">Activités Prévues</h2>
+          <p className="text-slate-500">
+            Une journée riche en échanges, découvertes et opportunités
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {activites.map((act, index) => (
+            <div
+              key={index}
+              className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all"
+            >
+              <h3 className="text-xl font-bold mb-3 text-primary-600">
+                {act.title}
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400">
+                {act.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Filières Stratégiques */}
+      <section className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-3">Filières Stratégiques</h2>
+          <p className="text-slate-500">
+            Domaines prioritaires pour le développement de la Côte d'Ivoire
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filieresStrategiques.map((filiere, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl shadow hover:shadow-lg transition-all"
+            >
+              <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex-shrink-0"></div>
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                {filiere}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Espaces */}
       <section id="espaces">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold mb-3">Espaces thématiques</h2>
           <p className="text-slate-500">
-            6 espaces pour une expérience complète
+            8 espaces structurés autour de 5 dimensions : orientation,
+            opportunités, valorisation, immersion, convivialité
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {espaces.map((espace, index) => (
             <div
               key={index}
@@ -197,22 +347,42 @@ const Village = () => {
         </div>
       </section>
 
+      {/* Retombées */}
+      <section className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-3">Retombées Attendues</h2>
+          <p className="text-slate-500">
+            Impact du Village sur la coopération ivoiro-russe
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {retombees.map((retombe, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl shadow"
+            >
+              <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0" />
+              <span className="text-slate-700 dark:text-slate-300">
+                {retombe}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Call to Action */}
       <section className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-8 md:p-12 text-white text-center">
         <h2 className="text-3xl font-bold mb-4">
           Participez au Village Opportunités
         </h2>
-        <p className="text-primary-100 mb-6 max-w-2xl mx-auto">
-          Une journée exceptionnelle pour découverte, apprentissage et
-          networking. Entrée gratuite pour tous les membres AIFUS.
-        </p>
+        <div className="flex flex-col items-center justify-center text-center w-full">
+          <p className="text-primary-100 mb-6 max-w-2xl mx-auto">
+            Une journée exceptionnelle pour découverte, apprentissage et
+            networking. Entrée gratuite pour tous les membres AIFUS.
+          </p>
+        </div>
+
         <div className="flex flex-wrap justify-center gap-4">
-          <Link
-            to="/register"
-            className="px-8 py-3 bg-white text-primary-700 font-semibold rounded-lg hover:bg-primary-50 transition-all hover:scale-105"
-          >
-            S'inscrire maintenant
-          </Link>
           <Link
             to="/gala"
             className="px-8 py-3 bg-primary-800 text-white font-semibold rounded-lg hover:bg-primary-900 transition-all"
