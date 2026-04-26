@@ -252,6 +252,26 @@ const Tombola = () => {
 
   return (
     <div className="space-y-16">
+      {/* Scroll to top button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        id="topBtn"
+        style={{ background: "rgba(39, 56, 70, 0.3)" }}
+        className="pointer-events-auto fixed bottom-8 right-8 rounded-full p-2 w-12 h-12 flex items-center justify-center hover:opacity-80 transition-all duration-200 z-20 scroll-top-btn border border-white/20 hover:border-white/40"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 text-black transition-transform duration-300 group-hover:scale-110"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+            clipRule="evenodd"
+          ></path>
+        </svg>
+      </button>
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-900 text-white">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-white blur-3xl"></div>
