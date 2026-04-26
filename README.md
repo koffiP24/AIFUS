@@ -100,6 +100,8 @@ VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 VITE_API_BASE_URL=/api
 ```
 
+Note: En développement, `VITE_API_BASE_URL=/api` utilise le proxy Vite vers `http://localhost:5000`. En production (Render/Vercel), il faut définir `VITE_API_BASE_URL=https://votre-backend-url/api`.
+
 Important :
 - `GOOGLE_CLIENT_ID` et `VITE_GOOGLE_CLIENT_ID` doivent contenir le meme vrai client ID Google pour activer la connexion Google.
 - `GOOGLE_CLIENT_IDS` est optionnel cote backend et permet d'autoriser plusieurs audiences Google sous forme de liste separee par des virgules.

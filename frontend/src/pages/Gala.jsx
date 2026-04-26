@@ -60,7 +60,7 @@ const categories = [
   {
     value: "RETRAITE",
     ticketCode: "GALA_RETRAITE",
-    label: "Retraite",
+    label: "Retraité",
     price: 25000,
     description: "Pour les alumni à la retraite",
     icon: UserIcon,
@@ -565,24 +565,24 @@ const Gala = () => {
 
           {categorie !== "INVITE" && (
             <div className="mb-4 rounded-xl bg-white p-6 shadow-lg animate-slide-up dark:bg-slate-800">
-              <label className="label">Nombre d'invites</label>
+              <label className="label">Nombre d'invités</label>
               <select
                 {...register("nombreInvites", { valueAsNumber: true })}
                 className="input-field"
               >
-                <option value={0}>0 invite</option>
-                <option value={1}>1 invite</option>
-                <option value={2}>2 invites</option>
-                <option value={3}>3 invites</option>
+                <option value={0}>0 invité</option>
+                <option value={1}>1 invité</option>
+                <option value={2}>2 invités</option>
+                <option value={3}>3 invités</option>
               </select>
               <p className="mt-2 text-sm text-slate-500">
-                20 000 Fcfa par invite supplementaire
+                20 000 Fcfa par invité supplémentaire
               </p>
             </div>
           )}
 
           <div className="mb-6 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-center text-white animate-pulse">
-            <p className="mb-2 text-primary-100">Montant total a payer</p>
+            <p className="mb-2 text-primary-100">Montant total à payer</p>
             <p className="text-4xl font-bold">
               {montant().toLocaleString()} Fcfa
             </p>
@@ -596,7 +596,7 @@ const Gala = () => {
 
           {!hasEnoughInviteStock && (
             <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Le stock disponible pour les billets invites ne couvre pas encore
+              Le stock disponible pour les billets invités ne couvre pas encore
               cette quantite.
             </div>
           )}
@@ -655,7 +655,7 @@ const Gala = () => {
                   Paiement sécurisé FedaPay
                 </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white">
-                  <p className="text-sm opacity-90">Montant a payer</p>
+                  <p className="text-sm opacity-90">Montant à payer</p>
                   <p className="text-3xl font-bold">
                     {montant(
                       checkoutDraft.categorie,
@@ -666,10 +666,10 @@ const Gala = () => {
                 </div>
 
                 <div className="mb-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-700 dark:bg-slate-700/50 dark:text-slate-200">
-                  <p className="font-semibold">Recapitulatif</p>
+                  <p className="font-semibold">Récapitulatif</p>
                   <div className="mt-3 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span>Categorie</span>
+                      <span>Catégorie</span>
                       <span className="flex items-center gap-2 font-medium">
                         {SelectedCategoryIcon ? (
                           <SelectedCategoryIcon className="h-4 w-4 text-amber-600" />
@@ -693,7 +693,7 @@ const Gala = () => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="label">Numero de telephone</label>
+                  <label className="label">Numéro de téléphone</label>
                   <div className="relative">
                     <DevicePhoneMobileIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                     <input

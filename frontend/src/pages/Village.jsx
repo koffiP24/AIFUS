@@ -109,14 +109,8 @@ const Village = () => {
               Côte d'Ivoire et la Russie
             </p>
           </div>
-          
+
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link
-              to="/register"
-              className="px-8 py-3 bg-white text-blue-700 font-semibold rounded-lg hover:bg-blue-50 transition-all hover:scale-105"
-            >
-              Réserver ma place
-            </Link>
             <a
               href="#espaces"
               className="px-8 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-all border border-white/20"
@@ -134,10 +128,10 @@ const Village = () => {
           <strong className="text-primary-600">
             Village Opportunités Ivoiro-Russe
           </strong>
-           , un espace ouvert de rencontres, d'échanges et d'information
-           réunissant les alumni, les élèves et étudiants, les parents d'élèves,
-           les universités, les entreprises partenaires et les institutions
-           intéressés par la coopération entre la Côte d'Ivoire et la Russie.
+          , un espace ouvert de rencontres, d'échanges et d'information
+          réunissant les alumni, les élèves et étudiants, les parents d'élèves,
+          les universités, les entreprises partenaires et les institutions
+          intéressés par la coopération entre la Côte d'Ivoire et la Russie.
         </p>
       </section>
 
@@ -170,9 +164,9 @@ const Village = () => {
       <section id="espaces">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold mb-3">Espaces thématiques</h2>
-           <p className="text-slate-500">
-             6 espaces pour une expérience complète
-           </p>
+          <p className="text-slate-500">
+            6 espaces pour une expérience complète
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -254,9 +248,9 @@ const Village = () => {
               <CheckCircleIcon className="w-5 h-5 text-green-500 mt-0.5" />
               <div>
                 <p className="font-medium">Lieu</p>
-                 <p className="text-slate-500">
-                   {villageEvent?.location || "Lieu à confirmer"}
-                 </p>
+                <p className="text-slate-500">
+                  {villageEvent?.location || "Lieu à confirmer"}
+                </p>
                 <p className="hidden text-slate-500">Abidjan (à confirmer)</p>
               </div>
             </div>
