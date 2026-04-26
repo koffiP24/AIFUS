@@ -18,15 +18,11 @@ const formatMetricValue = (value, format = "number") => {
   if (format === "currency") {
     return `${value.toLocaleString()} Fcfa`;
   }
-
   return value.toLocaleString();
 };
 
 const getMetricProgress = (value, maxValue) => {
-  if (!value || !maxValue) {
-    return 0;
-  }
-
+  if (!value || !maxValue) return 0;
   return Math.max(Math.round((value / maxValue) * 100), 14);
 };
 
@@ -38,32 +34,24 @@ const AnimatedMetricValue = ({ value, format = "number" }) => {
     const from = previousValueRef.current;
     const to = value;
     const duration = 850;
-
     if (from === to) {
       setDisplayValue(to);
       return;
     }
-
     let frameId;
     const startTime = performance.now();
-
     const updateValue = (currentTime) => {
       const progress = Math.min((currentTime - startTime) / duration, 1);
       const easedProgress = 1 - Math.pow(1 - progress, 3);
       const nextValue = Math.round(from + (to - from) * easedProgress);
-
       setDisplayValue(nextValue);
-
       if (progress < 1) {
         frameId = requestAnimationFrame(updateValue);
         return;
       }
-
       previousValueRef.current = to;
     };
-
     frameId = requestAnimationFrame(updateValue);
-
     return () => {
       cancelAnimationFrame(frameId);
       previousValueRef.current = to;
@@ -78,458 +66,90 @@ const surfaceCardClass =
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalAdmins: 0,
-    totalInscriptions: 0,
-    totalBillets: 0,
-    validTickets: 0,
-    checkedInCount: 0,
-    montantTotalInscriptions: 0,
-    montantTotalTombola: 0,
+    totalUsers: 0, totalAdmins: 0, totalInscriptions: 0,
+    totalBillets: 0, validTickets: 0, checkedInCount: 0,
+    montantTotalInscriptions: 0, montantTotalTombola: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [showScroll, setShowScroll] = useState(false);
 
   useEffect(() => {
-    api
-      .get("/admin/stats")
-      .then((res) => setStats(res.data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const toggleScrollButton = () => {
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScroll(scrolled > 300);
+    };
+    window.addEventListener("scroll", toggleScrollButton);
+    window.addEventListener("load", toggleScrollButton);
+    return () => {
+      window.removeEventListener("scroll", toggleScrollButton);
+      window.removeEventListener("load", toggleScrollButton);
+    };
+  }, []);
+
+  useEffect(() => {
+    api.get("/admin/stats").then((res) => setStats(res.data)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="loader"></div>
-      </div>
-    );
+    return <div className="flex min-h-[400px] items-center justify-center"><div className="loader"></div></div>;
   }
 
   const statCards = [
-    {
-      title: "Inscriptions Gala",
-      value: stats.totalInscriptions,
-      format: "number",
-      group: "count",
-      label: "niveau gala",
-      accentBar: "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500",
-      glowColor: "bg-amber-200/70 dark:bg-amber-500/20",
-      icon: CalendarIcon,
-      iconColor: "text-amber-600",
-      bgColor: "bg-amber-50/90 dark:bg-amber-900/20",
-    },
-    {
-      title: "Utilisateurs",
-      value: stats.totalUsers,
-      format: "number",
-      group: "count",
-      label: "base active",
-      accentBar: "bg-gradient-to-r from-sky-400 via-cyan-400 to-sky-500",
-      glowColor: "bg-sky-200/70 dark:bg-sky-500/20",
-      icon: UsersIcon,
-      iconColor: "text-sky-600",
-      bgColor: "bg-sky-50/90 dark:bg-sky-900/20",
-    },
-    {
-      title: "Admins",
-      value: stats.totalAdmins,
-      format: "number",
-      group: "count",
-      label: "controle acces",
-      accentBar: "bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-500",
-      glowColor: "bg-indigo-200/70 dark:bg-indigo-500/20",
-      icon: ShieldCheckIcon,
-      iconColor: "text-indigo-600",
-      bgColor: "bg-indigo-50/90 dark:bg-indigo-900/20",
-    },
-    {
-      title: "Tickets valides",
-      value: stats.validTickets,
-      format: "number",
-      group: "count",
-      label: "scan pret",
-      accentBar: "bg-gradient-to-r from-fuchsia-400 via-purple-400 to-fuchsia-500",
-      glowColor: "bg-fuchsia-200/70 dark:bg-fuchsia-500/20",
-      icon: QrCodeIcon,
-      iconColor: "text-purple-600",
-      bgColor: "bg-purple-50/90 dark:bg-purple-900/20",
-    },
-    {
-      title: "Participants scannes",
-      value: stats.checkedInCount,
-      format: "number",
-      group: "count",
-      label: "entrees validees",
-      accentBar: "bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500",
-      glowColor: "bg-emerald-200/70 dark:bg-emerald-500/20",
-      icon: CheckBadgeIcon,
-      iconColor: "text-green-600",
-      bgColor: "bg-green-50/90 dark:bg-green-900/20",
-    },
-    {
-      title: "Revenus Gala",
-      value: stats.montantTotalInscriptions,
-      format: "currency",
-      group: "revenue",
-      label: "encaissement",
-      accentBar: "bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500",
-      glowColor: "bg-blue-200/70 dark:bg-blue-500/20",
-      icon: CurrencyDollarIcon,
-      iconColor: "text-blue-600",
-      bgColor: "bg-blue-50/90 dark:bg-blue-900/20",
-    },
-    {
-      title: "Revenus Tombola",
-      value: stats.montantTotalTombola,
-      format: "currency",
-      group: "revenue",
-      label: "collecte live",
-      accentBar: "bg-gradient-to-r from-indigo-400 via-blue-400 to-indigo-500",
-      glowColor: "bg-indigo-200/70 dark:bg-indigo-500/20",
-      icon: ChartBarIcon,
-      iconColor: "text-indigo-600",
-      bgColor: "bg-indigo-50/90 dark:bg-indigo-900/20",
-    },
+    { title: "Inscriptions Gala", value: stats.totalInscriptions, format: "number", label: "niveau gala", accentBar: "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500", glowColor: "bg-amber-200/70 dark:bg-amber-500/20", icon: CalendarIcon, iconColor: "text-amber-600", bgColor: "bg-amber-50/90 dark:bg-amber-900/20" },
+    { title: "Utilisateurs", value: stats.totalUsers, format: "number", label: "base active", accentBar: "bg-gradient-to-r from-sky-400 via-cyan-400 to-sky-500", glowColor: "bg-sky-200/70 dark:bg-sky-500/20", icon: UsersIcon, iconColor: "text-sky-600", bgColor: "bg-sky-50/90 dark:bg-sky-900/20" },
+    { title: "Admins", value: stats.totalAdmins, format: "number", label: "controle acces", accentBar: "bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-500", glowColor: "bg-indigo-200/70 dark:bg-indigo-500/20", icon: ShieldCheckIcon, iconColor: "text-indigo-600", bgColor: "bg-indigo-50/90 dark:bg-indigo-900/20" },
+    { title: "Tickets valides", value: stats.validTickets, format: "number", label: "scan pret", accentBar: "bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500", glowColor: "bg-emerald-200/70 dark:bg-emerald-500/20", icon: CheckBadgeIcon, iconColor: "text-emerald-600", bgColor: "bg-emerald-50/90 dark:bg-emerald-900/20" },
   ];
 
-  const metricMaximums = statCards.reduce((accumulator, stat) => {
-    const currentMax = accumulator[stat.group] || 0;
-    accumulator[stat.group] = Math.max(currentMax, stat.value, 1);
-    return accumulator;
-  }, {});
-
-  const compactStatCards = statCards.map((stat) => ({
-    ...stat,
-    progress: getMetricProgress(stat.value, metricMaximums[stat.group]),
-  }));
-
-  const totalRevenue =
-    stats.montantTotalInscriptions + stats.montantTotalTombola;
-
-  const revenueMix = [
-    {
-      label: "Gala",
-      value: stats.montantTotalInscriptions,
-      share:
-        totalRevenue > 0
-          ? Math.round((stats.montantTotalInscriptions / totalRevenue) * 100)
-          : 0,
-      accentBar: "bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500",
-    },
-    {
-      label: "Tombola",
-      value: stats.montantTotalTombola,
-      share:
-        totalRevenue > 0
-          ? Math.round((stats.montantTotalTombola / totalRevenue) * 100)
-          : 0,
-      accentBar: "bg-gradient-to-r from-violet-300 via-indigo-400 to-fuchsia-500",
-    },
+  const metricItems = [
+    { title: "Téléchargements", metricLabel: "Billet(s) validé(s)", metricValue: stats.checkedTickets || "-", metricMax: Number.POSITIVE_INFINITY, icon: QrCodeIcon, iconColor: "text-purple-600", progress: getMetricProgress(stats.checkedTickets || 0, 100), glowColor: "bg-purple-200/70 dark:bg-purple-500/20", accentBar: "bg-gradient-to-r from-purple-400 via-fuchsia-400 to-purple-500", bgColor: "bg-purple-50/90 dark:bg-purple-900/20" },
+    { title: "Revenus Gala", metricLabel: "Total encaissé", metricValue: formatMetricValue(stats.montantTotalInscriptions, "currency"), metricMax: 1000000, icon: CurrencyDollarIcon, iconColor: "text-amber-600", progress: getMetricProgress(stats.montantTotalInscriptions, 1000000), glowColor: "bg-amber-200/70 dark:bg-amber-500/20", accentBar: "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500", bgColor: "bg-amber-50/90 dark:bg-amber-900/20" },
+    { title: "Revenus Tombola", metricLabel: "Total billets", metricValue: formatMetricValue(stats.montantTotalTombola, "currency"), metricMax: 500000, icon: TicketIcon, iconColor: "text-purple-600", progress: getMetricProgress(stats.montantTotalTombola, 500000), glowColor: "bg-purple-200/70 dark:bg-purple-500/20", accentBar: "bg-gradient-to-r from-purple-400 via-fuchsia-400 to-purple-500", bgColor: "bg-purple-50/90 dark:bg-purple-900/20" },
+    { title: "Participations", metricLabel: "Total billets vendus", metricValue: stats.totalBillets, metricMax: 500, icon: ChartBarIcon, iconColor: "text-teal-600", progress: getMetricProgress(stats.totalBillets, 500), glowColor: "bg-teal-200/70 dark:bg-teal-500/20", accentBar: "bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-500", bgColor: "bg-teal-50/90 dark:bg-teal-900/20" },
   ];
 
-  const actionCards = [
-    {
-      title: "Utilisateurs",
-      to: "/admin/users",
-      icon: UsersIcon,
-      iconColor: "text-sky-600",
-      bgColor: "bg-sky-50/90 dark:bg-sky-900/20",
-      accentBar: "bg-gradient-to-r from-sky-400 via-cyan-400 to-sky-500",
-      glowColor: "bg-sky-200/70 dark:bg-sky-500/20",
-      badge: "Acces",
-      description: "Roles, profils et suivi des comptes.",
-      metricValue: stats.totalUsers,
-      metricFormat: "number",
-      metricLabel: "comptes a superviser",
-    },
-    {
-      title: "Inscriptions Gala",
-      to: "/admin/inscriptions",
-      icon: CalendarIcon,
-      iconColor: "text-amber-600",
-      bgColor: "bg-amber-50/90 dark:bg-amber-900/20",
-      accentBar: "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500",
-      glowColor: "bg-amber-200/70 dark:bg-amber-500/20",
-      badge: "Flux",
-      description: "Participants, statuts et paiements.",
-      metricValue: stats.totalInscriptions,
-      metricFormat: "number",
-      metricLabel: "participants",
-    },
-    {
-      title: "Evenements",
-      to: "/admin/events",
-      icon: CalendarIcon,
-      iconColor: "text-slate-700 dark:text-slate-200",
-      bgColor: "bg-slate-100/90 dark:bg-slate-700/90",
-      accentBar: "bg-gradient-to-r from-slate-400 via-slate-500 to-slate-700",
-      glowColor: "bg-slate-200/70 dark:bg-slate-500/20",
-      badge: "Public",
-      description: "Date, heure, lieu et message visible.",
-      metricLabel: "pilotage du contenu public",
-    },
-    {
-      title: "Monitoring",
-      to: "/admin/monitoring",
-      icon: QrCodeIcon,
-      iconColor: "text-violet-600",
-      bgColor: "bg-violet-50/90 dark:bg-violet-900/20",
-      accentBar: "bg-gradient-to-r from-violet-400 via-fuchsia-400 to-violet-500",
-      glowColor: "bg-violet-200/70 dark:bg-violet-500/20",
-      badge: "Scan",
-      description: "Controle terrain, tickets et passages.",
-      metricValue: stats.checkedInCount,
-      metricFormat: "number",
-      metricLabel: "check-in(s) valides",
-    },
-    {
-      title: "Gestion Tombola",
-      to: "/admin/tombola",
-      icon: TicketIcon,
-      iconColor: "text-purple-600",
-      bgColor: "bg-purple-50/90 dark:bg-purple-900/20",
-      accentBar: "bg-gradient-to-r from-purple-400 via-fuchsia-400 to-purple-500",
-      glowColor: "bg-purple-200/70 dark:bg-purple-500/20",
-      badge: "Vente",
-      description: "Numeros, validation et suivi des billets.",
-      metricValue: stats.totalBillets,
-      metricFormat: "number",
-      metricLabel: "billets vendus",
-    },
+  const quickActions = [
+    { title: "Gérer les utilisateurs", description: "Vue d'ensemble, permissions, accès", href: "/admin/users", icon: UsersIcon, iconColor: "text-sky-600", bgColor: "from-sky-50 to-cyan-50 dark:from-sky-900/20 dark:to-cyan-900/20", accentColor: "bg-sky-100 dark:bg-sky-800" },
+    { title: "Inscription Galas", description: "Validation, liste d'attente, remboursements", href: "/admin/inscription", icon: CalendarIcon, iconColor: "text-amber-600", bgColor: "from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20", accentColor: "bg-amber-100 dark:bg-amber-800" },
+    { title: "Billetterie Tombola", description: "Configuration prix, lots, tirage", href: "/admin/tombola", icon: TicketIcon, iconColor: "text-purple-600", bgColor: "from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20", accentColor: "bg-purple-100 dark:bg-purple-800" },
+    { title: "Paramètres", description: "Configuration de l'événement", href: "/admin/settings", icon: ShieldCheckIcon, iconColor: "text-indigo-600", bgColor: "from-indigo-50 to-violet-50 dark:from-indigo-900/20 dark:to-violet-900/20", accentColor: "bg-indigo-100 dark:bg-indigo-800" },
   ];
 
   return (
     <div className="space-y-8">
+      <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} id="topBtn" className={`fixed bottom-6 left-6 pointer-events-auto rounded-2xl p-2 w-14 h-14 flex items-center justify-center hover:scale-105 transition-all duration-300 z-50 border border-white/30 scroll-btn group ${showScroll ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`} style={{ background: "rgba(99, 102, 241, 0.85)", boxShadow: "0 8px 20px rgba(0,0,0,0.12)" }} aria-label="Remonter en haut" title="Remonter en haut">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white drop-shadow-sm transition-transform group-active:translate-y-[-2px]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+        <span className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></span>
+      </button>
       <AdminSectionNav />
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Administration</h1>
-          <p className="text-slate-500">Gestion des festivites AIFUS 2026</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {compactStatCards.map((stat) => (
-          <div
-            key={stat.title}
-            className={`${surfaceCardClass} p-4 sm:p-5`}
-          >
-            <div className={`absolute inset-x-4 top-0 h-1 rounded-full ${stat.accentBar}`} />
-            <div
-              className={`absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-80 blur-2xl transition-transform duration-500 group-hover:scale-125 ${stat.glowColor}`}
-            />
-            <div className="relative mb-4 flex items-start justify-between gap-3">
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-2xl border border-white/70 ${stat.bgColor}`}
-              >
-                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-slate-100/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-700/80 dark:text-slate-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live
-              </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((card, i) => (
+          <div key={i} className={surfaceCardClass}>
+            <div className="flex items-center justify-between">
+              <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${card.bgColor}`}><card.icon className={`h-7 w-7 ${card.iconColor}`} /></div>
+              <div className={`h-2 w-2 rounded-full ${card.glowColor} animate-pulse`} />
             </div>
-            <div className="relative space-y-4">
-              <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  {stat.title}
-                </p>
-                <p className="mt-2 text-[1.65rem] font-bold leading-none tracking-tight text-slate-950 dark:text-white">
-                  <AnimatedMetricValue value={stat.value} format={stat.format} />
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  <span>{stat.label}</span>
-                  <span>{stat.progress}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-700/70">
-                  <div
-                    className={`h-2 rounded-full ${stat.accentBar} transition-all duration-700`}
-                    style={{ width: `${stat.progress}%` }}
-                  />
-                </div>
-              </div>
+            <div className="mt-4"><div className="text-3xl font-bold text-slate-800 dark:text-slate-200"><AnimatedMetricValue value={card.value} format={card.format} /></div>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">{card.title}</p>
             </div>
+            <div className="mt-4 h-2 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden"><div className={`h-full ${card.accentBar} transition-all duration-1000 ease-out`} style={{ width: `${Math.min(card.progress, 100)}%` }} /></div>
           </div>
         ))}
       </div>
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        <div className="group relative overflow-hidden rounded-[1.8rem] border border-slate-800/30 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-800 p-5 text-white shadow-[0_22px_45px_-28px_rgba(15,23,42,0.8)] sm:p-6 xl:col-span-2">
-          <div className="absolute inset-x-6 top-0 h-1 rounded-full bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400" />
-          <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-cyan-400/20 blur-3xl transition-transform duration-500 group-hover:scale-110" />
-          <div className="absolute -bottom-12 left-12 h-32 w-32 rounded-full bg-violet-400/20 blur-3xl transition-transform duration-500 group-hover:scale-110" />
-
-          <div className="relative flex flex-col gap-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
-                  Revenue pulse
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-                  Revenus totaux
-                </h2>
-                <p className="mt-2 max-w-xl text-sm text-slate-200/80">
-                  Vue instantanee des encaissements billetterie et tombola.
-                </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {metricItems.map((card, i) => (
+          <Link key={i} to="/admin/inscription" className={`${surfaceCardClass} p-6 group relative`}>
+            <div className={`absolute bottom-0 left-0 h-1 ${card.accentBar} transition-all duration-500 group-hover:w-full group-hover:opacity-100 w-0 opacity-0`} />
+            <div className={`absolute top-0 right-0 h-32 w-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${card.glowColor}`} />
+            <div className="relative flex items-start justify-between"><div>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">{card.title}</p>
+                <p className="text-2xl font-bold text-slate-800 dark:text-slate-200 mt-2">{card.metricValue}</p>
+                {typeof card.metricValue === "number" ? <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{card.metricLabel}</p> : <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">espace de configuration</p>}
               </div>
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/10 backdrop-blur">
-                <CurrencyDollarIcon className="h-6 w-6 text-cyan-100" />
-              </div>
+              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${card.accentColor} ${card.iconColor} transition-transform duration-300 group-hover:scale-110`}><card.icon className="h-6 w-6" /></div>
             </div>
-
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-[2rem] font-bold leading-none tracking-tight text-white sm:text-[2.6rem]">
-                  <AnimatedMetricValue value={totalRevenue} format="currency" />
-                </p>
-                <p className="mt-2 text-sm text-cyan-100/75">
-                  Suivi global de la caisse evenementielle
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
-                {revenueMix.map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur"
-                  >
-                    <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em] text-slate-200/75">
-                      <span>{item.label}</span>
-                      <span>{item.share}%</span>
-                    </div>
-                    <p className="mt-3 text-lg font-semibold text-white">
-                      <AnimatedMetricValue value={item.value} format="currency" />
-                    </p>
-                    <div className="mt-3 h-2 rounded-full bg-white/10">
-                      <div
-                        className={`h-2 rounded-full ${item.accentBar}`}
-                        style={{ width: `${Math.max(item.share, item.value > 0 ? 12 : 0)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-          {actionCards.slice(0, 2).map((card) => (
-            <Link
-              key={card.to}
-              to={card.to}
-              className={`${surfaceCardClass} p-4 sm:p-5`}
-            >
-              <div className={`absolute inset-x-4 top-0 h-1 rounded-full ${card.accentBar}`} />
-              <div
-                className={`absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-80 blur-2xl transition-transform duration-500 group-hover:scale-125 ${card.glowColor}`}
-              />
-
-              <div className="relative flex h-full flex-col justify-between gap-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-2xl border border-white/70 ${card.bgColor}`}
-                  >
-                    <card.icon className={`h-5 w-5 ${card.iconColor}`} />
-                  </div>
-                  <span className="rounded-full bg-slate-100/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-700/80 dark:text-slate-300">
-                    {card.badge}
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-950 dark:text-white">
-                      {card.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                      {card.description}
-                    </p>
-                  </div>
-
-                  <div className="flex items-end justify-between gap-3">
-                    <div>
-                      <p className="text-xl font-bold leading-none tracking-tight text-slate-950 dark:text-white">
-                        <AnimatedMetricValue
-                          value={card.metricValue}
-                          format={card.metricFormat}
-                        />
-                      </p>
-                      <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                        {card.metricLabel}
-                      </p>
-                    </div>
-                    <ArrowRightIcon className="h-5 w-5 text-slate-400 transition-all group-hover:translate-x-1 group-hover:text-primary-600" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {actionCards.slice(2).map((card) => (
-          <Link
-            key={card.to}
-            to={card.to}
-            className={`${surfaceCardClass} p-4 sm:p-5`}
-          >
-            <div className={`absolute inset-x-4 top-0 h-1 rounded-full ${card.accentBar}`} />
-            <div
-              className={`absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-80 blur-2xl transition-transform duration-500 group-hover:scale-125 ${card.glowColor}`}
-            />
-
-            <div className="relative flex h-full flex-col justify-between gap-5">
-              <div className="flex items-start justify-between gap-3">
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-2xl border border-white/70 ${card.bgColor}`}
-                >
-                  <card.icon className={`h-5 w-5 ${card.iconColor}`} />
-                </div>
-                <span className="rounded-full bg-slate-100/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-700/80 dark:text-slate-300">
-                  {card.badge}
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <h3 className="text-base font-semibold text-slate-950 dark:text-white">
-                    {card.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    {card.description}
-                  </p>
-                </div>
-
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    {typeof card.metricValue === "number" ? (
-                      <p className="text-xl font-bold leading-none tracking-tight text-slate-950 dark:text-white">
-                        <AnimatedMetricValue
-                          value={card.metricValue}
-                          format={card.metricFormat}
-                        />
-                      </p>
-                    ) : (
-                      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
-                        {card.metricLabel}
-                      </p>
-                    )}
-                    <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                      {typeof card.metricValue === "number"
-                        ? card.metricLabel
-                        : "espace de configuration"}
-                    </p>
-                  </div>
-                  <ArrowRightIcon className="h-5 w-5 text-slate-400 transition-all group-hover:translate-x-1 group-hover:text-primary-600" />
-                </div>
-              </div>
-            </div>
+            <div className="mt-4 flex items-center justify-between"><div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400"><span className={`h-2 w-2 rounded-full ${card.accentBar.split(' ')[0]}`} /><span>Cliquez pour gérer</span></div>
+              <ArrowRightIcon className="h-5 w-5 text-slate-400 transition-all group-hover:translate-x-1 group-hover:text-primary-600" /></div>
           </Link>
         ))}
       </div>

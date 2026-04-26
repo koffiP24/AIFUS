@@ -119,6 +119,7 @@ const Gala = () => {
   });
   const [ticketTypesByCode, setTicketTypesByCode] = useState({});
   const [recentSession, setRecentSession] = useState(null);
+  const [showScroll, setShowScroll] = useState(false);
 
   const { register, handleSubmit, watch } = useForm({
     resolver: zodResolver(schema),
@@ -141,6 +142,19 @@ const Gala = () => {
   );
   const SelectedCategoryIcon = selectedCategory?.icon;
   const showSandboxHint = isLikelyFedapaySandbox();
+
+  useEffect(() => {
+    const toggleScrollButton = () => {
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScroll(scrolled > 300);
+    };
+    window.addEventListener("scroll", toggleScrollButton);
+    window.addEventListener("load", toggleScrollButton);
+    return () => {
+      window.removeEventListener("scroll", toggleScrollButton);
+      window.removeEventListener("load", toggleScrollButton);
+    };
+  }, []);
 
   const montant = (categoryValue = categorie, invitesValue = nbInvites) => {
     const category = categories.find((item) => item.value === categoryValue);
@@ -307,16 +321,25 @@ const Gala = () => {
 
   return (
     <div className="space-y-16">
-      {/* Scroll to top button */}
+      {/* ========== NOUVEAU BOUTON SCROLL TO TOP ========== */}
+      {/* Animation : apparition/disparition avec opacity + scale, transition fluide */}
+      {/* Au survol : agrandissement, rotation de l'icône, ombre plus forte */}
+      {/* Au clic : effet de rebond actif */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        id="topBtn"
-        style={{ background: "rgba(39, 56, 70, 0.3)" }}
-        className="pointer-events-auto fixed bottom-8 right-8 rounded-full p-2 w-12 h-12 flex items-center justify-center hover:opacity-80 transition-all duration-200 z-20 scroll-top-btn border border-white/20 hover:border-white/40"
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-90 ${
+          showScroll
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-10 opacity-0"
+        }`}
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
+        aria-label="Remonter en haut"
+        title="Remonter en haut"
       >
+        {/* Icône flèche avec rotation au survol */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 text-black transition-transform duration-300 group-hover:scale-110"
+          className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12"
           viewBox="0 0 20 20"
           fill="currentColor"
         >
@@ -324,9 +347,12 @@ const Gala = () => {
             fillRule="evenodd"
             d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
             clipRule="evenodd"
-          ></path>
+          />
         </svg>
+        {/* Anneau de lueur au survol */}
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </button>
+
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 text-white">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute left-0 top-0 h-64 w-64 animate-pulse rounded-full bg-white blur-3xl"></div>
@@ -675,7 +701,7 @@ const Gala = () => {
                   Paiement sécurisé FedaPay
                 </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white">
-                  <p className="text-sm opacity-90">Montant à payer</p>
+                  <p className="text-sm opacity-90">Montant a payer</p>
                   <p className="text-3xl font-bold">
                     {montant(
                       checkoutDraft.categorie,

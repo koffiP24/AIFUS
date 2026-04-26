@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useEvents } from "../context/EventContext";
 import { formatEventShortDate } from "../utils/eventSettings";
@@ -14,6 +15,21 @@ const Home = () => {
   const villageEvent = getEvent("village");
   const galaEvent = getEvent("gala");
   const tombolaEvent = getEvent("tombola");
+
+  const [showScroll, setShowScroll] = useState(false);
+
+  useEffect(() => {
+    const toggleScrollButton = () => {
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScroll(scrolled > 300);
+    };
+    window.addEventListener("scroll", toggleScrollButton);
+    window.addEventListener("load", toggleScrollButton);
+    return () => {
+      window.removeEventListener("scroll", toggleScrollButton);
+      window.removeEventListener("load", toggleScrollButton);
+    };
+  }, []);
 
   const evenements = [
     {
@@ -48,11 +64,11 @@ const Home = () => {
     },
   ];
 
-   evenements[0] = {
-     ...evenements[0],
-     title: "Village Opportunités",
-     description: villageEvent?.description || evenements[0].description,
-   };
+  evenements[0] = {
+    ...evenements[0],
+    title: "Village Opportunités",
+    description: villageEvent?.description || evenements[0].description,
+  };
   evenements[1] = {
     ...evenements[1],
     description: `Soirée de prestige réunissant toutes les générations d'alumni le ${formatEventShortDate(galaEvent)}.`,
@@ -72,26 +88,21 @@ const Home = () => {
 
   return (
     <div className="space-y-16">
-      {/* Scroll to top button */}
+      {/* Scroll to top button - bouton alternatif */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         id="topBtn"
-        style={{ background: "rgba(39, 56, 70, 0.3)" }}
-        className="pointer-events-auto fixed bottom-8 right-8 rounded-full p-2 w-12 h-12 flex items-center justify-center hover:opacity-80 transition-all duration-200 z-20 scroll-top-btn border border-white/20 hover:border-white/40"
+        className={`fixed bottom-6 left-6 pointer-events-auto rounded-2xl p-2 w-14 h-14 flex items-center justify-center hover:scale-105 transition-all duration-300 z-20 border border-white/30 scroll-btn group ${showScroll ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        style={{ background: "rgba(99, 102, 241, 0.85)", boxShadow: "0 8px 20px rgba(0,0,0,0.12)" }}
+        aria-label="Remonter en haut"
+        title="Remonter en haut"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 text-black transition-transform duration-300 group-hover:scale-110"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path
-            fillRule="evenodd"
-            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
-            clipRule="evenodd"
-          ></path>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white drop-shadow-sm transition-transform group-active:translate-y-[-2px]" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
         </svg>
+        <span className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></span>
       </button>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-700 via-primary-800 to-slate-900 text-white">
         {/* Background Pattern */}
