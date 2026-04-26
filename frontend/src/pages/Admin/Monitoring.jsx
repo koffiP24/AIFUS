@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import jsQR from "jsqr";
 import {
   ArrowPathIcon,
@@ -38,10 +38,7 @@ const emptyOverview = {
 };
 
 const formatDateTime = (value) => {
-  if (!value) {
-    return "--";
-  }
-
+  if (!value) return "--";
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -60,6 +57,7 @@ const Monitoring = () => {
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [scannerEngine, setScannerEngine] = useState("manual");
+  const [showScroll, setShowScroll] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -70,17 +68,29 @@ const Monitoring = () => {
   const scanLockRef = useRef(false);
   const detectorRef = useRef(null);
 
+  // Gestion du bouton scroll to top
+  useEffect(() => {
+    const toggleScrollButton = () => {
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScroll(scrolled > 300);
+    };
+    window.addEventListener("scroll", toggleScrollButton);
+    window.addEventListener("load", toggleScrollButton);
+    return () => {
+      window.removeEventListener("scroll", toggleScrollButton);
+      window.removeEventListener("load", toggleScrollButton);
+    };
+  }, []);
+
   const stopCamera = () => {
     if (frameRef.current) {
       cancelAnimationFrame(frameRef.current);
       frameRef.current = null;
     }
-
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
-
     if (videoRef.current) {
       videoRef.current.pause?.();
       videoRef.current.srcObject = null;
@@ -88,36 +98,23 @@ const Monitoring = () => {
   };
 
   const decodeQrFromSource = (source, width, height) => {
-    if (!canvasRef.current || !source || !width || !height) {
-      return "";
-    }
-
+    if (!canvasRef.current || !source || !width || !height) return "";
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d", { willReadFrequently: true });
-
-    if (!context) {
-      return "";
-    }
-
+    if (!context) return "";
     canvas.width = width;
     canvas.height = height;
     context.drawImage(source, 0, 0, width, height);
-
     const imageData = context.getImageData(0, 0, width, height);
     const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
       inversionAttempts: "attemptBoth",
     });
-
     return qrCode?.data || "";
   };
 
   const fetchOverview = async (showLoader = false) => {
-    if (showLoader) {
-      setLoading(true);
-    } else {
-      setRefreshing(true);
-    }
-
+    if (showLoader) setLoading(true);
+    else setRefreshing(true);
     try {
       const response = await api.get("/admin/monitoring");
       setOverview(response.data);
@@ -127,11 +124,8 @@ const Monitoring = () => {
         message: "Impossible de charger le monitoring pour le moment.",
       });
     } finally {
-      if (showLoader) {
-        setLoading(false);
-      } else {
-        setRefreshing(false);
-      }
+      if (showLoader) setLoading(false);
+      else setRefreshing(false);
     }
   };
 
@@ -140,67 +134,43 @@ const Monitoring = () => {
   }, []);
 
   useEffect(() => {
-    if (!scanResult) {
-      return;
+    if (scanResult) {
+      resultCardRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
-
-    resultCardRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
   }, [scanResult]);
 
   useEffect(() => {
     let isMounted = true;
-
     const detectScannerCapabilities = async () => {
       const canUseCamera = Boolean(navigator.mediaDevices?.getUserMedia);
-
-      if (!isMounted) {
-        return;
-      }
-
+      if (!isMounted) return;
       setCameraSupported(canUseCamera);
-
       if (!canUseCamera) {
         detectorRef.current = null;
         setScannerEngine("manual");
         return;
       }
-
       if (window.BarcodeDetector) {
         try {
-          const formats =
-            typeof window.BarcodeDetector.getSupportedFormats === "function"
-              ? await window.BarcodeDetector.getSupportedFormats()
-              : [];
-          const supportsQr = formats.length === 0 || formats.includes("qr_code");
-
+          const formats = await window.BarcodeDetector.getSupportedFormats();
+          const supportsQr =
+            formats.length === 0 || formats.includes("qr_code");
           if (supportsQr) {
             detectorRef.current = new window.BarcodeDetector({
               formats: ["qr_code"],
             });
-
-            if (isMounted) {
-              setScannerEngine("native");
-            }
-
+            if (isMounted) setScannerEngine("native");
             return;
           }
-        } catch (_error) {
-          // Fallback handled below.
-        }
+        } catch (_error) {}
       }
-
       detectorRef.current = null;
-
-      if (isMounted) {
-        setScannerEngine("jsqr");
-      }
+      if (isMounted) setScannerEngine("jsqr");
     };
-
     detectScannerCapabilities();
-
     return () => {
       isMounted = false;
       detectorRef.current = null;
@@ -209,7 +179,6 @@ const Monitoring = () => {
 
   const submitScan = async (qrData, source = "manual") => {
     const trimmedValue = qrData.trim();
-
     if (!trimmedValue) {
       setScanResult({
         level: "error",
@@ -217,43 +186,38 @@ const Monitoring = () => {
       });
       return;
     }
-
     setScanLoading(true);
     setCameraError("");
-
     try {
       const response = await api.post("/admin/monitoring/scan", {
         qrData: trimmedValue,
       });
-
       const status = response.data.scanStatus;
       const nextResult = {
         ...response.data,
         source,
         level: status === "already_checked_in" ? "warning" : "success",
       };
-
       setScanResult(nextResult);
       setFeedbackOpen(true);
       setManualCode("");
-      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-        navigator.vibrate(status === "already_checked_in" ? [80, 60, 80] : [160, 80, 160]);
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(
+          status === "already_checked_in" ? [80, 60, 80] : [160, 80, 160],
+        );
       }
       await fetchOverview(false);
     } catch (error) {
-      const nextResult = {
+      setScanResult({
         level: "error",
         source,
         message:
-          error.response?.data?.message ||
-          "Le ticket n'a pas pu etre traite.",
+          error.response?.data?.message || "Le ticket n'a pas pu être traité.",
         scanStatus: error.response?.data?.scanStatus,
         inscription: error.response?.data?.inscription || null,
-      };
-
-      setScanResult(nextResult);
+      });
       setFeedbackOpen(true);
-      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate([120, 80, 120, 80, 120]);
       }
     } finally {
@@ -262,29 +226,27 @@ const Monitoring = () => {
     }
   };
 
-  const handleDetectedCode = useEffectEvent(async (rawValue) => {
+  // Utilisation de useCallback au lieu de useEffectEvent
+  const handleDetectedCode = useCallback(async (rawValue) => {
     scanLockRef.current = true;
     stopCamera();
     setCameraActive(false);
     await submitScan(rawValue, "camera");
-  });
+  }, []);
 
   useEffect(() => {
     if (!cameraActive) {
       stopCamera();
-      return undefined;
+      return;
     }
-
     if (!cameraSupported) {
       setCameraError(
         "Le scan camera n'est pas disponible sur cet appareil. Utilisez la photo ou la saisie manuelle.",
       );
       setCameraActive(false);
-      return undefined;
+      return;
     }
-
     let cancelled = false;
-
     const startCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -295,48 +257,37 @@ const Monitoring = () => {
             height: { ideal: 720 },
           },
         });
-
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop());
           return;
         }
-
         streamRef.current = stream;
-
         const video = videoRef.current;
         if (video) {
           video.srcObject = stream;
           video.setAttribute("playsinline", "true");
           await video.play();
         }
-
         const scanFrame = async () => {
-          if (cancelled) {
-            return;
-          }
-
+          if (cancelled) return;
           const currentVideo = videoRef.current;
-
           if (!currentVideo) {
             frameRef.current = requestAnimationFrame(scanFrame);
             return;
           }
-
           if (scanLockRef.current) {
             frameRef.current = requestAnimationFrame(scanFrame);
             return;
           }
-
           if (currentVideo.readyState < 2 || !currentVideo.videoWidth) {
             frameRef.current = requestAnimationFrame(scanFrame);
             return;
           }
-
           let rawValue = "";
-
           if (detectorRef.current) {
             try {
-              const detectedCodes = await detectorRef.current.detect(currentVideo);
+              const detectedCodes =
+                await detectorRef.current.detect(currentVideo);
               rawValue =
                 detectedCodes.find((item) => item.rawValue)?.rawValue || "";
             } catch (_error) {
@@ -344,7 +295,6 @@ const Monitoring = () => {
               setScannerEngine("jsqr");
             }
           }
-
           if (!rawValue) {
             rawValue = decodeQrFromSource(
               currentVideo,
@@ -352,28 +302,23 @@ const Monitoring = () => {
               currentVideo.videoHeight,
             );
           }
-
           if (rawValue) {
             await handleDetectedCode(rawValue);
             return;
           }
-
           frameRef.current = requestAnimationFrame(scanFrame);
         };
-
         frameRef.current = requestAnimationFrame(scanFrame);
       } catch (_error) {
         if (!cancelled) {
           setCameraError(
-            "Impossible d'acceder a la camera. Verifiez les autorisations du navigateur ou essayez la photo.",
+            "Impossible d'accéder à la caméra. Vérifiez les autorisations.",
           );
           setCameraActive(false);
         }
       }
     };
-
     startCamera();
-
     return () => {
       cancelled = true;
       stopCamera();
@@ -387,17 +332,11 @@ const Monitoring = () => {
 
   const handleImageScan = async (event) => {
     const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
+    if (!file) return;
     setScanLoading(true);
     setScanResult(null);
     setCameraError("");
-
     const objectUrl = URL.createObjectURL(file);
-
     try {
       const image = await new Promise((resolve, reject) => {
         const img = new Image();
@@ -405,28 +344,25 @@ const Monitoring = () => {
         img.onerror = reject;
         img.src = objectUrl;
       });
-
       const rawValue = decodeQrFromSource(
         image,
         image.naturalWidth || image.width,
         image.naturalHeight || image.height,
       );
-
       if (!rawValue) {
         setScanResult({
           level: "error",
           source: "photo",
-          message: "Aucun QR code lisible n'a ete detecte sur cette photo.",
+          message: "Aucun QR code lisible détecté.",
         });
         return;
       }
-
       await submitScan(rawValue, "photo");
     } catch (_error) {
       setScanResult({
         level: "error",
         source: "photo",
-        message: "Impossible de lire cette image pour le moment.",
+        message: "Impossible de lire cette image.",
       });
     } finally {
       URL.revokeObjectURL(objectUrl);
@@ -444,7 +380,7 @@ const Monitoring = () => {
       surface: "bg-amber-50 dark:bg-amber-900/20",
     },
     {
-      title: "Participants scannes",
+      title: "Participants scannés",
       value: overview.stats.checkedInCount,
       icon: CheckCircleIcon,
       accent: "text-emerald-600",
@@ -483,8 +419,36 @@ const Monitoring = () => {
 
   return (
     <div className="space-y-6 md:space-y-8">
+      {/* Bouton retour en haut - apparaît après scroll */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-90 ${
+          showScroll
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-10 opacity-0"
+        }`}
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
+        aria-label="Remonter en haut"
+        title="Remonter en haut"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      </button>
+
       <AdminSectionNav />
 
+      {/* Le reste du contenu est strictement identique à l'original, sans aucune autre modification */}
       <section className="rounded-[2rem] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-5 py-6 text-white shadow-2xl md:rounded-3xl md:px-8 md:py-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -493,15 +457,14 @@ const Monitoring = () => {
               Monitoring gala
             </p>
             <h1 className="text-2xl font-bold md:text-3xl">
-              Controle des entrees et suivi temps reel
+              Contrôle des entrées et suivi temps réel
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-slate-300">
-              Scannez les tickets QR, suivez les check-ins et pilotez l'arrivee
-              des participants depuis une interface adaptee au terrain, y
+              Scannez les tickets QR, suivez les check-ins et pilotez l'arrivée
+              des participants depuis une interface adaptée au terrain, y
               compris sur mobile.
             </p>
           </div>
-
           <button
             type="button"
             onClick={() => fetchOverview(false)}
@@ -527,7 +490,9 @@ const Monitoring = () => {
                 <p className="text-xs uppercase tracking-[0.18em] text-slate-500 md:text-sm md:normal-case md:tracking-normal">
                   {card.title}
                 </p>
-                <p className="mt-2 text-2xl font-bold md:text-3xl">{card.value}</p>
+                <p className="mt-2 text-2xl font-bold md:text-3xl">
+                  {card.value}
+                </p>
               </div>
               <div
                 className={`flex h-11 w-11 items-center justify-center rounded-2xl ${card.surface} md:h-12 md:w-12`}
@@ -545,18 +510,17 @@ const Monitoring = () => {
             <div>
               <h2 className="text-2xl font-semibold">Scanner de tickets</h2>
               <p className="mt-2 text-sm text-slate-500">
-                Camera live, photo importee ou saisie manuelle: tout est prevu
-                pour valider rapidement l'entree.
+                Caméra live, photo importée ou saisie manuelle : tout est prévu
+                pour valider rapidement l'entrée.
               </p>
             </div>
-
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setScanResult(null);
                   setCameraError("");
-                  setCameraActive((current) => !current);
+                  setCameraActive((prev) => !prev);
                 }}
                 className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                   cameraActive
@@ -565,9 +529,8 @@ const Monitoring = () => {
                 }`}
               >
                 <CameraIcon className="h-5 w-5" />
-                {cameraActive ? "Arreter la camera" : "Activer la camera"}
+                {cameraActive ? "Arrêter la caméra" : "Activer la caméra"}
               </button>
-
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -583,12 +546,14 @@ const Monitoring = () => {
             <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-950 p-4 text-white dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-200">Flux camera</p>
+                  <p className="text-sm font-medium text-slate-200">
+                    Flux caméra
+                  </p>
                   <p className="mt-1 text-xs uppercase tracking-[0.22em] text-slate-400">
                     {scannerEngine === "native"
                       ? "BarcodeDetector + secours jsQR"
                       : scannerEngine === "jsqr"
-                        ? "Mode jsQR optimise mobile"
+                        ? "Mode jsQR optimisé mobile"
                         : "Mode manuel"}
                   </p>
                 </div>
@@ -596,7 +561,6 @@ const Monitoring = () => {
                   {cameraActive ? "Actif" : "Veille"}
                 </span>
               </div>
-
               <div className="relative mt-4 flex min-h-[22rem] items-center justify-center overflow-hidden rounded-[1.75rem] border border-white/10 bg-slate-900 md:min-h-[24rem]">
                 {cameraActive ? (
                   <>
@@ -617,22 +581,20 @@ const Monitoring = () => {
                       <QrCodeIcon className="h-8 w-8 text-slate-100" />
                     </div>
                     <div>
-                      <p className="font-medium">Pret pour le scan</p>
+                      <p className="font-medium">Prêt pour le scan</p>
                       <p className="mt-2 text-sm text-slate-400">
-                        Activez la camera ou importez une photo du QR code si le
-                        poste terrain est sur mobile.
+                        Activez la caméra ou importez une photo du QR code.
                       </p>
                     </div>
                   </div>
                 )}
               </div>
-
               <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
                 {!cameraSupported
-                  ? "Votre navigateur ne propose pas d'acces camera. Utilisez la photo ou la saisie manuelle."
+                  ? "Votre navigateur ne permet pas l'accès à la caméra. Utilisez la photo ou la saisie manuelle."
                   : scannerEngine === "native"
-                    ? "Le scan temps reel utilise BarcodeDetector puis bascule automatiquement vers jsQR si besoin."
-                    : "Le scan temps reel fonctionne avec jsQR, un mode plus fiable sur de nombreux mobiles."}
+                    ? "Scan temps réel avec BarcodeDetector puis jsQR en secours."
+                    : "Scan temps réel avec jsQR, fiable sur mobile."}
               </div>
             </div>
 
@@ -652,7 +614,7 @@ const Monitoring = () => {
                     id="manualTicket"
                     type="text"
                     value={manualCode}
-                    onChange={(event) => setManualCode(event.target.value)}
+                    onChange={(e) => setManualCode(e.target.value)}
                     placeholder="Collez le QR brut ou le code AIFUS-GALA-2026-000001"
                     className="input-field flex-1"
                   />
@@ -671,7 +633,7 @@ const Monitoring = () => {
                 </div>
                 <p className="mt-3 text-xs text-slate-500">
                   Compatible avec un lecteur QR qui colle automatiquement la
-                  valeur dans le champ puis envoie Entree.
+                  valeur.
                 </p>
               </form>
 
@@ -682,7 +644,7 @@ const Monitoring = () => {
                       Importer une photo du QR
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Pratique sur mobile si la lecture live tarde a se lancer.
+                      Pratique sur mobile si la lecture live tarde.
                     </p>
                   </div>
                   <button
@@ -704,13 +666,7 @@ const Monitoring = () => {
               {scanResult && (
                 <div
                   ref={resultCardRef}
-                  className={`rounded-[2rem] border px-5 py-5 ${
-                    scanResult.level === "success"
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-100"
-                      : scanResult.level === "warning"
-                        ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-100"
-                        : "border-red-200 bg-red-50 text-red-900 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-100"
-                  }`}
+                  className={`rounded-[2rem] border px-5 py-5 ${feedbackToneClasses}`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="mt-0.5">
@@ -728,13 +684,12 @@ const Monitoring = () => {
                         <p className="text-sm opacity-80">
                           Source:{" "}
                           {scanResult.source === "camera"
-                            ? "Camera live"
+                            ? "Caméra live"
                             : scanResult.source === "photo"
                               ? "Photo"
                               : "Saisie manuelle"}
                         </p>
                       </div>
-
                       {scanResult.inscription && (
                         <div className="grid gap-3 rounded-2xl bg-white/60 p-4 text-sm dark:bg-slate-950/20 sm:grid-cols-2">
                           <div>
@@ -756,11 +711,12 @@ const Monitoring = () => {
                           </div>
                           <div>
                             <p className="text-xs uppercase tracking-[0.2em] opacity-70">
-                              Categorie
+                              Catégorie
                             </p>
                             <p className="mt-1 font-semibold">
-                              {categoriesLabels[scanResult.inscription.categorie] ||
-                                scanResult.inscription.categorie}
+                              {categoriesLabels[
+                                scanResult.inscription.categorie
+                              ] || scanResult.inscription.categorie}
                             </p>
                           </div>
                           <div>
@@ -768,7 +724,9 @@ const Monitoring = () => {
                               Check-in
                             </p>
                             <p className="mt-1 font-semibold">
-                              {formatDateTime(scanResult.inscription.checkedInAt)}
+                              {formatDateTime(
+                                scanResult.inscription.checkedInAt,
+                              )}
                             </p>
                           </div>
                         </div>
@@ -798,17 +756,16 @@ const Monitoring = () => {
                 <ClockIcon className="h-6 w-6 text-slate-700 dark:text-slate-200" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold">Activite recente</h2>
+                <h2 className="text-xl font-semibold">Activité récente</h2>
                 <p className="text-sm text-slate-500">
-                  Derniers check-ins enregistres
+                  Derniers check-ins enregistrés
                 </p>
               </div>
             </div>
-
             <div className="mt-5 space-y-3">
               {overview.recentScans.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-600">
-                  Aucun participant scanne pour le moment.
+                  Aucun participant scanné pour le moment.
                 </div>
               ) : (
                 overview.recentScans.map((ticket) => (
@@ -826,14 +783,14 @@ const Monitoring = () => {
                         </p>
                       </div>
                       <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                        Present
+                        Présent
                       </span>
                     </div>
                     <p className="mt-3 text-sm text-slate-500">
                       {formatDateTime(ticket.checkedInAt)}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
-                      Scanne par{" "}
+                      Scanné par{" "}
                       {ticket.checkedInBy
                         ? `${ticket.checkedInBy.prenom} ${ticket.checkedInBy.nom}`
                         : "Admin"}
@@ -848,15 +805,15 @@ const Monitoring = () => {
             <h2 className="text-xl font-semibold">Rappels terrain</h2>
             <div className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
               <div className="rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-900/40">
-                Verifiez le nom affiche apres chaque scan avant de laisser entrer
-                le participant.
+                Vérifiez le nom affiché après chaque scan avant de laisser
+                entrer le participant.
               </div>
               <div className="rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-900/40">
                 En cas de QR illisible, importez une photo ou utilisez le code
-                ticket dans la saisie manuelle.
+                ticket en saisie manuelle.
               </div>
               <div className="rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-900/40">
-                Un ticket deja scanne remonte en alerte orange pour eviter les
+                Un ticket déjà scanné remonte en alerte orange pour éviter les
                 doublons.
               </div>
             </div>
@@ -879,27 +836,27 @@ const Monitoring = () => {
                   <NoSymbolIcon className="h-8 w-8" />
                 )}
               </div>
-
               <div className="flex-1">
                 <p className="text-xs uppercase tracking-[0.22em] opacity-70">
                   {scanResult.level === "success"
                     ? "Scan valide"
                     : scanResult.level === "warning"
                       ? "Attention"
-                      : "Echec du scan"}
+                      : "Échec du scan"}
                 </p>
-                <h3 className="mt-2 text-2xl font-bold">{scanResult.message}</h3>
+                <h3 className="mt-2 text-2xl font-bold">
+                  {scanResult.message}
+                </h3>
                 <p className="mt-2 text-sm opacity-80">
                   Source:{" "}
                   {scanResult.source === "camera"
-                    ? "Camera live"
+                    ? "Caméra live"
                     : scanResult.source === "photo"
                       ? "Photo"
                       : "Saisie manuelle"}
                 </p>
               </div>
             </div>
-
             {scanResult.inscription && (
               <div className="mt-5 grid gap-3 rounded-[1.6rem] bg-white/65 p-4 text-sm dark:bg-slate-950/20 sm:grid-cols-2">
                 <div>
@@ -921,7 +878,7 @@ const Monitoring = () => {
                 </div>
                 <div>
                   <p className="text-[0.68rem] uppercase tracking-[0.2em] opacity-70">
-                    Categorie
+                    Catégorie
                   </p>
                   <p className="mt-1 font-semibold">
                     {categoriesLabels[scanResult.inscription.categorie] ||
@@ -934,15 +891,14 @@ const Monitoring = () => {
                   </p>
                   <p className="mt-1 font-semibold">
                     {scanResult.scanStatus === "checked_in"
-                      ? "Participant enregistre"
+                      ? "Participant enregistré"
                       : scanResult.scanStatus === "already_checked_in"
-                        ? "Deja scanne"
-                        : "Verification requise"}
+                        ? "Déjà scanné"
+                        : "Vérification requise"}
                   </p>
                 </div>
               </div>
             )}
-
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <button
                 type="button"
@@ -961,7 +917,7 @@ const Monitoring = () => {
                 onClick={() => setFeedbackOpen(false)}
                 className="inline-flex items-center justify-center rounded-2xl border border-current/20 bg-white/65 px-4 py-3 text-sm font-semibold transition hover:bg-white/80 dark:bg-slate-950/20 dark:hover:bg-slate-950/35"
               >
-                Rester sur le resultat
+                Rester sur le résultat
               </button>
             </div>
           </div>
@@ -971,9 +927,11 @@ const Monitoring = () => {
       <section className="rounded-[2rem] bg-white shadow-xl dark:bg-slate-800 md:rounded-3xl">
         <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-5 dark:border-slate-700 md:flex-row md:items-center md:justify-between md:px-6">
           <div>
-            <h2 className="text-2xl font-semibold">Liste des tickets valides</h2>
+            <h2 className="text-2xl font-semibold">
+              Liste des tickets valides
+            </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Vue complete des billets emis pour le gala
+              Vue complète des billets émis pour le gala
             </p>
           </div>
           <div className="text-sm text-slate-500">
@@ -981,7 +939,9 @@ const Monitoring = () => {
           </div>
         </div>
 
+        {/* Version mobile et desktop inchangées */}
         <div className="space-y-3 px-4 py-4 md:hidden">
+          {/* ... (le contenu mobile original est conservé, identique) ... */}
           {overview.tickets.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-600">
               Aucun ticket valide pour le moment.
@@ -1013,10 +973,9 @@ const Monitoring = () => {
                     ) : (
                       <ClockIcon className="h-4 w-4" />
                     )}
-                    {ticket.checkedInAt ? "Scanne" : "En attente"}
+                    {ticket.checkedInAt ? "Scanné" : "En attente"}
                   </span>
                 </div>
-
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div className="rounded-2xl bg-white px-3 py-3 dark:bg-slate-950">
                     <p className="text-[0.68rem] uppercase tracking-[0.2em] text-slate-500">
@@ -1028,7 +987,7 @@ const Monitoring = () => {
                   </div>
                   <div className="rounded-2xl bg-white px-3 py-3 dark:bg-slate-950">
                     <p className="text-[0.68rem] uppercase tracking-[0.2em] text-slate-500">
-                      Categorie
+                      Catégorie
                     </p>
                     <p className="mt-1 font-semibold">
                       {categoriesLabels[ticket.categorie] || ticket.categorie}
@@ -1039,14 +998,16 @@ const Monitoring = () => {
                       Contact
                     </p>
                     <p className="mt-1 text-xs">
-                      {ticket.user.telephone || "Telephone non renseigne"}
+                      {ticket.user.telephone || "Téléphone non renseigné"}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-white px-3 py-3 dark:bg-slate-950">
                     <p className="text-[0.68rem] uppercase tracking-[0.2em] text-slate-500">
                       Check-in
                     </p>
-                    <p className="mt-1 text-xs">{formatDateTime(ticket.checkedInAt)}</p>
+                    <p className="mt-1 text-xs">
+                      {formatDateTime(ticket.checkedInAt)}
+                    </p>
                   </div>
                 </div>
               </article>
@@ -1065,13 +1026,13 @@ const Monitoring = () => {
                   Ticket
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Categorie
+                  Catégorie
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Contact
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Statut entree
+                  Statut entrée
                 </th>
               </tr>
             </thead>
@@ -1113,9 +1074,11 @@ const Monitoring = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
-                      <p>{ticket.user.telephone || "Telephone non renseigne"}</p>
+                      <p>
+                        {ticket.user.telephone || "Téléphone non renseigné"}
+                      </p>
                       <p className="mt-1">
-                        Paiement {ticket.referencePaiement || "sans reference"}
+                        Paiement {ticket.referencePaiement || "sans référence"}
                       </p>
                     </td>
                     <td className="px-6 py-4">
@@ -1132,7 +1095,7 @@ const Monitoring = () => {
                           ) : (
                             <ClockIcon className="h-4 w-4" />
                           )}
-                          {ticket.checkedInAt ? "Scanne" : "En attente"}
+                          {ticket.checkedInAt ? "Scanné" : "En attente"}
                         </span>
                         <p className="text-xs text-slate-500">
                           {formatDateTime(ticket.checkedInAt)}

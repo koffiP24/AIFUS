@@ -11,10 +11,7 @@ import api from "../../services/api";
 import AdminSectionNav from "../../components/AdminSectionNav";
 
 const formatDate = (value) => {
-  if (!value) {
-    return "--";
-  }
-
+  if (!value) return "--";
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -34,21 +31,35 @@ const UserManagement = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [savingUserId, setSavingUserId] = useState(null);
   const [feedback, setFeedback] = useState("");
+  const [showScroll, setShowScroll] = useState(false);
+
+  // Gestion de l'affichage du bouton scroll to top
+  useEffect(() => {
+    const toggleScrollButton = () => {
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScroll(scrolled > 300);
+    };
+    window.addEventListener("scroll", toggleScrollButton);
+    window.addEventListener("load", toggleScrollButton);
+    return () => {
+      window.removeEventListener("scroll", toggleScrollButton);
+      window.removeEventListener("load", toggleScrollButton);
+    };
+  }, []);
 
   const fetchUsers = async (searchValue = "") => {
-    const hasSearch = searchValue.trim().length > 0;
-
-    if (loading) {
-      setFeedback("");
-    } else {
+    // Désactiver le rafraîchissement si c'est le premier chargement
+    if (!loading) {
       setRefreshing(true);
+    } else {
+      setFeedback("");
     }
 
     try {
+      const hasSearch = searchValue.trim().length > 0;
       const response = await api.get("/admin/users", {
         params: hasSearch ? { search: searchValue.trim() } : {},
       });
-
       setUsers(response.data.users);
       setStats(response.data.stats);
     } catch (_error) {
@@ -75,18 +86,28 @@ const UserManagement = () => {
     try {
       const response = await api.put(`/admin/users/${userId}`, { role });
 
+      // Mise à jour locale immédiate
       setUsers((currentUsers) =>
         currentUsers.map((user) =>
           user.id === userId ? { ...user, ...response.data } : user,
         ),
       );
 
-      setFeedback("Role utilisateur mis a jour.");
-      await fetchUsers(search);
+      setFeedback("Rôle utilisateur mis à jour.");
+
+      // Rechargement silencieux des stats (sans bloquer l'UI)
+      const statsResponse = await api.get("/admin/stats");
+      if (statsResponse.data) {
+        setStats((prevStats) => ({
+          ...prevStats,
+          totalAdmins: statsResponse.data.totalAdmins,
+          totalUsers: statsResponse.data.totalUsers,
+        }));
+      }
     } catch (error) {
       setFeedback(
         error.response?.data?.message ||
-          "Impossible de mettre a jour cet utilisateur.",
+          "Impossible de mettre à jour cet utilisateur.",
       );
     } finally {
       setSavingUserId(null);
@@ -134,6 +155,33 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-8">
+      {/* Bouton retour en haut - apparaît après scroll */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-90 ${
+          showScroll
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-10 opacity-0"
+        }`}
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
+        aria-label="Remonter en haut"
+        title="Remonter en haut"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      </button>
+
       <AdminSectionNav />
 
       <section className="rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 px-8 py-8 text-white shadow-2xl">
@@ -143,9 +191,11 @@ const UserManagement = () => {
               <UsersIcon className="h-4 w-4" />
               Gestion des utilisateurs
             </p>
-            <h1 className="text-3xl font-bold">Comptes participants et admins</h1>
+            <h1 className="text-3xl font-bold">
+              Comptes participants et admins
+            </h1>
             <p className="mt-3 max-w-2xl text-sm text-slate-300">
-              Recherchez un compte, visualisez son activite et ajustez son role
+              Recherchez un compte, visualisez son activité et ajustez son rôle
               d&apos;administration depuis ce tableau.
             </p>
           </div>
@@ -196,11 +246,14 @@ const UserManagement = () => {
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Rechercher par nom, prenom, email ou telephone"
+              placeholder="Rechercher par nom, prénom, email ou téléphone"
               className="input-field pl-12"
             />
           </div>
-          <button type="submit" className="btn-primary whitespace-nowrap px-6 py-3">
+          <button
+            type="submit"
+            className="btn-primary whitespace-nowrap px-6 py-3"
+          >
             Rechercher
           </button>
         </form>
@@ -230,23 +283,27 @@ const UserManagement = () => {
                   Tombola
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Role
+                  Rôle
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Cree le
+                  Créé le
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
-                    Aucun utilisateur trouve.
+                  <td
+                    colSpan="6"
+                    className="px-6 py-12 text-center text-slate-500"
+                  >
+                    Aucun utilisateur trouvé.
                   </td>
                 </tr>
               ) : (
                 users.map((user) => {
                   const galaRegistration = user.inscriptionsGala?.[0] || null;
+                  const tombolaCount = user._count?.billetsTombola ?? 0;
 
                   return (
                     <tr
@@ -257,29 +314,33 @@ const UserManagement = () => {
                         <p className="font-semibold">
                           {user.prenom} {user.nom}
                         </p>
-                        <p className="mt-1 text-sm text-slate-500">{user.email}</p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {user.email}
+                        </p>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500">
-                        {user.telephone || "Telephone non renseigne"}
+                        {user.telephone || "Téléphone non renseigné"}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         {galaRegistration ? (
                           <div className="space-y-1">
                             <p className="font-medium text-slate-900 dark:text-white">
                               {galaRegistration.statutPaiement === "VALIDE"
-                                ? "Inscription validee"
+                                ? "Inscription validée"
                                 : "Inscription en attente"}
                             </p>
                             <p className="text-slate-500">
-                              {galaRegistration.ticketCode || "Ticket non emis"}
+                              {galaRegistration.ticketCode || "Ticket non émis"}
                             </p>
                           </div>
                         ) : (
-                          <span className="text-slate-500">Aucune inscription</span>
+                          <span className="text-slate-500">
+                            Aucune inscription
+                          </span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500">
-                        {user._count.billetsTombola} billet(s)
+                        {tombolaCount} billet(s)
                       </td>
                       <td className="px-6 py-4">
                         <select
