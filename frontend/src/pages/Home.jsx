@@ -151,12 +151,6 @@ const Home = () => {
 
           <div className="flex flex-wrap justify-center gap-4">
             <Link
-              to="/register"
-              className="px-8 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-amber-500/25"
-            >
-              Rejoindre la communauté
-            </Link>
-            <Link
               to="/gala"
               className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition-all border border-white/20"
             >
