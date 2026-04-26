@@ -5,6 +5,15 @@ import {
   formatEventDateLabel,
   formatEventTimeRange,
 } from "../utils/eventSettings";
+import {
+  AcademicCapIcon,
+  UserGroupIcon,
+  BuildingOfficeIcon,
+  GlobeAltIcon,
+  CalendarIcon,
+  MapPinIcon,
+  CheckCircleIcon,
+} from "@heroicons/react/24/outline";
 
 const Village = () => {
   const { getEvent } = useEvents();
@@ -40,8 +49,7 @@ const Village = () => {
     {
       icon: BuildingOfficeIcon,
       title: "Faciliter",
-      description:
-        "L'insertion professionnelle des nouveaux diplômés",
+      description: "L'insertion professionnelle des nouveaux diplômés",
     },
     {
       icon: GlobeAltIcon,
@@ -156,19 +164,33 @@ const Village = () => {
 
   return (
     <div className="space-y-16">
-      {/* Scroll to top button - bouton alternatif */}
+      {/* ========== NOUVEAU BOUTON SCROLL TO TOP (remplace l'ancien) ========== */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        id="topBtn"
-        className={`fixed bottom-6 left-6 pointer-events-auto rounded-2xl p-2 w-14 h-14 flex items-center justify-center hover:scale-105 transition-all duration-300 z-20 border border-white/30 scroll-btn group ${showScroll ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
-        style={{ background: "rgba(99, 102, 241, 0.85)", boxShadow: "0 8px 20px rgba(0,0,0,0.12)" }}
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-90 ${
+          showScroll
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-10 opacity-0"
+        }`}
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
         aria-label="Remonter en haut"
         title="Remonter en haut"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white drop-shadow-sm transition-transform group-active:translate-y-[-2px]" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+        {/* Icône flèche avec rotation au survol */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+            clipRule="evenodd"
+          />
         </svg>
-        <span className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></span>
+        {/* Anneau de lueur au survol */}
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </button>
 
       {/* Header */}
@@ -432,9 +454,6 @@ const Village = () => {
                   {formatEventDateLabel(villageEvent)} -{" "}
                   {formatEventTimeRange(villageEvent)}
                 </p>
-                <p className="hidden text-slate-500">
-                  À confirmer - Durée : 1 journée complète
-                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -444,7 +463,6 @@ const Village = () => {
                 <p className="text-slate-500">
                   {villageEvent?.location || "Lieu à confirmer"}
                 </p>
-                <p className="hidden text-slate-500">Abidjan (à confirmer)</p>
               </div>
             </div>
             <div className="flex items-start gap-3">

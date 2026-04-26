@@ -266,19 +266,31 @@ const Tombola = () => {
 
   return (
     <div className="space-y-16">
-      {/* Scroll to top button - bouton alternatif */}
+      {/* ========== NOUVEAU BOUTON SCROLL TO TOP ========== */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        id="topBtn"
-        className={`fixed bottom-6 left-6 pointer-events-auto rounded-2xl p-2 w-14 h-14 flex items-center justify-center hover:scale-105 transition-all duration-300 z-20 border border-white/30 scroll-btn group ${showScroll ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
-        style={{ background: "rgba(99, 102, 241, 0.85)", boxShadow: "0 8px 20px rgba(0,0,0,0.12)" }}
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-90 ${
+          showScroll
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-10 opacity-0"
+        }`}
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
         aria-label="Remonter en haut"
         title="Remonter en haut"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white drop-shadow-sm transition-transform group-active:translate-y-[-2px]" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+            clipRule="evenodd"
+          />
         </svg>
-        <span className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></span>
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </button>
 
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-900 text-white">
@@ -308,7 +320,7 @@ const Tombola = () => {
               Tentez de gagner une voiture et de nombreux lots exceptionnels
             </p>
           </div>
-          
+
           <div className="mt-8 inline-block">
             <div className="rounded-2xl bg-white/10 px-8 py-4 backdrop-blur">
               <p className="mb-1 text-sm text-purple-200">Prix du billet</p>
@@ -366,7 +378,7 @@ const Tombola = () => {
         <section className="rounded-2xl border border-sky-200 bg-sky-50 p-5 dark:border-sky-800 dark:bg-sky-900/20">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-             <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">
+              <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">
                 Un paiement Tombola est déjà en cours ou récent sur cet
                 appareil.
               </p>
@@ -553,10 +565,10 @@ const Tombola = () => {
                       className="input-field pl-12"
                     />
                   </div>
-                   <p className="mt-1 text-xs text-slate-500">
-                      Orange Money, Wave et les moyens compatibles seront proposés
-                      sur FedaPay.
-                    </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Orange Money, Wave et les moyens compatibles seront proposés
+                    sur FedaPay.
+                  </p>
                   {showSandboxHint && (
                     <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
                       {FEDAPAY_SANDBOX_MTN_HINT}
@@ -580,17 +592,17 @@ const Tombola = () => {
             {paymentStep === "processing" && (
               <div className="py-8 text-center">
                 <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
-                 <p className="text-lg font-medium">Création du paiement...</p>
-                  <p className="text-sm text-slate-500">
-                    Vous allez être redirigé vers FedaPay.
-                  </p>
-               </div>
-             )}
-           </div>
-         </div>
-       )}
-     </div>
-   );
- };
+                <p className="text-lg font-medium">Création du paiement...</p>
+                <p className="text-sm text-slate-500">
+                  Vous allez être redirigé vers FedaPay.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
- export default Tombola;
+export default Tombola;
