@@ -36,13 +36,11 @@ const parseOrigin = (value) => {
 const configuredOrigins = [
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URLS,
+  "https://aifus2026.vercel.app",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "http://localhost:4173",
   "http://127.0.0.1:4173",
-  "https://unporticoed-jayceon-unwebbing.ngrok-free.dev",
-  "https://ariyah-infiltrative-thriftlessly.ngrok-free.dev",
-  "https://aifus.onrender.com",
 ]
   .flatMap((value) => String(value || "").split(","))
   .map((value) => value.trim())

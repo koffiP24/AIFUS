@@ -45,10 +45,15 @@ Variables d'environnement recommandees :
 
 ```env
 VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-VITE_API_BASE_URL=https://your-render-service.onrender.com/api
+VITE_API_BASE_URL=https://aifus.onrender.com/api
 ```
 
 Le fichier `vercel.json` gere le fallback SPA pour React Router.
+
+URL de production actuelle :
+
+- frontend : `https://aifus2026.vercel.app`
+- backend API : `https://aifus.onrender.com/api`
 
 ## PWA mobile
 

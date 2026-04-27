@@ -15,8 +15,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       allowedHosts: [
-        "unporticoed-jayceon-unwebbing.ngrok-free.dev",
-        "ariyah-infiltrative-thriftlessly.ngrok-free.dev",
+        "aifus2026.vercel.app",
         "aifus.onrender.com",
       ],
       proxy: {
