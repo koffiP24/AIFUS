@@ -2,9 +2,9 @@ export const defaultEventSettings = {
   village: {
     key: "village",
     title: "Village Opportunites Ivoiro-Russe",
-    subtitle: "Evenement gratuit",
+    subtitle: "Événement gratuit",
     description:
-      "Plateforme d'information, d'orientation et de cooperation entre la Cote d'Ivoire et la Russie.",
+      "Plateforme d'information, d'orientation et de coopération entre la Côte d'Ivoire et la Russie.",
     location: "Abidjan",
     startsAt: "2026-07-31T09:00:00.000Z",
     endsAt: "2026-07-31T18:00:00.000Z",
@@ -13,9 +13,9 @@ export const defaultEventSettings = {
   gala: {
     key: "gala",
     title: "Gala des Alumni",
-    subtitle: "Soiree de prestige",
+    subtitle: "Soirée de prestige",
     description:
-      "Grande soiree de celebration, de reconnaissance et de reseautage intergenerationnel.",
+      "Grande soirée de célébration, de reconnaissance et de réseautage intergénérationnel.",
     location: "Hotel Palm Club / Sofitel",
     startsAt: "2026-08-01T18:00:00.000Z",
     endsAt: "2026-08-02T02:00:00.000Z",
@@ -26,7 +26,7 @@ export const defaultEventSettings = {
     title: "Grande Tombola AIFUS",
     subtitle: "Tirage lors du gala",
     description:
-      "Tombola officielle des festivites AIFUS 2026 avec tirage pendant la soiree du gala.",
+      "Tombola officielle des festivités AIFUS 2026 avec tirage pendant la soirée du gala.",
     location: "Scene principale du gala",
     startsAt: "2026-08-01T21:30:00.000Z",
     endsAt: "2026-08-01T22:00:00.000Z",

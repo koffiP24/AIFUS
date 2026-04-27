@@ -30,6 +30,26 @@ Notes :
 - redemarrez Vite apres toute modification de `frontend/.env`,
 - la connexion Google reste desactivee tant que `VITE_GOOGLE_CLIENT_ID` contient un placeholder.
 
+## Deploiement Vercel
+
+Le frontend est maintenant pret pour un deploiement Vercel en mode SPA.
+
+Reglages recommandes dans Vercel :
+
+- Root Directory : `frontend`
+- Framework Preset : `Vite`
+- Build Command : `npm run build`
+- Output Directory : `dist`
+
+Variables d'environnement recommandees :
+
+```env
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+VITE_API_BASE_URL=https://your-render-service.onrender.com/api
+```
+
+Le fichier `vercel.json` gere le fallback SPA pour React Router.
+
 ## PWA mobile
 
 Le frontend expose maintenant :

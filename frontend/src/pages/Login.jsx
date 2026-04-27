@@ -53,13 +53,15 @@ const Login = () => {
       const userData = await login(email, password, { remember: rememberMe });
       navigate(getPostLoginPath(userData));
     } catch (err) {
-      const apiMessage = getApiErrorMessage(
-        err,
-        "Erreur de connexion. Veuillez verifier vos identifiants.",
-      );
+       const apiMessage = getApiErrorMessage(
+         err,
+         "Erreur de connexion. Veuillez vérifier vos identifiants.",
+       );
 
-      if (apiMessage.toLowerCase().includes("mot de passe incorrect")) {
-        setError("Mot de passe incorrect. Verifiez votre saisie puis reessayez.");
+       if (apiMessage.toLowerCase().includes("mot de passe incorrect")) {
+         setError(
+           "Mot de passe incorrect. Vérifiez votre saisie puis réessayez.",
+         );
       } else {
         setError(apiMessage);
       }
@@ -84,7 +86,7 @@ const Login = () => {
   };
 
   const handleGoogleError = () => {
-    setGoogleError("La connexion Google a echoue. Veuillez reessayer.");
+    setGoogleError("La connexion Google a échoué. Veuillez réessayer.");
   };
 
   return (
@@ -113,10 +115,10 @@ const Login = () => {
           {successMessage && (
             <div className="mb-6 flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
               <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0" />
-              <div>
-                <p className="font-semibold">Reinitialisation reussie</p>
-                <p className="text-sm">{successMessage}</p>
-              </div>
+                <div>
+                  <p className="font-semibold">Réinitialisation réussie</p>
+                  <p className="text-sm">{successMessage}</p>
+                </div>
             </div>
           )}
 
@@ -139,7 +141,7 @@ const Login = () => {
                 Se connecter avec Google
               </h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Utilisez votre compte Google pour un acces instantane.
+                Utilisez votre compte Google pour un accès instantané.
               </p>
             </div>
 
@@ -231,7 +233,7 @@ const Login = () => {
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Laissez cette option decochee pour utiliser des comptes differents
+              Laissez cette option décochée pour utiliser des comptes différents
               dans plusieurs onglets.
             </p>
 
@@ -267,21 +269,21 @@ const Login = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-slate-600 dark:text-slate-400">
-              Pas encore de compte ?{" "}
-              <Link
-                to="/register"
-                className="font-semibold text-primary-600 hover:text-primary-700"
-              >
-                Creer un compte
-              </Link>
-            </p>
+               <p className="text-slate-600 dark:text-slate-400">
+                 Pas encore de compte ?{" "}
+                 <Link
+                   to="/register"
+                   className="font-semibold text-primary-600 hover:text-primary-700"
+                 >
+                   Créer un compte
+                 </Link>
+               </p>
           </div>
         </div>
 
         <div className="mt-8 text-center">
           <p className="text-sm text-slate-400">
-            Festivites AIFUS 2026 • 65 ans d'excellence
+            Festivités AIFUS 2026 • 65 ans d'excellence
           </p>
         </div>
       </div>

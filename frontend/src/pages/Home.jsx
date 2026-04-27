@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useEvents } from "../context/EventContext";
 import { formatEventShortDate } from "../utils/eventSettings";
@@ -14,6 +15,21 @@ const Home = () => {
   const villageEvent = getEvent("village");
   const galaEvent = getEvent("gala");
   const tombolaEvent = getEvent("tombola");
+
+  const [showScroll, setShowScroll] = useState(false);
+
+  useEffect(() => {
+    const toggleScrollButton = () => {
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScroll(scrolled > 300);
+    };
+    window.addEventListener("scroll", toggleScrollButton);
+    window.addEventListener("load", toggleScrollButton);
+    return () => {
+      window.removeEventListener("scroll", toggleScrollButton);
+      window.removeEventListener("load", toggleScrollButton);
+    };
+  }, []);
 
   const evenements = [
     {
@@ -50,17 +66,17 @@ const Home = () => {
 
   evenements[0] = {
     ...evenements[0],
-    title: "Village Opportunites",
+    title: "Village Opportunités",
     description: villageEvent?.description || evenements[0].description,
   };
   evenements[1] = {
     ...evenements[1],
-    description: `Soiree de prestige reunissant toutes les generations d'alumni le ${formatEventShortDate(galaEvent)}.`,
+    description: `Soirée de prestige réunissant toutes les générations d'alumni le ${formatEventShortDate(galaEvent)}.`,
     badge: formatEventShortDate(galaEvent),
   };
   evenements[2] = {
     ...evenements[2],
-    description: `Tentez de gagner une voiture et de nombreux lots. Tirage prevu le ${formatEventShortDate(tombolaEvent)}.`,
+    description: `Tentez de gagner une voiture et de nombreux lots. Tirage prévu le ${formatEventShortDate(tombolaEvent)}.`,
   };
 
   const stats = [
@@ -72,6 +88,35 @@ const Home = () => {
 
   return (
     <div className="space-y-16">
+      {/* ========== NOUVEAU BOUTON SCROLL TO TOP (remplace l'ancien) ========== */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-90 ${
+          showScroll
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-10 opacity-0"
+        }`}
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
+        aria-label="Remonter en haut"
+        title="Remonter en haut"
+      >
+        {/* Icône flèche avec rotation au survol */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+        {/* Anneau de lueur au survol */}
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      </button>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-700 via-primary-800 to-slate-900 text-white">
         {/* Background Pattern */}
@@ -94,8 +139,8 @@ const Home = () => {
             2026
           </h1>
 
-          <div className="flex flex-col items-center justify-center text-center">
-            <p className="text-xl md:text-2xl ...">
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <p className="text-xl md:text-2xl">
               Célébration des 65 ans des Alumni Ivoiriens formés en ex-URSS et
               en Russie
             </p>
@@ -105,12 +150,6 @@ const Home = () => {
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              to="/register"
-              className="px-8 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-amber-500/25"
-            >
-              Rejoindre la communauté
-            </Link>
             <Link
               to="/gala"
               className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition-all border border-white/20"
@@ -142,10 +181,12 @@ const Home = () => {
       <section>
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold mb-3">Les temps forts</h2>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Trois événements exceptionnels pour celebrate notre communauté et
-            créer de nouvelles connexions
-          </p>
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+              Trois événements exceptionnels pour célébrer notre communauté et
+              créer de nouvelles connexions
+            </p>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -271,7 +312,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
     </div>
   );
 };

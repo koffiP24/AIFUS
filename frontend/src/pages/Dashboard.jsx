@@ -27,7 +27,22 @@ const Dashboard = () => {
   const [inscription, setInscription] = useState(null);
   const [billets, setBillets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState('');
+  const [notification, setNotification] = useState("");
+  const [showScroll, setShowScroll] = useState(false);
+
+  // Gestion de l'affichage du bouton scroll to top
+  useEffect(() => {
+    const toggleScrollButton = () => {
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScroll(scrolled > 300);
+    };
+    window.addEventListener("scroll", toggleScrollButton);
+    window.addEventListener("load", toggleScrollButton);
+    return () => {
+      window.removeEventListener("scroll", toggleScrollButton);
+      window.removeEventListener("load", toggleScrollButton);
+    };
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -42,11 +57,13 @@ const Dashboard = () => {
 
   const handleCancelInscription = async () => {
     try {
-      await api.delete('/inscriptions/gala/cancel');
+      await api.delete("/inscriptions/gala/cancel");
       setInscription(null);
-      setNotification('Réservation annulée avec succès.');
+      setNotification("Réservation annulée avec succès.");
     } catch (err) {
-      setNotification(err.response?.data?.message || 'Impossible d\'annuler la réservation.');
+      setNotification(
+        err.response?.data?.message || "Impossible d'annuler la réservation.",
+      );
     }
   };
 
@@ -67,10 +84,38 @@ const Dashboard = () => {
   const galaEvent = getEvent("gala");
   const tombolaEvent = getEvent("tombola");
 
-  const InscriptionCategoryIcon = categoriesLabels[inscription?.categorie]?.icon;
+  const InscriptionCategoryIcon =
+    categoriesLabels[inscription?.categorie]?.icon;
 
   return (
     <div className="space-y-8">
+      {/* Bouton retour en haut - apparaît seulement après scroll */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-90 ${
+          showScroll
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-10 opacity-0"
+        }`}
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
+        aria-label="Remonter en haut"
+        title="Remonter en haut"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      </button>
+
       {/* Welcome Header */}
       <section className="relative overflow-hidden rounded-3xl p-8 text-white shadow-2xl">
         <div className="absolute inset-0 bg-gradient-to-r from-primary-600 via-slate-900 to-purple-700 opacity-95"></div>
@@ -166,7 +211,9 @@ const Dashboard = () => {
                     <CheckCircleIcon className="w-6 h-6 text-green-600" />
                     <div>
                       <p className="font-semibold">Inscrit</p>
-                      <p className="text-sm text-slate-500">{formatEventShortDate(galaEvent)}</p>
+                      <p className="text-sm text-slate-500">
+                        {formatEventShortDate(galaEvent)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -212,7 +259,7 @@ const Dashboard = () => {
                     />
                   </div>
                 )}
-                {inscription.statutPaiement === 'EN_ATTENTE' && (
+                {inscription.statutPaiement === "EN_ATTENTE" && (
                   <div className="mt-5 space-y-3">
                     <button
                       type="button"
@@ -222,7 +269,9 @@ const Dashboard = () => {
                       Annuler la réservation
                     </button>
                     {notification && (
-                      <div className="text-sm text-slate-600">{notification}</div>
+                      <div className="text-sm text-slate-600">
+                        {notification}
+                      </div>
                     )}
                   </div>
                 )}
@@ -340,17 +389,26 @@ const Dashboard = () => {
       <section className="rounded-3xl bg-gradient-to-r from-primary-600 to-purple-700 text-white p-8 shadow-2xl">
         <div className="flex flex-col lg:flex-row justify-between gap-6 items-center">
           <div>
-            <h2 className="text-2xl font-bold mb-2">Restez prêt pour les événements</h2>
+            <h2 className="text-2xl font-bold mb-2">
+              Restez prêt pour les événements
+            </h2>
             <p className="text-primary-100 max-w-2xl">
-              Vos expériences AIFUS sont centralisées ici : gala, tombola et village d'opportunités.
-              Profitez d'un accès immédiat à vos billets et réservations.
+              Vos expériences AIFUS sont centralisées ici : gala, tombola et
+              village d'opportunités. Profitez d'un accès immédiat à vos billets
+              et réservations.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link to="/gala" className="btn-outline text-white border-white/40 hover:bg-white/10">
+            <Link
+              to="/gala"
+              className="btn-outline text-white border-white/40 hover:bg-white/10"
+            >
               Voir le Gala
             </Link>
-            <Link to="/tombola" className="btn-primary bg-white text-slate-900 hover:shadow-lg">
+            <Link
+              to="/tombola"
+              className="btn-primary bg-white text-slate-900 hover:shadow-lg"
+            >
               Acheter des billets
             </Link>
           </div>

@@ -35,7 +35,9 @@ import {
 const buildCustomerFromUser = (user, phoneOverride) => ({
   firstName: String(user?.prenom || user?.firstName || "").trim(),
   lastName: String(user?.nom || user?.lastName || "").trim(),
-  email: String(user?.email || "").trim().toLowerCase(),
+  email: String(user?.email || "")
+    .trim()
+    .toLowerCase(),
   phone: String(phoneOverride || user?.telephone || user?.phone || "").trim(),
 });
 
@@ -52,6 +54,7 @@ const Tombola = () => {
   const [paymentPhone, setPaymentPhone] = useState("");
   const [ticketType, setTicketType] = useState(null);
   const [recentSession, setRecentSession] = useState(null);
+  const [showScroll, setShowScroll] = useState(false);
   const tombolaEvent = getEvent("tombola");
 
   const prixBillet = ticketType?.priceAmount || 10000;
@@ -64,6 +67,19 @@ const Tombola = () => {
     message,
   );
   const showSandboxHint = isLikelyFedapaySandbox();
+
+  useEffect(() => {
+    const toggleScrollButton = () => {
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScroll(scrolled > 300);
+    };
+    window.addEventListener("scroll", toggleScrollButton);
+    window.addEventListener("load", toggleScrollButton);
+    return () => {
+      window.removeEventListener("scroll", toggleScrollButton);
+      window.removeEventListener("load", toggleScrollButton);
+    };
+  }, []);
 
   useEffect(() => {
     setPaymentPhone(String(user?.telephone || user?.phone || "").trim());
@@ -137,7 +153,7 @@ const Tombola = () => {
 
       if (!customer.firstName || !customer.lastName || !customer.email) {
         throw new Error(
-          "Votre profil est incomplet. Ajoutez votre nom, prenom et email avant le paiement.",
+          "Votre profil est incomplet. Ajoutez votre nom, prénom et email avant le paiement.",
         );
       }
 
@@ -165,7 +181,7 @@ const Tombola = () => {
         payment?.instructions?.paymentUrl || payment?.payment?.paymentUrl;
 
       if (!paymentUrl) {
-        throw new Error("Aucun lien de paiement FedaPay n'a ete retourne.");
+        throw new Error("Aucun lien de paiement FedaPay n'a été retourné.");
       }
 
       const session = {
@@ -250,6 +266,33 @@ const Tombola = () => {
 
   return (
     <div className="space-y-16">
+      {/* ========== NOUVEAU BOUTON SCROLL TO TOP ========== */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-90 ${
+          showScroll
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-10 opacity-0"
+        }`}
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
+        aria-label="Remonter en haut"
+        title="Remonter en haut"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      </button>
+
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-900 text-white">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-white blur-3xl"></div>
@@ -259,7 +302,9 @@ const Tombola = () => {
         <div className="relative px-8 py-16 text-center md:py-20">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm">
             <SparklesIcon className="h-4 w-4 animate-spin" />
-            <span>Tirage lors du Gala - {formatEventShortDate(tombolaEvent)}</span>
+            <span>
+              Tirage lors du Gala - {formatEventShortDate(tombolaEvent)}
+            </span>
           </div>
 
           <h1 className="mb-4 text-4xl font-bold md:text-5xl">
@@ -270,15 +315,18 @@ const Tombola = () => {
             AIFUS 2026
           </h1>
 
-          <p className="mx-auto max-w-2xl text-xl text-purple-100">
-            Tentez de gagner une voiture et de nombreux lots exceptionnels
-          </p>
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <p className="text-xl md:text-2xl">
+              Tentez de gagner une voiture et de nombreux lots exceptionnels
+            </p>
+          </div>
 
           <div className="mt-8 inline-block">
             <div className="rounded-2xl bg-white/10 px-8 py-4 backdrop-blur">
               <p className="mb-1 text-sm text-purple-200">Prix du billet</p>
               <p className="text-4xl font-bold text-white">
-                {prixBillet.toLocaleString()} <span className="text-lg">Fcfa</span>
+                {prixBillet.toLocaleString()}{" "}
+                <span className="text-lg">Fcfa</span>
               </p>
             </div>
           </div>
@@ -287,8 +335,8 @@ const Tombola = () => {
 
       <section>
         <div className="mb-10 text-center">
-          <h2 className="mb-3 text-3xl font-bold">Les lots a gagner</h2>
-          <p className="text-slate-500">Plus de 50 lots a remporter !</p>
+          <h2 className="mb-3 text-3xl font-bold">Les lots à gagner</h2>
+          <p className="text-slate-500">Plus de 50 lots à remporter !</p>
         </div>
 
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-5">
@@ -304,7 +352,9 @@ const Tombola = () => {
               </div>
               <div className="mb-1 text-xs text-slate-500">Rang {lot.rang}</div>
               <div className="mb-1 text-sm font-bold">{lot.libelle}</div>
-              <div className="text-sm font-semibold text-primary-600">{lot.valeur}</div>
+              <div className="text-sm font-semibold text-primary-600">
+                {lot.valeur}
+              </div>
             </div>
           ))}
         </div>
@@ -329,10 +379,14 @@ const Tombola = () => {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">
-                Un paiement Tombola est deja en cours ou recent sur cet appareil.
+                Un paiement Tombola est déjà en cours ou récent sur cet
+                appareil.
               </p>
               <p className="mt-1 text-sm text-sky-700 dark:text-sky-200">
-                Reference: <span className="font-mono">{recentSession.orderReference}</span>
+                Reference:{" "}
+                <span className="font-mono">
+                  {recentSession.orderReference}
+                </span>
               </p>
             </div>
             <Link
@@ -380,7 +434,7 @@ const Tombola = () => {
                   <span className="text-sm text-slate-500">
                     {catalogLoading ? (
                       <span className="font-medium text-slate-500">
-                        Verification du stock...
+                        Vérification du stock...
                       </span>
                     ) : places.restantes > 0 ? (
                       <span className="font-medium text-green-600">
@@ -429,7 +483,9 @@ const Tombola = () => {
               <div className="mb-6 flex items-center justify-between rounded-xl bg-slate-50 p-4 dark:bg-slate-700/50">
                 <div>
                   <p className="text-sm text-slate-500">Prix unitaire</p>
-                  <p className="font-semibold">{prixBillet.toLocaleString()} Fcfa</p>
+                  <p className="font-semibold">
+                    {prixBillet.toLocaleString()} Fcfa
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-slate-500">Total</p>
@@ -461,14 +517,14 @@ const Tombola = () => {
           <ExclamationCircleIcon className="mx-auto mb-4 h-12 w-12 text-amber-500" />
           <h3 className="mb-2 text-xl font-semibold">Connexion requise</h3>
           <p className="mb-6 text-slate-500">
-            Veuillez vous connecter ou creer un compte pour acheter des billets.
+            Veuillez vous connecter ou créer un compte pour acheter des billets.
           </p>
           <div className="flex justify-center gap-4">
             <Link to="/login" className="btn-primary">
               Se connecter
             </Link>
             <Link to="/register" className="btn-outline">
-              Creer un compte
+              Créer un compte
             </Link>
           </div>
         </section>
@@ -487,7 +543,9 @@ const Tombola = () => {
 
             {paymentStep === "details" && (
               <>
-                <h3 className="mb-4 text-xl font-bold">Paiement securise FedaPay</h3>
+                <h3 className="mb-4 text-xl font-bold">
+                  Paiement sécurisé FedaPay
+                </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-purple-600 to-primary-700 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
                   <p className="text-3xl font-bold">
@@ -508,7 +566,8 @@ const Tombola = () => {
                     />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    Orange Money, Wave et les moyens compatibles seront proposes sur FedaPay.
+                    Orange Money, Wave et les moyens compatibles seront proposés
+                    sur FedaPay.
                   </p>
                   {showSandboxHint && (
                     <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
@@ -533,9 +592,9 @@ const Tombola = () => {
             {paymentStep === "processing" && (
               <div className="py-8 text-center">
                 <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
-                <p className="text-lg font-medium">Creation du paiement...</p>
+                <p className="text-lg font-medium">Création du paiement...</p>
                 <p className="text-sm text-slate-500">
-                  Vous allez etre redirige vers FedaPay.
+                  Vous allez être redirigé vers FedaPay.
                 </p>
               </div>
             )}

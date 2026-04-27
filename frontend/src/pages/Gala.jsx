@@ -60,9 +60,9 @@ const categories = [
   {
     value: "RETRAITE",
     ticketCode: "GALA_RETRAITE",
-    label: "Retraite",
+    label: "Retraité",
     price: 25000,
-    description: "Pour les alumni a la retraite",
+    description: "Pour les alumni à la retraite",
     icon: UserIcon,
     iconColor: "text-emerald-600",
     iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
@@ -72,7 +72,7 @@ const categories = [
     ticketCode: "GALA_SANS_EMPLOI",
     label: "Sans emploi",
     price: 15000,
-    description: "Pour les alumni en quete d'emploi",
+    description: "Pour les alumni en quête d'emploi",
     icon: MagnifyingGlassIcon,
     iconColor: "text-amber-600",
     iconBg: "bg-amber-100 dark:bg-amber-900/30",
@@ -82,7 +82,7 @@ const categories = [
     ticketCode: "GALA_INVITE",
     label: "Invite",
     price: 20000,
-    description: "Pour les personnes invitees par un membre",
+    description: "Pour les personnes invitées par un membre",
     icon: GiftIcon,
     iconColor: "text-purple-600",
     iconBg: "bg-purple-100 dark:bg-purple-900/30",
@@ -92,7 +92,9 @@ const categories = [
 const buildCustomerFromUser = (user, phoneOverride) => ({
   firstName: String(user?.prenom || user?.firstName || "").trim(),
   lastName: String(user?.nom || user?.lastName || "").trim(),
-  email: String(user?.email || "").trim().toLowerCase(),
+  email: String(user?.email || "")
+    .trim()
+    .toLowerCase(),
   phone: String(phoneOverride || user?.telephone || user?.phone || "").trim(),
 });
 
@@ -117,6 +119,7 @@ const Gala = () => {
   });
   const [ticketTypesByCode, setTicketTypesByCode] = useState({});
   const [recentSession, setRecentSession] = useState(null);
+  const [showScroll, setShowScroll] = useState(false);
 
   const { register, handleSubmit, watch } = useForm({
     resolver: zodResolver(schema),
@@ -139,6 +142,19 @@ const Gala = () => {
   );
   const SelectedCategoryIcon = selectedCategory?.icon;
   const showSandboxHint = isLikelyFedapaySandbox();
+
+  useEffect(() => {
+    const toggleScrollButton = () => {
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScroll(scrolled > 300);
+    };
+    window.addEventListener("scroll", toggleScrollButton);
+    window.addEventListener("load", toggleScrollButton);
+    return () => {
+      window.removeEventListener("scroll", toggleScrollButton);
+      window.removeEventListener("load", toggleScrollButton);
+    };
+  }, []);
 
   const montant = (categoryValue = categorie, invitesValue = nbInvites) => {
     const category = categories.find((item) => item.value === categoryValue);
@@ -221,7 +237,7 @@ const Gala = () => {
     const inviteTicketType = ticketTypesByCode.GALA_INVITE;
 
     if (!mainTicketType) {
-      throw new Error("Le billet selectionne n'est pas disponible.");
+      throw new Error("Le billet sélectionné n'est pas disponible.");
     }
 
     const items = [
@@ -233,7 +249,7 @@ const Gala = () => {
 
     if (draft.categorie !== "INVITE" && Number(draft.nombreInvites || 0) > 0) {
       if (!inviteTicketType) {
-        throw new Error("Le billet invite n'est pas disponible.");
+        throw new Error("Le billet invité n'est pas disponible.");
       }
 
       items.push({
@@ -255,7 +271,7 @@ const Gala = () => {
 
       if (!customer.firstName || !customer.lastName || !customer.email) {
         throw new Error(
-          "Votre profil est incomplet. Ajoutez votre nom, prenom et email avant le paiement.",
+          "Votre profil est incomplet. Ajoutez votre nom, prénom et email avant le paiement.",
         );
       }
 
@@ -275,7 +291,7 @@ const Gala = () => {
         payment?.instructions?.paymentUrl || payment?.payment?.paymentUrl;
 
       if (!paymentUrl) {
-        throw new Error("Aucun lien de paiement FedaPay n'a ete retourne.");
+        throw new Error("Aucun lien de paiement FedaPay n'a été retourné.");
       }
 
       const session = {
@@ -305,6 +321,38 @@ const Gala = () => {
 
   return (
     <div className="space-y-16">
+      {/* ========== NOUVEAU BOUTON SCROLL TO TOP ========== */}
+      {/* Animation : apparition/disparition avec opacity + scale, transition fluide */}
+      {/* Au survol : agrandissement, rotation de l'icône, ombre plus forte */}
+      {/* Au clic : effet de rebond actif */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-90 ${
+          showScroll
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-10 opacity-0"
+        }`}
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
+        aria-label="Remonter en haut"
+        title="Remonter en haut"
+      >
+        {/* Icône flèche avec rotation au survol */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+        {/* Anneau de lueur au survol */}
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      </button>
+
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 text-white">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute left-0 top-0 h-64 w-64 animate-pulse rounded-full bg-white blur-3xl"></div>
@@ -317,7 +365,7 @@ const Gala = () => {
         <div className="relative px-8 py-16 text-center md:py-20">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm animate-fade-in">
             <SparklesIcon className="h-4 w-4 animate-spin" />
-            <span>Evenement exclusif</span>
+            <span>Événement exclusif</span>
           </div>
 
           <h1 className="mb-4 text-4xl font-bold animate-slide-up md:text-5xl">
@@ -328,12 +376,12 @@ const Gala = () => {
             des Alumni
           </h1>
 
-          <p
-            className="mx-auto mb-8 max-w-2xl text-xl text-amber-100 animate-fade-in"
-            style={{ animationDelay: "0.2s" }}
-          >
-            Une soiree de celebration, de reconnaissance et de reseautage intergenerationnel
-          </p>
+          <div className="flex flex-col items-center justify-center text-center w-full">
+            <p className="text-xl md:text-2xl">
+              Une soirée de célébration, de reconnaissance et de réseautage
+              intergénérationnel
+            </p>
+          </div>
 
           <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-3">
             <div
@@ -348,7 +396,9 @@ const Gala = () => {
               style={{ animationDelay: "0.4s" }}
             >
               <MapPinIcon className="mx-auto mb-2 h-8 w-8 text-amber-300" />
-              <p className="font-semibold">{galaEvent?.location || "Lieu a confirmer"}</p>
+              <p className="font-semibold">
+                {galaEvent?.location || "Lieu à confirmer"}
+              </p>
             </div>
             <div
               className="rounded-xl bg-white/10 p-4 backdrop-blur animate-slide-up"
@@ -370,11 +420,11 @@ const Gala = () => {
           <ul className="space-y-3">
             {[
               "Cocktail de bienvenue",
-              "Diner gala gastronomique",
-              "Discours et temoignages",
+              "Dîner gala gastronomique",
+              "Discours et témoignages",
               "Remise de distinctions",
               "Animation musicale",
-              "Networking intergenerationnel",
+              "Networking intergénérationnel",
             ].map((item, index) => (
               <li
                 key={item}
@@ -395,10 +445,10 @@ const Gala = () => {
           </h3>
           <ul className="space-y-3">
             {[
-              "Rencontrer les generations d'alumni",
-              "Echanger avec les partenaires",
-              "Participer a la vie de l'association",
-              "Profiter d'une soiree inoubliable",
+              "Rencontrer les générations d'alumni",
+              "Échanger avec les partenaires",
+              "Participer à la vie de l'association",
+              "Profiter d'une soirée inoubliable",
             ].map((item, index) => (
               <li
                 key={item}
@@ -421,14 +471,17 @@ const Gala = () => {
 
         <div className="prose max-w-none text-sm text-amber-700 dark:prose-invert dark:text-amber-400">
           <p className="mb-4">
-            Le paiement est maintenant gere par un vrai tunnel FedaPay. La place est reservee
-            temporairement, puis confirmee seulement apres validation du paiement.
+            Le paiement est maintenant géré par un vrai tunnel FedaPay. La place
+            est réservée temporairement, puis confirmée seulement après
+            validation du paiement.
           </p>
 
           <div className="mb-4 rounded-lg bg-amber-100 p-4 dark:bg-amber-900/40">
-            <p className="mb-2 font-semibold">Acces au Gala (places limitees)</p>
+            <p className="mb-2 font-semibold">
+              Accès au Gala (places limitées)
+            </p>
             <p className="text-xs">
-              La participation au Gala est strictement limitee a 300 personnes.
+              La participation au Gala est strictement limitée à 300 personnes.
             </p>
           </div>
 
@@ -449,7 +502,7 @@ const Gala = () => {
           </ul>
 
           <p className="font-semibold text-amber-800 dark:text-amber-200">
-            Paiement securise via FedaPay - premier paye, premier servi
+            Paiement sécurisé via FedaPay - premier payé, premier servi
           </p>
         </div>
       </section>
@@ -459,10 +512,13 @@ const Gala = () => {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold text-sky-800 dark:text-sky-300">
-                Un paiement Gala est deja en cours ou recent sur cet appareil.
+                Un paiement Gala est déjà en cours ou récent sur cet appareil.
               </p>
               <p className="mt-1 text-sm text-sky-700 dark:text-sky-200">
-                Reference: <span className="font-mono">{recentSession.orderReference}</span>
+                Reference:{" "}
+                <span className="font-mono">
+                  {recentSession.orderReference}
+                </span>
               </p>
             </div>
             <Link
@@ -496,7 +552,8 @@ const Gala = () => {
           <div className="mb-8 text-center animate-fade-in">
             <h2 className="mb-2 text-3xl font-bold">Reservation du Gala</h2>
             <p className="text-slate-500">
-              Choisissez votre categorie puis continuez vers le paiement FedaPay.
+              Choisissez votre catégorie puis continuez vers le paiement
+              FedaPay.
             </p>
           </div>
 
@@ -527,10 +584,14 @@ const Gala = () => {
                 <div className="font-bold text-amber-600">
                   {cat.price.toLocaleString()} Fcfa
                 </div>
-                <div className="mt-1 text-xs text-slate-500">{cat.description}</div>
+                <div className="mt-1 text-xs text-slate-500">
+                  {cat.description}
+                </div>
                 <div className="mt-2 text-xs font-medium">
                   {catalogLoading ? (
-                    <span className="text-slate-500">Verification du stock...</span>
+                    <span className="text-slate-500">
+                      Vérification du stock...
+                    </span>
                   ) : places[cat.value] > 0 ? (
                     <span className="text-green-600">
                       {places[cat.value]} places restantes
@@ -550,39 +611,46 @@ const Gala = () => {
 
           {categorie !== "INVITE" && (
             <div className="mb-4 rounded-xl bg-white p-6 shadow-lg animate-slide-up dark:bg-slate-800">
-              <label className="label">Nombre d'invites</label>
+              <label className="label">Nombre d'invités</label>
               <select
                 {...register("nombreInvites", { valueAsNumber: true })}
                 className="input-field"
               >
-                <option value={0}>0 invite</option>
-                <option value={1}>1 invite</option>
-                <option value={2}>2 invites</option>
-                <option value={3}>3 invites</option>
+                <option value={0}>0 invité</option>
+                <option value={1}>1 invité</option>
+                <option value={2}>2 invités</option>
+                <option value={3}>3 invités</option>
               </select>
               <p className="mt-2 text-sm text-slate-500">
-                20 000 Fcfa par invite supplementaire
+                20 000 Fcfa par invité supplémentaire
               </p>
             </div>
           )}
 
           <div className="mb-6 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-center text-white animate-pulse">
-            <p className="mb-2 text-primary-100">Montant total a payer</p>
-            <p className="text-4xl font-bold">{montant().toLocaleString()} Fcfa</p>
+            <p className="mb-2 text-primary-100">Montant total à payer</p>
+            <p className="text-4xl font-bold">
+              {montant().toLocaleString()} Fcfa
+            </p>
             {categorie !== "INVITE" && nbInvites > 0 && (
               <p className="mt-2 text-sm text-primary-200">
-                ({selectedCategory?.price.toLocaleString()} Fcfa + {nbInvites} x 20 000 Fcfa)
+                ({selectedCategory?.price.toLocaleString()} Fcfa + {nbInvites} x
+                20 000 Fcfa)
               </p>
             )}
           </div>
 
           {!hasEnoughInviteStock && (
             <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Le stock disponible pour les billets invites ne couvre pas encore cette quantite.
+              Le stock disponible pour les billets invités ne couvre pas encore
+              cette quantite.
             </div>
           )}
 
-          <form onSubmit={handleSubmit(openPaymentModal)} className="text-center">
+          <form
+            onSubmit={handleSubmit(openPaymentModal)}
+            className="text-center"
+          >
             <button
               type="submit"
               disabled={!canContinueToPayment}
@@ -599,14 +667,15 @@ const Gala = () => {
           <ExclamationCircleIcon className="mx-auto mb-4 h-12 w-12 text-amber-500" />
           <h3 className="mb-2 text-xl font-semibold">Connexion requise</h3>
           <p className="mb-6 text-slate-500">
-            Veuillez vous connecter ou creer un compte pour reserver votre place.
+            Veuillez vous connecter ou créer un compte pour réserver votre
+            place.
           </p>
           <div className="flex justify-center gap-4">
             <Link to="/login" className="btn-primary">
               Se connecter
             </Link>
             <Link to="/register" className="btn-outline">
-              Creer un compte
+              Créer un compte
             </Link>
           </div>
         </section>
@@ -628,7 +697,9 @@ const Gala = () => {
 
             {paymentStep === "details" && (
               <>
-                <h3 className="mb-4 text-xl font-bold">Paiement securise FedaPay</h3>
+                <h3 className="mb-4 text-xl font-bold">
+                  Paiement sécurisé FedaPay
+                </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
                   <p className="text-3xl font-bold">
@@ -641,10 +712,10 @@ const Gala = () => {
                 </div>
 
                 <div className="mb-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-700 dark:bg-slate-700/50 dark:text-slate-200">
-                  <p className="font-semibold">Recapitulatif</p>
+                  <p className="font-semibold">Récapitulatif</p>
                   <div className="mt-3 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span>Categorie</span>
+                      <span>Catégorie</span>
                       <span className="flex items-center gap-2 font-medium">
                         {SelectedCategoryIcon ? (
                           <SelectedCategoryIcon className="h-4 w-4 text-amber-600" />
@@ -668,7 +739,7 @@ const Gala = () => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="label">Numero de telephone</label>
+                  <label className="label">Numéro de téléphone</label>
                   <div className="relative">
                     <DevicePhoneMobileIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                     <input
@@ -680,7 +751,8 @@ const Gala = () => {
                     />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    Orange Money, Wave et les moyens compatibles seront proposes sur la page FedaPay.
+                    Orange Money, Wave et les moyens compatibles seront proposés
+                    sur la page FedaPay.
                   </p>
                   {showSandboxHint && (
                     <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
@@ -708,9 +780,9 @@ const Gala = () => {
             {paymentStep === "processing" && (
               <div className="py-8 text-center">
                 <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
-                <p className="text-lg font-medium">Creation du paiement...</p>
+                <p className="text-lg font-medium">Création du paiement...</p>
                 <p className="text-sm text-slate-500">
-                  Vous allez etre redirige vers FedaPay.
+                  Vous allez être redirigé vers FedaPay.
                 </p>
               </div>
             )}

@@ -29,7 +29,22 @@ const EventSettings = () => {
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [showScroll, setShowScroll] = useState(false);
   const { refreshEvents } = useEvents();
+
+  // Gestion de l'affichage du bouton scroll to top
+  useEffect(() => {
+    const toggleScrollButton = () => {
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop;
+      setShowScroll(scrolled > 300);
+    };
+    window.addEventListener("scroll", toggleScrollButton);
+    window.addEventListener("load", toggleScrollButton);
+    return () => {
+      window.removeEventListener("scroll", toggleScrollButton);
+      window.removeEventListener("load", toggleScrollButton);
+    };
+  }, []);
 
   const fetchEvents = async () => {
     try {
@@ -120,6 +135,33 @@ const EventSettings = () => {
 
   return (
     <div className="space-y-8">
+      {/* Bouton retour en haut - apparaît seulement après scroll */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl active:scale-90 ${
+          showScroll
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-10 opacity-0"
+        }`}
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
+        aria-label="Remonter en haut"
+        title="Remonter en haut"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      </button>
+
       <AdminSectionNav />
 
       <section className="rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 px-8 py-8 text-white shadow-2xl">
@@ -156,7 +198,9 @@ const EventSettings = () => {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-semibold">{event.title}</h2>
-                  <p className="mt-1 text-sm text-slate-500">{event.subtitle}</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {event.subtitle}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -173,7 +217,9 @@ const EventSettings = () => {
                   <input
                     type="text"
                     value={event.title}
-                    onChange={(evt) => handleChange(key, "title", evt.target.value)}
+                    onChange={(evt) =>
+                      handleChange(key, "title", evt.target.value)
+                    }
                     className="input-field"
                   />
                 </div>
