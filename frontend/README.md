@@ -52,7 +52,7 @@ Le fichier `vercel.json` gere le fallback SPA pour React Router.
 
 URL de production actuelle :
 
-- frontend : `https://aifus2026.vercel.app`
+- frontend : `https://aifus-1.onrender.com`
 - backend API : `https://aifus.onrender.com/api`
 
 ## PWA mobile

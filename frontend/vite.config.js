@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       allowedHosts: [
-        "aifus2026.vercel.app",
+        "aifus-1.onrender.com",
         "aifus.onrender.com",
       ],
       proxy: {

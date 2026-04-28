@@ -15,9 +15,9 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: FRONTEND_URL
-        value: https://aifus2026.vercel.app
+        value: https://aifus-1.onrender.com
       - key: FRONTEND_URLS
-        value: https://aifus2026.vercel.app
+        value: https://aifus-1.onrender.com
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_IDS
@@ -35,9 +35,9 @@ services:
       - key: FEDAPAY_WEBHOOK_SECRET
         sync: false
       - key: FEDAPAY_RETURN_URL
-        value: https://aifus2026.vercel.app/payment-return
+        value: https://aifus-1.onrender.com/payment-return
       - key: FEDAPAY_CALLBACK_URL
-        value: https://aifus2026.vercel.app/payment-return
+        value: https://aifus-1.onrender.com/payment-return
       - key: FEDAPAY_WEBHOOK_URL
         value: https://aifus.onrender.com/api/v2/payments/webhook
       - key: FEDAPAY_PHONE_COUNTRY

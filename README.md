@@ -175,7 +175,7 @@ Le projet est maintenant prepare pour :
 
 URLs de production alignees dans le repo :
 
-- frontend : `https://aifus2026.vercel.app`
+- frontend : `https://aifus-1.onrender.com`
 - backend : `https://aifus.onrender.com`
 
 Fichiers ajoutes :
@@ -403,7 +403,7 @@ Configuration FedaPay importante :
 
 - le webhook FedaPay doit pointer vers votre backend public, ici `https://aifus.onrender.com/api/v2/payments/webhook`
 - n'utilisez jamais `http://localhost:5173` comme webhook : c'est une URL frontend locale, inaccessible depuis les serveurs FedaPay
-- `FEDAPAY_RETURN_URL` sert au retour navigateur apres paiement, ici `https://aifus2026.vercel.app/payment-return`
+- `FEDAPAY_RETURN_URL` sert au retour navigateur apres paiement, ici `https://aifus-1.onrender.com/payment-return`
 - si vous etes en local, exposez votre backend en `https` via un tunnel public avant de declarer l'URL webhook dans le dashboard FedaPay
 
 Variables utiles pour FedaPay dans [backend/.env.example](backend/.env.example) :

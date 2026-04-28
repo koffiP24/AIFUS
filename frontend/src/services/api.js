@@ -8,7 +8,7 @@ const resolveApiBaseUrl = () => {
 
   if (
     typeof window !== "undefined" &&
-    window.location.hostname === "aifus2026.vercel.app"
+    window.location.hostname === "aifus-1.onrender.com"
   ) {
     return "https://aifus.onrender.com/api";
   }
