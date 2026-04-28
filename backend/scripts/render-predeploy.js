@@ -38,22 +38,47 @@ const columnExists = async (connection, tableName, columnName) => {
   return Array.isArray(rows) && rows.length > 0;
 };
 
-const ensureLegacyAuthSchema = async (connection) => {
-  const hasUserTable =
-    (await tableExists(connection, "User")) ||
-    (await tableExists(connection, "user"));
+const ensureColumn = async (connection, tableName, columnName, definition) => {
+  const exists = await columnExists(connection, tableName, columnName);
 
-  if (!hasUserTable) {
-    console.log("[render-predeploy] Creating legacy auth schema...");
-    runNpx([
-      "prisma",
-      "db",
-      "execute",
-      "--file",
-      "prisma/migrations/20260412020528_aifus_db/migration.sql",
-      "--schema",
-      "prisma/schema.prisma",
-    ]);
+  if (!exists) {
+    console.log(
+      `[render-predeploy] Adding missing column ${tableName}.${columnName}...`,
+    );
+    await connection.query(
+      `ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${definition}`,
+    );
+  }
+};
+
+const ensureLegacyAuthSchema = async (connection) => {
+  let hasCanonicalUserTable = await tableExists(connection, "User");
+  const hasLowercaseUserTable = await tableExists(connection, "user");
+
+  if (!hasCanonicalUserTable && hasLowercaseUserTable) {
+    console.log("[render-predeploy] Renaming legacy lowercase user table to User...");
+    await connection.query("RENAME TABLE `user` TO `User`");
+    hasCanonicalUserTable = true;
+  }
+
+  if (!hasCanonicalUserTable) {
+    console.log("[render-predeploy] Creating canonical User table...");
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS \`User\` (
+        \`id\` INTEGER NOT NULL AUTO_INCREMENT,
+        \`email\` VARCHAR(191) NOT NULL,
+        \`password\` VARCHAR(191) NOT NULL,
+        \`role\` ENUM('USER', 'ADMIN') NOT NULL DEFAULT 'USER',
+        \`nom\` VARCHAR(191) NOT NULL,
+        \`prenom\` VARCHAR(191) NOT NULL,
+        \`telephone\` VARCHAR(191) NULL,
+        \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        \`updatedAt\` DATETIME(3) NOT NULL,
+        UNIQUE INDEX \`User_email_key\`(\`email\`),
+        PRIMARY KEY (\`id\`)
+      ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    `);
+    hasCanonicalUserTable = true;
   }
 
   const hasPasswordResetTable = await tableExists(connection, "PasswordReset");
@@ -75,13 +100,58 @@ const ensureLegacyAuthSchema = async (connection) => {
     `);
   }
 
-  const legacyUserTableName = (await tableExists(connection, "User"))
-    ? "User"
-    : (await tableExists(connection, "user"))
-      ? "user"
-      : null;
+  const legacyUserTableName = hasCanonicalUserTable ? "User" : null;
 
   if (legacyUserTableName) {
+    await ensureColumn(
+      connection,
+      legacyUserTableName,
+      "email",
+      "VARCHAR(191) NOT NULL",
+    );
+    await ensureColumn(
+      connection,
+      legacyUserTableName,
+      "password",
+      "VARCHAR(191) NOT NULL",
+    );
+    await ensureColumn(
+      connection,
+      legacyUserTableName,
+      "role",
+      "ENUM('USER', 'ADMIN') NOT NULL DEFAULT 'USER'",
+    );
+    await ensureColumn(
+      connection,
+      legacyUserTableName,
+      "nom",
+      "VARCHAR(191) NOT NULL DEFAULT ''",
+    );
+    await ensureColumn(
+      connection,
+      legacyUserTableName,
+      "prenom",
+      "VARCHAR(191) NOT NULL DEFAULT ''",
+    );
+    await ensureColumn(
+      connection,
+      legacyUserTableName,
+      "telephone",
+      "VARCHAR(191) NULL",
+    );
+    await ensureColumn(
+      connection,
+      legacyUserTableName,
+      "createdAt",
+      "DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)",
+    );
+    await ensureColumn(
+      connection,
+      legacyUserTableName,
+      "updatedAt",
+      "DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)",
+    );
+
     const hasResetCode = await columnExists(
       connection,
       legacyUserTableName,
