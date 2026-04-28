@@ -3,8 +3,7 @@ services:
     name: aifus-backend
     runtime: node
     rootDir: backend
-    buildCommand: npm run render:build
-    preDeployCommand: npm run render:predeploy
+    buildCommand: npm run render:build && npm run render:predeploy
     startCommand: npm start
     healthCheckPath: /healthz
     envVars:
@@ -58,3 +57,19 @@ services:
         value: Admin
       - key: V2_ADMIN_LAST_NAME
         value: AIFUS
+
+  - type: web
+    name: aifus-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://aifus.onrender.com/api
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
