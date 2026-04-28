@@ -26,7 +26,7 @@ const registerValidation = [
   body("nom").notEmpty().withMessage("Nom requis"),
   body("prenom").notEmpty().withMessage("Prenom requis"),
   body("telephone")
-    .optional()
+    .optional({ values: "falsy" })
     .isLength({ min: 8, max: 20 })
     .withMessage("Telephone invalide"),
 ];

@@ -53,7 +53,20 @@ const Register = () => {
     setError("");
     try {
       const { confirmPassword: _, ...data } = formData;
-      const userData = await register(data);
+      const payload = {
+        ...data,
+        email: data.email.trim(),
+        nom: data.nom.trim(),
+        prenom: data.prenom.trim(),
+      };
+
+      if (payload.telephone?.trim()) {
+        payload.telephone = payload.telephone.trim();
+      } else {
+        delete payload.telephone;
+      }
+
+      const userData = await register(payload);
       navigate(getPostRegisterPath(userData));
     } catch (err) {
       setError(
