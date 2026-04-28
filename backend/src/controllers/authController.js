@@ -68,6 +68,33 @@ const getHandledServerError = (
   error,
   fallbackMessage = "Erreur serveur",
 ) => {
+  if (error?.code === "P2002") {
+    return {
+      statusCode: 409,
+      message: "Un compte existe deja avec cette adresse email.",
+    };
+  }
+
+  if (error?.code === "P2021" || error?.code === "P2022") {
+    return {
+      statusCode: 500,
+      message:
+        "Base de donnees incomplete en production. Les migrations doivent etre relancees sur Render.",
+    };
+  }
+
+  if (
+    error?.code === "P1000" ||
+    error?.code === "P1001" ||
+    error?.name === "PrismaClientInitializationError"
+  ) {
+    return {
+      statusCode: 503,
+      message:
+        "Base de donnees indisponible. Verifiez la connexion Render ou Railway.",
+    };
+  }
+
   if (error?.statusCode === 500 && error?.publicMessage) {
     return {
       statusCode: 500,
@@ -200,9 +227,15 @@ const findValidResetRequestByCode = async (identifiant, code) => {
 // @route   POST /api/auth/register
 const register = async (req, res) => {
   const { email, password, nom, prenom, telephone } = req.body;
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const normalizedPhone = String(telephone || "").trim();
+  const normalizedNom = String(nom || "").trim();
+  const normalizedPrenom = String(prenom || "").trim();
 
   try {
-    const userExists = await prisma.user.findUnique({ where: { email } });
+    const userExists = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
     if (userExists) {
       return res.status(400).json({ message: "Cet email est déjà utilisé" });
     }
@@ -212,11 +245,11 @@ const register = async (req, res) => {
 
     const user = await prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
-        nom,
-        prenom,
-        telephone,
+        nom: normalizedNom,
+        prenom: normalizedPrenom,
+        ...(normalizedPhone ? { telephone: normalizedPhone } : {}),
         role: "USER", // premier utilisateur pourra être promu admin manuellement
       },
     });
@@ -240,9 +273,12 @@ const register = async (req, res) => {
 // @route   POST /api/auth/login
 const login = async (req, res) => {
   const { email, password } = req.body;
+  const normalizedEmail = String(email || "").trim().toLowerCase();
 
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
     if (!user) {
       return res
         .status(401)
@@ -545,7 +581,7 @@ const googleAuth = async (req, res) => {
       return res.status(400).json({ message: "Email introuvable depuis Google." });
     }
 
-    const email = payload.email;
+    const email = String(payload.email || "").trim().toLowerCase();
     const nom = payload.family_name || payload.name || "Utilisateur";
     const prenom = payload.given_name || payload.name || "Google";
 
