@@ -86,12 +86,31 @@ const configureFedapay = () => {
   FedaPay.setEnvironment(getFedapayEnvironment());
 };
 
+const getFedapayBaseReturnUrl = () => {
+  const baseUrl = [
+    process.env.FEDAPAY_RETURN_URL,
+    process.env.FEDAPAY_CALLBACK_URL,
+    process.env.FRONTEND_URL,
+  ]
+    .map((value) => String(value || "").trim())
+    .find(Boolean);
+
+  if (baseUrl) {
+    return baseUrl;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new HttpError(
+      500,
+      "Configuration FedaPay incomplete. FEDAPAY_RETURN_URL ou FRONTEND_URL manquant.",
+    );
+  }
+
+  return "http://localhost:5173";
+};
+
 const buildFedapayCallbackUrl = (orderReference, paymentReference) => {
-  const baseUrl =
-    process.env.FEDAPAY_RETURN_URL ||
-    process.env.FEDAPAY_CALLBACK_URL ||
-    process.env.FRONTEND_URL ||
-    "http://localhost:5173";
+  const baseUrl = getFedapayBaseReturnUrl();
   const url = new URL(baseUrl);
 
   if (!url.pathname || url.pathname === "/") {

@@ -46,8 +46,40 @@ const getReceivedGoogleAudiences = (payload) => {
   return [...new Set(values.filter(Boolean).map((value) => value.trim()))];
 };
 
-const getFrontendUrl = () =>
-  process.env.FRONTEND_URL || "http://localhost:5173";
+const getFrontendUrl = () => {
+  const configuredUrl = String(process.env.FRONTEND_URL || "").trim();
+
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    const error = new Error("FRONTEND_URL manquant");
+    error.statusCode = 500;
+    error.publicMessage =
+      "Configuration serveur incomplete. FRONTEND_URL est requis en production.";
+    throw error;
+  }
+
+  return "http://localhost:5173";
+};
+
+const getHandledServerError = (
+  error,
+  fallbackMessage = "Erreur serveur",
+) => {
+  if (error?.statusCode === 500 && error?.publicMessage) {
+    return {
+      statusCode: 500,
+      message: error.publicMessage,
+    };
+  }
+
+  return {
+    statusCode: 500,
+    message: fallbackMessage,
+  };
+};
 
 const generateResetCode = () =>
   crypto.randomInt(0, 1000000).toString().padStart(6, "0");
@@ -199,7 +231,8 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Erreur serveur" });
+    const handledError = getHandledServerError(error);
+    res.status(handledError.statusCode).json({ message: handledError.message });
   }
 };
 
@@ -233,7 +266,8 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Erreur serveur" });
+    const handledError = getHandledServerError(error);
+    res.status(handledError.statusCode).json({ message: handledError.message });
   }
 };
 
@@ -540,7 +574,13 @@ const googleAuth = async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur de vérification Google:", error);
-    res.status(401).json({ message: "Token Google invalide ou expiré." });
+    const handledError = getHandledServerError(
+      error,
+      "Token Google invalide ou expiré.",
+    );
+    res
+      .status(handledError.statusCode === 500 ? 500 : 401)
+      .json({ message: handledError.message });
   }
 };
 
