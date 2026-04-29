@@ -76,6 +76,7 @@ const AdminDashboard = () => {
     montantTotalTombola: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
   const [showScroll, setShowScroll] = useState(false);
 
   useEffect(() => {
@@ -94,8 +95,16 @@ const AdminDashboard = () => {
   useEffect(() => {
     api
       .get("/admin/stats")
-      .then((res) => setStats(res.data))
-      .catch(() => {})
+      .then((res) => {
+        setStats(res.data);
+        setErrorMessage("");
+      })
+      .catch((error) => {
+        setErrorMessage(
+          error.response?.data?.message ||
+            "Impossible de charger les statistiques du dashboard.",
+        );
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -248,6 +257,12 @@ const AdminDashboard = () => {
       </button>
 
       <AdminSectionNav />
+
+      {errorMessage ? (
+        <div className="rounded-3xl border border-rose-200 bg-rose-50/90 px-5 py-4 text-sm font-medium text-rose-700 shadow-[0_16px_35px_-28px_rgba(190,24,93,0.35)]">
+          {errorMessage}
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card, i) => (

@@ -1,4 +1,5 @@
 const { prisma } = require("../lib/prisma");
+const { prismaTicketing } = require("../lib/prismaTicketing");
 const {
   ensureGalaTicket,
   ensureTicketsForValidInscriptions,
@@ -27,6 +28,163 @@ const eventSettingSelect = {
   isPublished: true,
   createdAt: true,
   updatedAt: true,
+};
+
+const emptyDashboardStats = Object.freeze({
+  totalUsers: 0,
+  totalAdmins: 0,
+  totalInscriptions: 0,
+  totalBillets: 0,
+  validTickets: 0,
+  checkedInCount: 0,
+  pendingPayments: 0,
+  montantTotalInscriptions: 0,
+  montantTotalTombola: 0,
+});
+
+const getDashboardActivityScore = (stats) =>
+  (stats.totalInscriptions || 0) +
+  (stats.totalBillets || 0) +
+  (stats.validTickets || 0) +
+  (stats.checkedInCount || 0) +
+  (stats.pendingPayments || 0) +
+  (stats.montantTotalInscriptions || 0) +
+  (stats.montantTotalTombola || 0);
+
+const getLegacyDashboardStats = async () => {
+  await ensureTicketsForValidInscriptions(prisma);
+
+  const [
+    totalUsers,
+    totalAdmins,
+    totalInscriptions,
+    totalBillets,
+    validTickets,
+    checkedInCount,
+    pendingPayments,
+    montantInscriptions,
+    montantTombola,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.count({ where: { role: "ADMIN" } }),
+    prisma.inscriptionGala.count(),
+    prisma.billetTombola.count(),
+    prisma.inscriptionGala.count({ where: { statutPaiement: "VALIDE" } }),
+    prisma.inscriptionGala.count({ where: { checkedInAt: { not: null } } }),
+    prisma.inscriptionGala.count({ where: { statutPaiement: "EN_ATTENTE" } }),
+    prisma.inscriptionGala.aggregate({ _sum: { montantTotal: true } }),
+    prisma.billetTombola.aggregate({ _sum: { montant: true } }),
+  ]);
+
+  return {
+    totalUsers,
+    totalAdmins,
+    totalInscriptions,
+    totalBillets,
+    validTickets,
+    checkedInCount,
+    pendingPayments,
+    montantTotalInscriptions: montantInscriptions._sum.montantTotal || 0,
+    montantTotalTombola: montantTombola._sum.montant || 0,
+  };
+};
+
+const getV2DashboardStats = async () => {
+  const [
+    totalUsers,
+    totalAdmins,
+    galaOrderItems,
+    paidRevenueItems,
+    totalBillets,
+    validTickets,
+    checkedInCount,
+    pendingPayments,
+  ] = await Promise.all([
+    prismaTicketing.user.count(),
+    prismaTicketing.user.count({ where: { role: "ADMIN" } }),
+    prismaTicketing.orderItem.findMany({
+      where: {
+        event: { is: { type: "GALA" } },
+        order: {
+          is: {
+            status: {
+              in: ["PENDING", "PAYMENT_PROCESSING", "PAID"],
+            },
+          },
+        },
+      },
+      select: { quantity: true },
+    }),
+    prismaTicketing.orderItem.findMany({
+      where: {
+        order: { is: { status: "PAID" } },
+        event: { is: { type: { in: ["GALA", "RAFFLE"] } } },
+      },
+      select: {
+        subtotalAmount: true,
+        event: { select: { type: true } },
+      },
+    }),
+    prismaTicketing.raffleTicket.count({
+      where: { status: { not: "CANCELLED" } },
+    }),
+    prismaTicketing.ticket.count({
+      where: {
+        status: "GENERATED",
+        event: { is: { type: "GALA" } },
+      },
+    }),
+    prismaTicketing.ticket.count({
+      where: {
+        checkedInAt: { not: null },
+        event: { is: { type: "GALA" } },
+      },
+    }),
+    prismaTicketing.order.count({
+      where: {
+        status: { in: ["PENDING", "PAYMENT_PROCESSING"] },
+        items: {
+          some: {
+            event: { is: { type: "GALA" } },
+          },
+        },
+      },
+    }),
+  ]);
+
+  const totalInscriptions = galaOrderItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
+
+  const revenueByEventType = paidRevenueItems.reduce(
+    (accumulator, item) => {
+      if (item.event.type === "GALA") {
+        accumulator.montantTotalInscriptions += item.subtotalAmount;
+      }
+
+      if (item.event.type === "RAFFLE") {
+        accumulator.montantTotalTombola += item.subtotalAmount;
+      }
+
+      return accumulator;
+    },
+    {
+      montantTotalInscriptions: 0,
+      montantTotalTombola: 0,
+    },
+  );
+
+  return {
+    totalUsers,
+    totalAdmins,
+    totalInscriptions,
+    totalBillets,
+    validTickets,
+    checkedInCount,
+    pendingPayments,
+    ...revenueByEventType,
+  };
 };
 
 const getAllInscriptions = async (_req, res) => {
@@ -96,46 +254,46 @@ const validerBilletTombola = async (req, res) => {
 };
 
 const getStats = async (_req, res) => {
+  let legacyStats = emptyDashboardStats;
+  let v2Stats = emptyDashboardStats;
+  let legacyError = null;
+  let v2Error = null;
+
   try {
-    await ensureTicketsForValidInscriptions(prisma);
-
-    const [
-      totalUsers,
-      totalAdmins,
-      totalInscriptions,
-      totalBillets,
-      validTickets,
-      checkedInCount,
-      pendingPayments,
-      montantInscriptions,
-      montantTombola,
-    ] = await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({ where: { role: "ADMIN" } }),
-      prisma.inscriptionGala.count(),
-      prisma.billetTombola.count(),
-      prisma.inscriptionGala.count({ where: { statutPaiement: "VALIDE" } }),
-      prisma.inscriptionGala.count({ where: { checkedInAt: { not: null } } }),
-      prisma.inscriptionGala.count({ where: { statutPaiement: "EN_ATTENTE" } }),
-      prisma.inscriptionGala.aggregate({ _sum: { montantTotal: true } }),
-      prisma.billetTombola.aggregate({ _sum: { montant: true } }),
-    ]);
-
-    res.json({
-      totalUsers,
-      totalAdmins,
-      totalInscriptions,
-      totalBillets,
-      validTickets,
-      checkedInCount,
-      pendingPayments,
-      montantTotalInscriptions: montantInscriptions._sum.montantTotal || 0,
-      montantTotalTombola: montantTombola._sum.montant || 0,
-    });
+    legacyStats = await getLegacyDashboardStats();
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Erreur serveur" });
+    legacyError = error;
+    console.error("Admin dashboard legacy stats unavailable:", error.message);
   }
+
+  try {
+    v2Stats = await getV2DashboardStats();
+  } catch (error) {
+    v2Error = error;
+    console.error("Admin dashboard v2 stats unavailable:", error.message);
+  }
+
+  if (legacyError && v2Error) {
+    console.error(legacyError);
+    console.error(v2Error);
+    return res.status(500).json({ message: "Erreur serveur" });
+  }
+
+  const preferV2 =
+    !v2Error &&
+    (legacyError ||
+      getDashboardActivityScore(v2Stats) > getDashboardActivityScore(legacyStats));
+
+  const preferredStats = preferV2 ? v2Stats : legacyStats;
+
+  res.json({
+    ...preferredStats,
+    totalUsers: Math.max(legacyStats.totalUsers || 0, v2Stats.totalUsers || 0),
+    totalAdmins: Math.max(
+      legacyStats.totalAdmins || 0,
+      v2Stats.totalAdmins || 0,
+    ),
+  });
 };
 
 const getUsers = async (req, res) => {
