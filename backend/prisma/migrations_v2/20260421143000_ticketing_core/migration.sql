@@ -163,7 +163,7 @@ CREATE TABLE `payments` (
     `amount` INTEGER NOT NULL,
     `currency` VARCHAR(8) NOT NULL DEFAULT 'XOF',
     `status` ENUM('INITIATED', 'PENDING', 'SUCCESS', 'FAILED', 'CANCELLED', 'REFUNDED') NOT NULL DEFAULT 'INITIATED',
-    `payment_url` VARCHAR(2048) NULL,
+    `payment_url` TEXT NULL,
     `provider_status` VARCHAR(64) NULL,
     `failure_reason` VARCHAR(255) NULL,
     `callback_payload` JSON NULL,

@@ -60,7 +60,7 @@ const ensurePaymentUrlCapacity = async (connection) => {
 
   console.log("[render-predeploy] Ensuring payments.payment_url can store long provider URLs...");
   await connection.query(
-    "ALTER TABLE `payments` MODIFY COLUMN `payment_url` VARCHAR(2048) NULL",
+    "ALTER TABLE `payments` MODIFY COLUMN `payment_url` TEXT NULL",
   );
 };
 

@@ -104,6 +104,52 @@ const formatProviderError = (error, fallbackMessage) => {
   return `${providerMessage} (${flattenedErrors})`;
 };
 
+const isPaymentUrlTooLongError = (error) =>
+  error?.code === "P2000" &&
+  String(error?.meta?.column_name || error?.message || "")
+    .toLowerCase()
+    .includes("payment_url");
+
+const persistPaymentSession = async ({
+  paymentId,
+  depositId,
+  paymentUrl,
+  providerStatus,
+  rawResponse,
+  returnUrl,
+}) => {
+  const updateData = {
+    providerPaymentId: depositId,
+    paymentUrl,
+    providerStatus,
+    callbackPayload: {
+      provider: "PAWAPAY",
+      createPaymentPage: toSerializableObject(rawResponse),
+      paymentPageUrl: paymentUrl,
+      returnUrl,
+    },
+  };
+
+  try {
+    return await prismaTicketing.payment.update({
+      where: { id: paymentId },
+      data: updateData,
+    });
+  } catch (error) {
+    if (!isPaymentUrlTooLongError(error)) {
+      throw error;
+    }
+
+    return prismaTicketing.payment.update({
+      where: { id: paymentId },
+      data: {
+        ...updateData,
+        paymentUrl: null,
+      },
+    });
+  }
+};
+
 const getWebhookSecret = () =>
   process.env.PAYMENT_WEBHOOK_SECRET || process.env.JWT_SECRET || "";
 
@@ -279,18 +325,13 @@ const createExternalPaymentSession = async ({ provider, order, paymentId, transa
       providerPaymentId: paymentId,
     });
 
-    const updatedPayment = await prismaTicketing.payment.update({
-      where: { id: paymentId },
-      data: {
-        providerPaymentId: session.depositId,
-        paymentUrl: session.paymentUrl,
-        providerStatus: normalizeStatus(session.status || "PENDING"),
-        callbackPayload: {
-          provider: "PAWAPAY",
-          createPaymentPage: toSerializableObject(session.rawResponse),
-          returnUrl: session.returnUrl,
-        },
-      },
+    const updatedPayment = await persistPaymentSession({
+      paymentId,
+      depositId: session.depositId,
+      paymentUrl: session.paymentUrl,
+      providerStatus: normalizeStatus(session.status || "PENDING"),
+      rawResponse: session.rawResponse,
+      returnUrl: session.returnUrl,
     });
 
     return {
@@ -462,11 +503,14 @@ const initiatePayment = async (payload, { user = null } = {}) => {
       payment: {
         ...response.payment,
         providerPaymentId: externalSession.payment.providerPaymentId,
-        paymentUrl: externalSession.payment.paymentUrl,
+        paymentUrl: externalSession.paymentUrl,
         status: externalSession.payment.status,
       },
       instructions: buildPaymentInstructions(
-        externalSession.payment,
+        {
+          ...externalSession.payment,
+          paymentUrl: externalSession.paymentUrl,
+        },
         refreshedOrder.reference,
       ),
     };
