@@ -261,7 +261,7 @@ model Payment {
   amount               Int
   currency             String               @default("XOF") @db.VarChar(8)
   status               PaymentStatus        @default(INITIATED)
-  paymentUrl           String?              @map("payment_url") @db.VarChar(512)
+  paymentUrl           String?              @map("payment_url") @db.VarChar(2048)
   providerStatus       String?              @map("provider_status") @db.VarChar(64)
   failureReason        String?              @map("failure_reason") @db.VarChar(255)
   callbackPayload      Json?                @map("callback_payload")

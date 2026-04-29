@@ -51,6 +51,19 @@ const ensureColumn = async (connection, tableName, columnName, definition) => {
   }
 };
 
+const ensurePaymentUrlCapacity = async (connection) => {
+  const hasPaymentsTable = await tableExists(connection, "payments");
+
+  if (!hasPaymentsTable) {
+    return;
+  }
+
+  console.log("[render-predeploy] Ensuring payments.payment_url can store long provider URLs...");
+  await connection.query(
+    "ALTER TABLE `payments` MODIFY COLUMN `payment_url` VARCHAR(2048) NULL",
+  );
+};
+
 const ensureLegacyAuthSchema = async (connection) => {
   let hasCanonicalUserTable = await tableExists(connection, "User");
   const hasLowercaseUserTable = await tableExists(connection, "user");
@@ -224,6 +237,8 @@ const runDeployPreparation = async () => {
         "prisma/schema.mysql.prisma",
       ]);
     }
+
+    await ensurePaymentUrlCapacity(connection);
   } finally {
     await connection.end();
   }
