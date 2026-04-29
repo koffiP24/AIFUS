@@ -11,7 +11,33 @@ const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const isGoogleConfigured =
   googleClientId && !googleClientId.includes('your-google-client-id');
 
+const restoreSpaRouteFromRedirect = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const currentUrl = new URL(window.location.href);
+  const redirectTarget = currentUrl.searchParams.get("__spa_redirect__");
+
+  if (!redirectTarget) {
+    return;
+  }
+
+  currentUrl.searchParams.delete("__spa_redirect__");
+
+  const sanitizedTarget = redirectTarget.startsWith("/")
+    ? redirectTarget
+    : `/${redirectTarget}`;
+
+  window.history.replaceState(
+    null,
+    document.title,
+    sanitizedTarget,
+  );
+};
+
 registerPwaServiceWorker();
+restoreSpaRouteFromRedirect();
 
 const appTree = (
   <EventProvider>
