@@ -101,9 +101,10 @@ export const removePaymentSession = (orderReference) => {
 };
 
 export const buildPaymentReturnPath = ({
-  provider = "fedapay",
+  provider = "pawapay",
   orderReference,
   paymentReference,
+  providerPaymentId,
 } = {}) => {
   const searchParams = new URLSearchParams();
 
@@ -117,6 +118,10 @@ export const buildPaymentReturnPath = ({
 
   if (paymentReference) {
     searchParams.set("paymentReference", paymentReference);
+  }
+
+  if (providerPaymentId) {
+    searchParams.set("providerPaymentId", providerPaymentId);
   }
 
   const query = searchParams.toString();

@@ -36,10 +36,6 @@ import {
   formatEventDateLabel,
   formatEventTimeRange,
 } from "../utils/eventSettings";
-import {
-  FEDAPAY_SANDBOX_MTN_HINT,
-  isLikelyFedapaySandbox,
-} from "../utils/fedapaySandbox";
 
 const schema = z.object({
   categorie: z.enum(["ACTIF", "RETRAITE", "SANS_EMPLOI", "INVITE"]),
@@ -141,7 +137,6 @@ const Gala = () => {
     message,
   );
   const SelectedCategoryIcon = selectedCategory?.icon;
-  const showSandboxHint = isLikelyFedapaySandbox();
 
   useEffect(() => {
     const toggleScrollButton = () => {
@@ -261,7 +256,7 @@ const Gala = () => {
     return items;
   };
 
-  const handleFedapayCheckout = async () => {
+  const handlePawapayCheckout = async () => {
     setLoading(true);
     setPaymentStep("processing");
     setMessage("");
@@ -284,19 +279,20 @@ const Gala = () => {
       const payment = await initiateTicketingPayment({
         orderReference: order.reference,
         customerEmail: customer.email,
-        provider: "FEDAPAY",
+        provider: "PAWAPAY",
       });
 
       const paymentUrl =
         payment?.instructions?.paymentUrl || payment?.payment?.paymentUrl;
 
       if (!paymentUrl) {
-        throw new Error("Aucun lien de paiement FedaPay n'a été retourné.");
+        throw new Error("Aucun lien de paiement pawaPay n'a été retourné.");
       }
 
       const session = {
         orderReference: payment.order.reference,
         paymentReference: payment.payment.transactionReference,
+        providerPaymentId: payment.payment.providerPaymentId,
         customerEmail: customer.email,
         sourcePath: "/gala",
         label: "Gala des Alumni",
@@ -304,14 +300,14 @@ const Gala = () => {
 
       savePaymentSession(session);
       setRecentSession(session);
-      setMessage("Redirection vers FedaPay en cours...");
+      setMessage("Redirection vers pawaPay en cours...");
       window.location.assign(paymentUrl);
     } catch (error) {
       setPaymentStep("details");
       setMessage(
         getApiErrorMessage(
           error,
-          "Impossible de lancer le paiement FedaPay pour le moment.",
+          "Impossible de lancer le paiement pawaPay pour le moment.",
         ),
       );
     } finally {
@@ -471,7 +467,7 @@ const Gala = () => {
 
         <div className="prose max-w-none text-sm text-amber-700 dark:prose-invert dark:text-amber-400">
           <p className="mb-4">
-            Le paiement est maintenant géré par un vrai tunnel FedaPay. La place
+            Le paiement est maintenant géré par un vrai tunnel pawaPay. La place
             est réservée temporairement, puis confirmée seulement après
             validation du paiement.
           </p>
@@ -502,7 +498,7 @@ const Gala = () => {
           </ul>
 
           <p className="font-semibold text-amber-800 dark:text-amber-200">
-            Paiement sécurisé via FedaPay - premier payé, premier servi
+            Paiement sécurisé via pawaPay - premier payé, premier servi
           </p>
         </div>
       </section>
@@ -523,9 +519,10 @@ const Gala = () => {
             </div>
             <Link
               to={buildPaymentReturnPath({
-                provider: "fedapay",
+                provider: "pawapay",
                 orderReference: recentSession.orderReference,
                 paymentReference: recentSession.paymentReference,
+                providerPaymentId: recentSession.providerPaymentId,
               })}
               className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
             >
@@ -553,7 +550,7 @@ const Gala = () => {
             <h2 className="mb-2 text-3xl font-bold">Reservation du Gala</h2>
             <p className="text-slate-500">
               Choisissez votre catégorie puis continuez vers le paiement
-              FedaPay.
+              pawaPay.
             </p>
           </div>
 
@@ -658,7 +655,7 @@ const Gala = () => {
             >
               {catalogLoading
                 ? "Chargement du stock..."
-                : "Continuer vers FedaPay"}
+                : "Continuer vers pawaPay"}
             </button>
           </form>
         </section>
@@ -698,7 +695,7 @@ const Gala = () => {
             {paymentStep === "details" && (
               <>
                 <h3 className="mb-4 text-xl font-bold">
-                  Paiement sécurisé FedaPay
+                  Paiement sécurisé pawaPay
                 </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
@@ -751,19 +748,13 @@ const Gala = () => {
                     />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    Orange Money, Wave et les moyens compatibles seront proposés
-                    sur la page FedaPay.
+                    Le paiement mobile money sera proposé sur la page pawaPay.
                   </p>
-                  {showSandboxHint && (
-                    <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
-                      {FEDAPAY_SANDBOX_MTN_HINT}
-                    </div>
-                  )}
                 </div>
 
                 <button
                   type="button"
-                  onClick={handleFedapayCheckout}
+                  onClick={handlePawapayCheckout}
                   disabled={loading}
                   className="w-full btn-primary py-3 transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -772,7 +763,7 @@ const Gala = () => {
                     : `Payer ${montant(
                         checkoutDraft.categorie,
                         checkoutDraft.nombreInvites,
-                      ).toLocaleString()} Fcfa avec FedaPay`}
+                      ).toLocaleString()} Fcfa avec pawaPay`}
                 </button>
               </>
             )}
@@ -782,7 +773,7 @@ const Gala = () => {
                 <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
                 <p className="text-lg font-medium">Création du paiement...</p>
                 <p className="text-sm text-slate-500">
-                  Vous allez être redirigé vers FedaPay.
+                  Vous allez être redirigé vers pawaPay.
                 </p>
               </div>
             )}

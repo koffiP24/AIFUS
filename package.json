@@ -24,9 +24,6 @@
     "prisma:validate:v2": "npm run prisma:validate:v2 --prefix backend",
     "seed:v2": "npm run seed:v2 --prefix backend"
   },
-  "dependencies": {
-    "fedapay": "^1.2.5"
-  },
   "engines": {
     "node": "22.x"
   }

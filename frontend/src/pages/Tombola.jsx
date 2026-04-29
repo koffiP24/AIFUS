@@ -27,10 +27,6 @@ import {
   getLatestPaymentSessionForPath,
   savePaymentSession,
 } from "../utils/paymentSession";
-import {
-  FEDAPAY_SANDBOX_MTN_HINT,
-  isLikelyFedapaySandbox,
-} from "../utils/fedapaySandbox";
 
 const buildCustomerFromUser = (user, phoneOverride) => ({
   firstName: String(user?.prenom || user?.firstName || "").trim(),
@@ -66,7 +62,6 @@ const Tombola = () => {
   const isPositiveMessage = /redirection|pret|reprendre|verification/i.test(
     message,
   );
-  const showSandboxHint = isLikelyFedapaySandbox();
 
   useEffect(() => {
     const toggleScrollButton = () => {
@@ -174,19 +169,20 @@ const Tombola = () => {
       const payment = await initiateTicketingPayment({
         orderReference: order.reference,
         customerEmail: customer.email,
-        provider: "FEDAPAY",
+        provider: "PAWAPAY",
       });
 
       const paymentUrl =
         payment?.instructions?.paymentUrl || payment?.payment?.paymentUrl;
 
       if (!paymentUrl) {
-        throw new Error("Aucun lien de paiement FedaPay n'a été retourné.");
+        throw new Error("Aucun lien de paiement pawaPay n'a été retourné.");
       }
 
       const session = {
         orderReference: payment.order.reference,
         paymentReference: payment.payment.transactionReference,
+        providerPaymentId: payment.payment.providerPaymentId,
         customerEmail: customer.email,
         sourcePath: "/tombola",
         label: "Tombola AIFUS",
@@ -194,14 +190,14 @@ const Tombola = () => {
 
       savePaymentSession(session);
       setRecentSession(session);
-      setMessage("Redirection vers FedaPay en cours...");
+      setMessage("Redirection vers pawaPay en cours...");
       window.location.assign(paymentUrl);
     } catch (error) {
       setPaymentStep("details");
       setMessage(
         getApiErrorMessage(
           error,
-          "Impossible de lancer le paiement FedaPay pour la tombola.",
+          "Impossible de lancer le paiement pawaPay pour la tombola.",
         ),
       );
     } finally {
@@ -391,9 +387,10 @@ const Tombola = () => {
             </div>
             <Link
               to={buildPaymentReturnPath({
-                provider: "fedapay",
+                provider: "pawapay",
                 orderReference: recentSession.orderReference,
                 paymentReference: recentSession.paymentReference,
+                providerPaymentId: recentSession.providerPaymentId,
               })}
               className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
             >
@@ -507,7 +504,7 @@ const Tombola = () => {
                 }
                 className="w-full btn-primary py-4 text-lg disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Acheter {quantite} billet{quantite > 1 ? "s" : ""} avec FedaPay
+                Acheter {quantite} billet{quantite > 1 ? "s" : ""} avec pawaPay
               </button>
             </div>
           </div>
@@ -544,7 +541,7 @@ const Tombola = () => {
             {paymentStep === "details" && (
               <>
                 <h3 className="mb-4 text-xl font-bold">
-                  Paiement sécurisé FedaPay
+                  Paiement sécurisé pawaPay
                 </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-purple-600 to-primary-700 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
@@ -566,14 +563,8 @@ const Tombola = () => {
                     />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    Orange Money, Wave et les moyens compatibles seront proposés
-                    sur FedaPay.
+                    Le paiement mobile money sera proposé sur pawaPay.
                   </p>
-                  {showSandboxHint && (
-                    <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
-                      {FEDAPAY_SANDBOX_MTN_HINT}
-                    </div>
-                  )}
                 </div>
 
                 <button
@@ -584,7 +575,7 @@ const Tombola = () => {
                 >
                   {loading
                     ? "Preparation du paiement..."
-                    : `Payer ${(quantite * prixBillet).toLocaleString()} Fcfa avec FedaPay`}
+                    : `Payer ${(quantite * prixBillet).toLocaleString()} Fcfa avec pawaPay`}
                 </button>
               </>
             )}
@@ -594,7 +585,7 @@ const Tombola = () => {
                 <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
                 <p className="text-lg font-medium">Création du paiement...</p>
                 <p className="text-sm text-slate-500">
-                  Vous allez être redirigé vers FedaPay.
+                  Vous allez être redirigé vers pawaPay.
                 </p>
               </div>
             )}

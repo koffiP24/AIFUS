@@ -11,14 +11,12 @@ const {
 } = require("../common/orderService");
 const { ensureOrderTickets } = require("../tickets/tickets.service");
 const {
-  hasFedapayConfig,
-  createFedapayPaymentSession,
-  parseFedapayWebhook,
-  retrieveFedapayTransaction,
-  isFedapayTransactionEvent,
-  buildFedapayWebhookPayload,
+  hasPawapayConfig,
+  createPawapayPaymentSession,
+  retrievePawapayDepositStatus,
+  buildPawapayWebhookPayload,
   sanitizeForJson,
-} = require("./fedapay.client");
+} = require("./pawapay.client");
 
 const SUCCESS_STATUSES = new Set([
   "SUCCESS",
@@ -30,7 +28,14 @@ const SUCCESS_STATUSES = new Set([
   "APPROVED_PARTIALLY_REFUNDED",
   "TRANSFERRED_PARTIALLY_REFUNDED",
 ]);
-const FAILED_STATUSES = new Set(["FAILED", "FAIL", "ERROR", "DECLINED"]);
+const FAILED_STATUSES = new Set([
+  "FAILED",
+  "FAIL",
+  "ERROR",
+  "DECLINED",
+  "REJECTED",
+  "NOT_FOUND",
+]);
 const CANCELLED_STATUSES = new Set([
   "CANCELLED",
   "CANCELED",
@@ -55,7 +60,7 @@ const resolveProvider = (provider) => {
     return requestedProvider;
   }
 
-  return hasFedapayConfig() ? "FEDAPAY" : "SIMULATION";
+  return hasPawapayConfig() ? "PAWAPAY" : "SIMULATION";
 };
 
 const toSerializableObject = (value) => sanitizeForJson(value);
@@ -142,7 +147,7 @@ const verifyWebhookSignature = (payload, signature) => {
 };
 
 const buildPaymentInstructions = (payment, orderReference) => {
-  if (payment.provider === "FEDAPAY") {
+  if (payment.provider === "PAWAPAY") {
     return {
       provider: payment.provider,
       transactionReference: payment.transactionReference,
@@ -263,29 +268,27 @@ const markPaymentFailure = async (tx, { orderId, paymentId, status, providerPayl
 };
 
 const createExternalPaymentSession = async ({ provider, order, paymentId, transactionReference }) => {
-  if (provider !== "FEDAPAY") {
+  if (provider !== "PAWAPAY") {
     return null;
   }
 
   try {
-    const session = await createFedapayPaymentSession({
+    const session = await createPawapayPaymentSession({
       order,
       paymentReference: transactionReference,
+      providerPaymentId: paymentId,
     });
 
     const updatedPayment = await prismaTicketing.payment.update({
       where: { id: paymentId },
       data: {
-        providerPaymentId: session.transactionId,
+        providerPaymentId: session.depositId,
         paymentUrl: session.paymentUrl,
         providerStatus: normalizeStatus(session.status || "PENDING"),
         callbackPayload: {
-          provider: "FEDAPAY",
-          createTransaction: toSerializableObject(session.rawTransaction),
-          paymentToken: toSerializableObject(session.rawToken),
-          callbackUrl: session.callbackUrl,
-          providerReference: session.transactionReference,
-          phoneFallbackUsed: Boolean(session.phoneFallbackUsed),
+          provider: "PAWAPAY",
+          createPaymentPage: toSerializableObject(session.rawResponse),
+          returnUrl: session.returnUrl,
         },
       },
     });
@@ -297,7 +300,7 @@ const createExternalPaymentSession = async ({ provider, order, paymentId, transa
   } catch (error) {
     const failureReason = formatProviderError(
       error,
-      "Impossible d'initialiser le paiement FedaPay.",
+      "Impossible d'initialiser le paiement pawaPay.",
     );
 
     await prismaTicketing.$transaction(
@@ -311,7 +314,7 @@ const createExternalPaymentSession = async ({ provider, order, paymentId, transa
             providerStatus: "INIT_ERROR",
             failureReason,
             callbackPayload: {
-              provider: "FEDAPAY",
+              provider: "PAWAPAY",
               initError: {
                 message: failureReason,
               },
@@ -437,7 +440,7 @@ const initiatePayment = async (payload, { user = null } = {}) => {
   if (
     response &&
     !response.alreadyPaid &&
-    provider === "FEDAPAY" &&
+    provider === "PAWAPAY" &&
     pendingExternalSession &&
     response.payment?.status === "PENDING"
   ) {
@@ -728,44 +731,25 @@ const processWebhook = async (payload, signature = null, options = {}) => {
   return response;
 };
 
-const processFedapayWebhook = async ({ rawBody, signature }) => {
-  const event = parseFedapayWebhook(rawBody, signature);
+const processPawapayWebhook = async ({ payload }) => {
+  const providerPaymentId = String(payload?.depositId || "").trim();
 
-  if (!isFedapayTransactionEvent(event)) {
-    return {
-      message: "Evenement FedaPay ignore",
-      ignored: true,
-      eventName: event?.name || event?.type || null,
-    };
+  if (!providerPaymentId) {
+    throw new HttpError(400, "Webhook pawaPay sans depositId");
   }
 
-  const transactionId = event?.entity?.id || event?.object_id || null;
-
-  if (!transactionId) {
-    throw new HttpError(400, "Webhook FedaPay sans identifiant de transaction");
-  }
-
-  const transaction = await retrieveFedapayTransaction(transactionId);
-  const fallbackTransactionReference = String(
-    transaction?.merchant_reference || event?.entity?.merchant_reference || "",
-  ).trim();
-
-  if (!fallbackTransactionReference) {
-    throw new HttpError(
-      400,
-      "Reference marchand FedaPay absente pour rapprocher le paiement local",
-    );
-  }
-
-  const localPayment = await prismaTicketing.payment.findUnique({
-    where: { transactionReference: fallbackTransactionReference },
+  const localPayment = await prismaTicketing.payment.findFirst({
+    where: {
+      providerPaymentId,
+    },
   });
 
-  const normalizedPayload = buildFedapayWebhookPayload({
-    event,
-    transaction,
-    fallbackTransactionReference,
-    fallbackAmount: localPayment?.amount,
+  const statusPayload = await retrievePawapayDepositStatus(providerPaymentId);
+  const normalizedPayload = buildPawapayWebhookPayload({
+    callbackPayload: payload,
+    statusPayload,
+    fallbackTransactionReference: localPayment?.transactionReference || "",
+    fallbackAmount: localPayment?.amount || 0,
     fallbackCurrency: localPayment?.currency || "XOF",
   });
 
@@ -776,8 +760,15 @@ const processFedapayWebhook = async ({ rawBody, signature }) => {
 };
 
 const reconcilePayment = async (payload, { user = null } = {}) => {
-  if (!payload.orderReference && !payload.transactionReference) {
-    throw new HttpError(400, "orderReference ou transactionReference requis");
+  if (
+    !payload.orderReference &&
+    !payload.transactionReference &&
+    !payload.providerPaymentId
+  ) {
+    throw new HttpError(
+      400,
+      "orderReference, transactionReference ou providerPaymentId requis",
+    );
   }
 
   let payment = null;
@@ -785,6 +776,11 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
   if (payload.transactionReference) {
     payment = await prismaTicketing.payment.findUnique({
       where: { transactionReference: payload.transactionReference },
+        include: { order: true },
+      });
+  } else if (payload.providerPaymentId) {
+    payment = await prismaTicketing.payment.findFirst({
+      where: { providerPaymentId: payload.providerPaymentId },
       include: { order: true },
     });
   } else {
@@ -796,7 +792,7 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
     payment = await prismaTicketing.payment.findFirst({
       where: {
         orderId: order.id,
-        provider: "FEDAPAY",
+        provider: "PAWAPAY",
       },
       orderBy: { createdAt: "desc" },
       include: { order: true },
@@ -804,7 +800,7 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
   }
 
   if (!payment) {
-    throw new HttpError(404, "Paiement FedaPay introuvable");
+    throw new HttpError(404, "Paiement pawaPay introuvable");
   }
 
   await loadAndAuthorizeOrder(prismaTicketing, payment.order.reference, {
@@ -812,28 +808,27 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
     customerEmail: payload.customerEmail,
   });
 
-  if (payment.provider !== "FEDAPAY") {
-    throw new HttpError(409, "La reconciliation n'est disponible que pour FedaPay");
+  if (payment.provider !== "PAWAPAY") {
+    throw new HttpError(409, "La reconciliation n'est disponible que pour pawaPay");
   }
 
   if (!payment.providerPaymentId) {
     throw new HttpError(
       409,
-      "Aucun identifiant FedaPay n'est enregistre pour ce paiement",
+      "Aucun identifiant pawaPay n'est enregistre pour ce paiement",
     );
   }
 
-  const transaction = await retrieveFedapayTransaction(payment.providerPaymentId);
-  const normalizedPayload = buildFedapayWebhookPayload({
-    event: {
-      id: `RECONCILE-${Date.now()}-${payment.providerPaymentId}`,
-      name: `transaction.${String(transaction.status || "pending").trim().toLowerCase()}`,
-      entity: {
-        id: transaction.id,
-        merchant_reference: transaction.merchant_reference,
-      },
+  const statusPayload = await retrievePawapayDepositStatus(payment.providerPaymentId);
+  const normalizedPayload = buildPawapayWebhookPayload({
+    callbackPayload: {
+      depositId: payment.providerPaymentId,
+      status:
+        statusPayload?.status === "FOUND"
+          ? statusPayload?.data?.status
+          : "NOT_FOUND",
     },
-    transaction,
+    statusPayload,
     fallbackTransactionReference: payment.transactionReference,
     fallbackAmount: payment.amount,
     fallbackCurrency: payment.currency,
@@ -911,7 +906,7 @@ const simulatePayment = async (payload, { user = null } = {}) => {
 module.exports = {
   initiatePayment,
   processWebhook,
-  processFedapayWebhook,
+  processPawapayWebhook,
   reconcilePayment,
   simulatePayment,
   buildWebhookSignature,

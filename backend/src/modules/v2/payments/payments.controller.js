@@ -4,11 +4,11 @@ const { sendHttpError } = require("../common/httpError");
 const webhookHealth = async (_req, res) => {
   return res.json({
     ok: true,
-    provider: "FEDAPAY",
+    provider: "PAWAPAY",
     route: "/api/v2/payments/webhook",
     method: "POST",
     message:
-      "Endpoint webhook accessible. Configurez cette URL cote FedaPay, pas votre frontend.",
+      "Endpoint webhook accessible. Configurez cette URL cote pawaPay, pas votre frontend.",
   });
 };
 
@@ -25,12 +25,11 @@ const initiatePayment = async (req, res) => {
 
 const handleWebhook = async (req, res) => {
   try {
-    const fedapaySignature = req.headers["x-fedapay-signature"] || null;
-    const payload = fedapaySignature
-      ? await paymentsService.processFedapayWebhook({
-          rawBody: req.rawBody || JSON.stringify(req.body),
-          signature: fedapaySignature,
-        })
+    const payload =
+      req.body?.depositId && req.body?.status
+        ? await paymentsService.processPawapayWebhook({
+            payload: req.body,
+          })
       : await paymentsService.processWebhook(
           req.body,
           req.headers["x-signature"] || null,

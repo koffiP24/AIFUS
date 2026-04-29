@@ -31,7 +31,7 @@ export const createTicketingOrder = async ({ items, customer }) => {
 export const initiateTicketingPayment = async ({
   orderReference,
   customerEmail,
-  provider = "FEDAPAY",
+  provider = "PAWAPAY",
 }) => {
   const { data } = await api.post("/v2/payments/initiate", {
     orderReference,
@@ -45,11 +45,13 @@ export const initiateTicketingPayment = async ({
 export const reconcileTicketingPayment = async ({
   orderReference,
   transactionReference,
+  providerPaymentId,
   customerEmail,
 }) => {
   const { data } = await api.post("/v2/payments/reconcile", {
     orderReference,
     transactionReference,
+    providerPaymentId,
     customerEmail,
   });
 

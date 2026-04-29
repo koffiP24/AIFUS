@@ -21,9 +21,18 @@ import {
   getPaymentSession,
   removePaymentSession,
 } from "../utils/paymentSession";
-import { FEDAPAY_SANDBOX_MTN_HINT } from "../utils/fedapaySandbox";
 
-const STATUS_META = {
+const getProviderLabel = (provider) => {
+  const normalizedProvider = String(provider || "").trim().toLowerCase();
+
+  if (normalizedProvider === "pawapay") {
+    return "pawaPay";
+  }
+
+  return "le prestataire de paiement";
+};
+
+const buildStatusMeta = (providerLabel) => ({
   PAID: {
     title: "Paiement confirme",
     description:
@@ -37,7 +46,7 @@ const STATUS_META = {
   PAYMENT_PROCESSING: {
     title: "Paiement en cours de verification",
     description:
-      "Le paiement a ete initie. Nous recontrolons le statut avec FedaPay.",
+      `Le paiement a ete initie. Nous recontrolons le statut avec ${providerLabel}.`,
     icon: ClockIcon,
     accent: "text-amber-700",
     panel:
@@ -84,7 +93,7 @@ const STATUS_META = {
       "border-red-200 bg-gradient-to-br from-red-50 to-rose-50 text-red-900",
     badge: "bg-red-100 text-red-800",
   },
-};
+});
 
 const shouldPollStatus = (status) =>
   status === "PENDING" || status === "PAYMENT_PROCESSING";
@@ -103,26 +112,6 @@ const statusLabel = (status) =>
     REFUNDED: "Rembourse",
   })[status] || status || "Inconnu";
 
-const buildSandboxHint = (payment) => {
-  const transactionMode =
-    payment?.callbackPayload?.rawPayload?.transaction?.mode || null;
-  const providerStatus = String(payment?.providerStatus || "").toUpperCase();
-  const paymentUrl = String(payment?.paymentUrl || "");
-  const isSandboxPayment =
-    paymentUrl.includes("sandbox-process.fedapay.com") ||
-    transactionMode === "momo_test";
-
-  if (!isSandboxPayment || providerStatus !== "DECLINED") {
-    return "";
-  }
-
-  if (transactionMode === "momo_test") {
-    return FEDAPAY_SANDBOX_MTN_HINT;
-  }
-
-  return "";
-};
-
 const PaymentReturn = () => {
   const location = useLocation();
   const { user } = useAuth();
@@ -134,18 +123,21 @@ const PaymentReturn = () => {
   const [info, setInfo] = useState("");
 
   const searchParams = new URLSearchParams(location.search);
-  const provider = (searchParams.get("provider") || "fedapay").toLowerCase();
+  const provider = (searchParams.get("provider") || "pawapay").toLowerCase();
   const orderReference = searchParams.get("orderReference") || "";
   const paymentReference = searchParams.get("paymentReference") || "";
+  const providerPaymentId = searchParams.get("providerPaymentId") || "";
   const session = getPaymentSession(orderReference);
   const customerEmail =
     session?.customerEmail || user?.email || "";
   const sourcePath = session?.sourcePath || "/";
+  const providerLabel = getProviderLabel(provider);
+  const STATUS_META = buildStatusMeta(providerLabel);
 
   const loadPaymentState = useEffectEvent(
     async ({ reconcile = true, silent = false } = {}) => {
       if (!orderReference) {
-        setError("Reference de commande absente dans le retour FedaPay.");
+        setError(`Reference de commande absente dans le retour ${providerLabel}.`);
         setLoading(false);
         return;
       }
@@ -160,11 +152,12 @@ const PaymentReturn = () => {
       setInfo("");
 
       try {
-        if (reconcile && provider === "fedapay") {
+        if (reconcile && provider === "pawapay") {
           try {
             await reconcileTicketingPayment({
               orderReference,
               transactionReference: paymentReference || undefined,
+              providerPaymentId: providerPaymentId || undefined,
               customerEmail: customerEmail || undefined,
             });
           } catch (reconcileError) {
@@ -207,7 +200,14 @@ const PaymentReturn = () => {
 
   useEffect(() => {
     loadPaymentState({ reconcile: true, silent: false });
-  }, [loadPaymentState, orderReference, paymentReference, provider, customerEmail]);
+  }, [
+    loadPaymentState,
+    orderReference,
+    paymentReference,
+    providerPaymentId,
+    provider,
+    customerEmail,
+  ]);
 
   useEffect(() => {
     if (!shouldPollStatus(order?.status)) {
@@ -226,7 +226,6 @@ const PaymentReturn = () => {
   const primaryEvent = getOrderPrimaryEvent(order);
   const latestPayment = getOrderLatestPayment(order);
   const ticketCount = download?.tickets?.length || order?.tickets?.length || 0;
-  const sandboxHint = buildSandboxHint(latestPayment);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 py-6">
@@ -265,12 +264,6 @@ const PaymentReturn = () => {
       {info && !error && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {info}
-        </div>
-      )}
-
-      {sandboxHint && (
-        <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
-          {sandboxHint}
         </div>
       )}
 
@@ -329,7 +322,7 @@ const PaymentReturn = () => {
                     href={latestPayment.paymentUrl}
                     className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                   >
-                    Retourner au paiement FedaPay
+                    Retourner au paiement {providerLabel}
                   </a>
                 )}
             </div>

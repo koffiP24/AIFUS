@@ -6,26 +6,22 @@ const { prismaTicketing } = require("../src/lib/prismaTicketing");
 const ordersService = require("../src/modules/v2/orders/orders.service");
 const paymentsService = require("../src/modules/v2/payments/payments.service");
 
-const ensureFedapayConfig = () => {
+const ensurePawapayConfig = () => {
   const missing = [];
 
-  if (!process.env.FEDAPAY_SECRET_KEY) {
-    missing.push("FEDAPAY_SECRET_KEY");
-  }
-
-  if (!process.env.FEDAPAY_WEBHOOK_SECRET) {
-    missing.push("FEDAPAY_WEBHOOK_SECRET");
+  if (!process.env.PAWAPAY_API_TOKEN) {
+    missing.push("PAWAPAY_API_TOKEN");
   }
 
   if (missing.length > 0) {
     throw new Error(
-      `Configuration FedaPay manquante: ${missing.join(", ")}. Renseignez ces variables dans backend/.env avant de lancer le smoke test.`,
+      `Configuration pawaPay manquante: ${missing.join(", ")}. Renseignez ces variables dans backend/.env avant de lancer le smoke test.`,
     );
   }
 };
 
 async function main() {
-  ensureFedapayConfig();
+  ensurePawapayConfig();
 
   await prismaTicketing.$connect();
 
@@ -39,13 +35,13 @@ async function main() {
   }
 
   const timestamp = Date.now();
-  const customerEmail = `smoke.fedapay.${timestamp}@example.com`;
+  const customerEmail = `smoke.pawapay.${timestamp}@example.com`;
 
   const order = await ordersService.createOrder({
     items: [{ ticketTypeId: galaTicketType.id, quantity: 1 }],
     customer: {
       firstName: "Smoke",
-      lastName: "FedaPay",
+      lastName: "PawaPay",
       email: customerEmail,
       phone: "0700000099",
     },
@@ -55,14 +51,14 @@ async function main() {
     {
       orderReference: order.reference,
       customerEmail,
-      provider: "FEDAPAY",
+      provider: "PAWAPAY",
     },
     { user: null },
   );
 
   if (!payment?.payment?.paymentUrl) {
     throw new Error(
-      "Session FedaPay creee sans paymentUrl. Verifiez la reponse provider.",
+      "Session pawaPay creee sans paymentUrl. Verifiez la reponse provider.",
     );
   }
 

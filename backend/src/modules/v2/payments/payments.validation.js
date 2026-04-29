@@ -4,7 +4,7 @@ const initiatePaymentValidation = [
   body("orderReference").notEmpty().withMessage("orderReference requis"),
   body("provider")
     .optional()
-    .isIn(["SIMULATION", "FEDAPAY", "simulation", "fedapay"])
+    .isIn(["SIMULATION", "PAWAPAY", "simulation", "pawapay"])
     .withMessage("provider invalide"),
   body("customerEmail")
     .optional()
@@ -14,7 +14,7 @@ const initiatePaymentValidation = [
 
 const webhookValidation = [
   body().custom((value, { req }) => {
-    if (req.headers["x-fedapay-signature"]) {
+    if (req.body?.depositId && req.body?.status) {
       return true;
     }
 
@@ -35,9 +35,19 @@ const reconcilePaymentValidation = [
     .optional()
     .isString()
     .withMessage("transactionReference invalide"),
+  body("providerPaymentId")
+    .optional()
+    .isString()
+    .withMessage("providerPaymentId invalide"),
   body().custom((value, { req }) => {
-    if (!req.body?.orderReference && !req.body?.transactionReference) {
-      throw new Error("orderReference ou transactionReference requis");
+    if (
+      !req.body?.orderReference &&
+      !req.body?.transactionReference &&
+      !req.body?.providerPaymentId
+    ) {
+      throw new Error(
+        "orderReference, transactionReference ou providerPaymentId requis",
+      );
     }
 
     return true;
