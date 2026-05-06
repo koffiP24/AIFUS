@@ -81,6 +81,10 @@ const hasGeniusPayConfig = () =>
   Boolean(getGeniusPayApiKey() && getGeniusPayApiSecret());
 
 const getGeniusPayBaseUrl = () => "https://pay.genius.ci/api/v1/merchant";
+const GENIUSPAY_REQUEST_TIMEOUT_MS = Number.parseInt(
+  process.env.GENIUSPAY_REQUEST_TIMEOUT_MS || "8000",
+  10,
+);
 
 const getGeniusPayBaseReturnUrl = () => {
   const baseUrl = [process.env.GENIUSPAY_RETURN_URL, process.env.FRONTEND_URL]
@@ -157,15 +161,48 @@ const geniusPayFetch = async (pathname, { method = "GET", body } = {}) => {
     );
   }
 
-  const response = await fetch(`${getGeniusPayBaseUrl()}${pathname}`, {
-    method,
-    headers: {
-      "X-API-Key": apiKey,
-      "X-API-Secret": apiSecret,
-      "Content-Type": "application/json",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    Number.isFinite(GENIUSPAY_REQUEST_TIMEOUT_MS)
+      ? GENIUSPAY_REQUEST_TIMEOUT_MS
+      : 8000,
+  );
+
+  let response;
+
+  try {
+    response = await fetch(`${getGeniusPayBaseUrl()}${pathname}`, {
+      method,
+      headers: {
+        "X-API-Key": apiKey,
+        "X-API-Secret": apiSecret,
+        "Content-Type": "application/json",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    const isTimeoutError =
+      error?.name === "AbortError" ||
+      String(error?.message || "").toLowerCase().includes("aborted");
+    const networkError = new HttpError(
+      502,
+      isTimeoutError
+        ? "GeniusPay met trop de temps a repondre."
+        : "GeniusPay est temporairement indisponible.",
+    );
+    networkError.httpResponse = {
+      status: 502,
+      data: {
+        message: networkError.message,
+      },
+    };
+    networkError.cause = error;
+    throw networkError;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const rawText = await response.text();
   let data = null;

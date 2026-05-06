@@ -135,6 +135,22 @@ const PaymentReturn = () => {
   const providerLabel = getProviderLabel(provider);
   const STATUS_META = buildStatusMeta(providerLabel);
 
+  const applyLoadedOrderState = useEffectEvent(
+    async (nextOrder, emailForAccess = customerEmail || undefined) => {
+      setOrder(nextOrder);
+
+      if (nextOrder.status === "PAID") {
+        const nextDownload = await getTicketingDownload(nextOrder.reference, {
+          customerEmail: emailForAccess,
+        });
+        setDownload(nextDownload);
+        removePaymentSession(nextOrder.reference);
+      } else {
+        setDownload(null);
+      }
+    },
+  );
+
   useEffect(() => {
     setShouldReconcileProvider(true);
   }, [orderReference, provider]);
@@ -157,7 +173,27 @@ const PaymentReturn = () => {
       setInfo("");
 
       try {
-        if (reconcile && shouldReconcileProvider && provider === "geniuspay") {
+        const currentOrder = await getTicketingOrder(orderReference, {
+          customerEmail: customerEmail || undefined,
+        });
+
+        await applyLoadedOrderState(
+          currentOrder,
+          customerEmail || undefined,
+        );
+
+        if (!silent) {
+          setLoading(false);
+        }
+
+        if (
+          reconcile &&
+          shouldReconcileProvider &&
+          provider === "geniuspay" &&
+          shouldPollStatus(currentOrder.status)
+        ) {
+          setRefreshing(true);
+
           try {
             const reconcileResult = await reconcileTicketingPayment({
               orderReference,
@@ -182,21 +218,11 @@ const PaymentReturn = () => {
           }
         }
 
-        const nextOrder = await getTicketingOrder(orderReference, {
+        const refreshedOrder = await getTicketingOrder(orderReference, {
           customerEmail: customerEmail || undefined,
         });
 
-        setOrder(nextOrder);
-
-        if (nextOrder.status === "PAID") {
-          const nextDownload = await getTicketingDownload(orderReference, {
-            customerEmail: customerEmail || undefined,
-          });
-          setDownload(nextDownload);
-          removePaymentSession(orderReference);
-        } else {
-          setDownload(null);
-        }
+        await applyLoadedOrderState(refreshedOrder, customerEmail || undefined);
       } catch (requestError) {
         setError(
           getApiErrorMessage(
@@ -210,6 +236,23 @@ const PaymentReturn = () => {
       }
     },
   );
+
+  const refreshOrderOnly = useEffectEvent(async () => {
+    try {
+      const nextOrder = await getTicketingOrder(orderReference, {
+        customerEmail: customerEmail || undefined,
+      });
+
+      await applyLoadedOrderState(nextOrder, customerEmail || undefined);
+    } catch (requestError) {
+      setError(
+        getApiErrorMessage(
+          requestError,
+          "Impossible de verifier le statut de votre paiement.",
+        ),
+      );
+    }
+  });
 
   useEffect(() => {
     loadPaymentState({ reconcile: true, silent: false });
@@ -229,14 +272,28 @@ const PaymentReturn = () => {
     }
 
     const timeoutId = window.setTimeout(() => {
-      loadPaymentState({
-        reconcile: shouldReconcileProvider && provider === "geniuspay",
-        silent: true,
+      if (shouldReconcileProvider && provider === "geniuspay") {
+        loadPaymentState({
+          reconcile: true,
+          silent: true,
+        });
+        return;
+      }
+
+      setRefreshing(true);
+      refreshOrderOnly().finally(() => {
+        setRefreshing(false);
       });
     }, 5000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [loadPaymentState, order?.status, provider, shouldReconcileProvider]);
+  }, [
+    loadPaymentState,
+    refreshOrderOnly,
+    order?.status,
+    provider,
+    shouldReconcileProvider,
+  ]);
 
   const meta = STATUS_META[order?.status] || STATUS_META.PAYMENT_PROCESSING;
   const StatusIcon = meta.icon;
