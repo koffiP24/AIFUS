@@ -44,6 +44,7 @@ const CANCELLED_STATUSES = new Set([
   "ABORTED",
   "EXPIRED",
 ]);
+const PROVIDER_RECONCILE_DEFERRED_STATUSES = new Set([502]);
 
 const buildTransactionReference = (provider) => {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -54,6 +55,26 @@ const buildTransactionReference = (provider) => {
 const buildEventReference = () => `EVT-${crypto.randomBytes(6).toString("hex").toUpperCase()}`;
 
 const normalizeStatus = (status) => String(status || "").trim().toUpperCase();
+
+const shouldDeferProviderReconcileError = (error) => {
+  if (!error) {
+    return false;
+  }
+
+  if (
+    typeof error.statusCode === "number" &&
+    PROVIDER_RECONCILE_DEFERRED_STATUSES.has(error.statusCode)
+  ) {
+    return true;
+  }
+
+  const responseStatus = Number.parseInt(error?.httpResponse?.status, 10);
+  if (PROVIDER_RECONCILE_DEFERRED_STATUSES.has(responseStatus)) {
+    return true;
+  }
+
+  return false;
+};
 
 const resolveProvider = (provider) => {
   const requestedProvider = String(provider || "").trim().toUpperCase();
@@ -873,18 +894,36 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
     );
   }
 
-  const statusPayload = await retrieveGeniusPayPaymentStatus(payment.providerPaymentId);
-  const normalizedPayload = buildGeniusPayWebhookPayload({
-    statusPayload,
-    fallbackTransactionReference: payment.transactionReference,
-    fallbackAmount: payment.amount,
-    fallbackCurrency: payment.currency,
-  });
+  try {
+    const statusPayload = await retrieveGeniusPayPaymentStatus(payment.providerPaymentId);
+    const normalizedPayload = buildGeniusPayWebhookPayload({
+      statusPayload,
+      fallbackTransactionReference: payment.transactionReference,
+      fallbackAmount: payment.amount,
+      fallbackCurrency: payment.currency,
+    });
 
-  return processWebhook(normalizedPayload, null, {
-    skipSignatureVerification: true,
-    signatureValid: true,
-  });
+    return processWebhook(normalizedPayload, null, {
+      skipSignatureVerification: true,
+      signatureValid: true,
+    });
+  } catch (error) {
+    if (!shouldDeferProviderReconcileError(error)) {
+      throw error;
+    }
+
+    const currentOrder = await loadAndAuthorizeOrder(prismaTicketing, payment.order.reference, {
+      user,
+      customerEmail: payload.customerEmail,
+    });
+
+    return {
+      message:
+        "Le statut GeniusPay n'est pas encore disponible. Nous continuons d'attendre la confirmation du webhook.",
+      providerCheckDeferred: true,
+      order: serializeOrderEntity(currentOrder),
+    };
+  }
 };
 
 const simulatePayment = async (payload, { user = null } = {}) => {

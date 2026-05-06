@@ -121,6 +121,7 @@ const PaymentReturn = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+  const [shouldReconcileProvider, setShouldReconcileProvider] = useState(true);
 
   const searchParams = new URLSearchParams(location.search);
   const provider = (searchParams.get("provider") || "geniuspay").toLowerCase();
@@ -133,6 +134,10 @@ const PaymentReturn = () => {
   const sourcePath = session?.sourcePath || "/";
   const providerLabel = getProviderLabel(provider);
   const STATUS_META = buildStatusMeta(providerLabel);
+
+  useEffect(() => {
+    setShouldReconcileProvider(true);
+  }, [orderReference, provider]);
 
   const loadPaymentState = useEffectEvent(
     async ({ reconcile = true, silent = false } = {}) => {
@@ -152,19 +157,27 @@ const PaymentReturn = () => {
       setInfo("");
 
       try {
-        if (reconcile && provider === "geniuspay") {
+        if (reconcile && shouldReconcileProvider && provider === "geniuspay") {
           try {
-            await reconcileTicketingPayment({
+            const reconcileResult = await reconcileTicketingPayment({
               orderReference,
               transactionReference: paymentReference || undefined,
               providerPaymentId: providerPaymentId || undefined,
               customerEmail: customerEmail || undefined,
             });
+
+            if (reconcileResult?.providerCheckDeferred) {
+              setShouldReconcileProvider(false);
+              if (reconcileResult?.message) {
+                setInfo(reconcileResult.message);
+              }
+            }
           } catch (reconcileError) {
             const message = getApiErrorMessage(
               reconcileError,
               "Le paiement n'a pas encore pu etre recontrole.",
             );
+            setShouldReconcileProvider(false);
             setInfo(message);
           }
         }
@@ -207,6 +220,7 @@ const PaymentReturn = () => {
     providerPaymentId,
     provider,
     customerEmail,
+    shouldReconcileProvider,
   ]);
 
   useEffect(() => {
@@ -215,11 +229,14 @@ const PaymentReturn = () => {
     }
 
     const timeoutId = window.setTimeout(() => {
-      loadPaymentState({ reconcile: true, silent: true });
+      loadPaymentState({
+        reconcile: shouldReconcileProvider && provider === "geniuspay",
+        silent: true,
+      });
     }, 5000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [loadPaymentState, order?.status]);
+  }, [loadPaymentState, order?.status, provider, shouldReconcileProvider]);
 
   const meta = STATUS_META[order?.status] || STATUS_META.PAYMENT_PROCESSING;
   const StatusIcon = meta.icon;
@@ -342,7 +359,10 @@ const PaymentReturn = () => {
           <div className="space-y-3">
             <button
               type="button"
-              onClick={() => loadPaymentState({ reconcile: true, silent: false })}
+              onClick={() => {
+                setShouldReconcileProvider(true);
+                loadPaymentState({ reconcile: true, silent: false });
+              }}
               disabled={loading || refreshing}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
