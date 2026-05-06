@@ -109,6 +109,7 @@ const Gala = () => {
   });
   const [paymentStep, setPaymentStep] = useState("details");
   const [paymentPhone, setPaymentPhone] = useState("");
+  const [paymentError, setPaymentError] = useState("");
   const [checkoutDraft, setCheckoutDraft] = useState({
     categorie: "ACTIF",
     nombreInvites: 0,
@@ -217,6 +218,7 @@ const Gala = () => {
 
   const openPaymentModal = (values) => {
     setMessage("");
+    setPaymentError("");
     setCheckoutDraft({
       categorie: values.categorie,
       nombreInvites:
@@ -260,6 +262,7 @@ const Gala = () => {
     setLoading(true);
     setPaymentStep("processing");
     setMessage("");
+    setPaymentError("");
 
     try {
       const customer = buildCustomerFromUser(user, paymentPhone);
@@ -303,13 +306,13 @@ const Gala = () => {
       setMessage("Redirection vers GeniusPay en cours...");
       window.location.assign(paymentUrl);
     } catch (error) {
-      setPaymentStep("details");
-      setMessage(
-        getApiErrorMessage(
-          error,
-          "Impossible de lancer le paiement GeniusPay pour le moment.",
-        ),
+      const nextError = getApiErrorMessage(
+        error,
+        "Impossible de lancer le paiement GeniusPay pour le moment.",
       );
+      setPaymentStep("details");
+      setPaymentError(nextError);
+      setMessage(nextError);
     } finally {
       setLoading(false);
     }
@@ -685,6 +688,7 @@ const Gala = () => {
               onClick={() => {
                 setShowPayment(false);
                 setPaymentStep("details");
+                setPaymentError("");
               }}
               className="absolute right-4 top-4 text-slate-400 transition-colors hover:text-slate-600"
               type="button"
@@ -707,6 +711,12 @@ const Gala = () => {
                     Fcfa
                   </p>
                 </div>
+
+                {paymentError && (
+                  <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {paymentError}
+                  </div>
+                )}
 
                 <div className="mb-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-700 dark:bg-slate-700/50 dark:text-slate-200">
                   <p className="font-semibold">Récapitulatif</p>

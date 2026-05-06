@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 
+const { prisma } = require("../../../lib/prisma");
 const { prismaTicketing, Prisma } = require("../../../lib/prismaTicketing");
 const { HttpError } = require("../common/httpError");
 const { ORDER_RESERVATION_TTL_MINUTES } = require("../common/config");
@@ -8,9 +9,16 @@ const {
   serializeOrderEntity,
   getOrderByReferenceOrThrow,
   loadAndAuthorizeOrder,
+  expireOrderIfNeeded,
+  normalizeEmail,
 } = require("../common/orderService");
 
 const RETRYABLE_ERROR_CODES = new Set(["P2034"]);
+const GALA_BLOCKING_ORDER_STATUSES = new Set([
+  "PENDING",
+  "PAYMENT_PROCESSING",
+  "PAID",
+]);
 
 const isSaleWindowOpen = (entity, now) => {
   if (entity.saleStartsAt && entity.saleStartsAt > now) {
@@ -79,6 +87,7 @@ const loadRequestedTicketTypes = async (tx, normalizedItems) => {
           id: true,
           name: true,
           slug: true,
+          type: true,
           isActive: true,
           saleStartsAt: true,
           saleEndsAt: true,
@@ -222,6 +231,128 @@ const lockTicketTypes = async (tx, ticketTypeIds) => {
   `;
 };
 
+const lockEvents = async (tx, eventIds) => {
+  if (!eventIds.length) {
+    return;
+  }
+
+  await tx.$queryRaw`
+    SELECT id
+    FROM events
+    WHERE id IN (${Prisma.join(eventIds)})
+    FOR UPDATE
+  `;
+};
+
+const isGalaOrder = (lines = []) =>
+  lines.some((line) => line.ticketType?.event?.type === "GALA");
+
+const buildGalaDuplicateMessage = (status) => {
+  if (status === "PAID") {
+    return "Un meme compte ne peut pas acheter plusieurs billets Gala. Votre compte possede deja un billet Gala.";
+  }
+
+  return "Un meme compte ne peut pas acheter plusieurs billets Gala. Une commande Gala est deja en cours sur ce compte.";
+};
+
+const ensureNoLegacyGalaPurchase = async (customerEmail) => {
+  const normalizedCustomerEmail = normalizeEmail(customerEmail);
+
+  if (!normalizedCustomerEmail) {
+    return;
+  }
+
+  const legacyInscription = await prisma.inscriptionGala.findFirst({
+    where: {
+      statutPaiement: {
+        not: "ANNULE",
+      },
+      user: {
+        email: normalizedCustomerEmail,
+      },
+    },
+    select: {
+      id: true,
+      statutPaiement: true,
+      referencePaiement: true,
+    },
+  });
+
+  if (!legacyInscription) {
+    return;
+  }
+
+  throw new HttpError(
+    409,
+    "Un meme compte ne peut pas acheter plusieurs billets Gala. Ce compte dispose deja d'une inscription Gala.",
+    {
+      source: "legacy",
+      inscriptionId: legacyInscription.id,
+      paymentStatus: legacyInscription.statutPaiement,
+      paymentReference: legacyInscription.referencePaiement || null,
+    },
+  );
+};
+
+const ensureNoExistingGalaOrder = async (
+  tx,
+  { customerEmail, userId = null, now = new Date() },
+) => {
+  const normalizedCustomerEmail = normalizeEmail(customerEmail);
+  const identityFilters = [];
+
+  if (userId) {
+    identityFilters.push({ userId });
+  }
+
+  if (normalizedCustomerEmail) {
+    identityFilters.push({ customerEmail: normalizedCustomerEmail });
+  }
+
+  if (!identityFilters.length) {
+    return;
+  }
+
+  const matchingOrders = await tx.order.findMany({
+    where: {
+      OR: identityFilters,
+      status: {
+        in: Array.from(GALA_BLOCKING_ORDER_STATUSES),
+      },
+      items: {
+        some: {
+          event: {
+            type: "GALA",
+          },
+        },
+      },
+    },
+    select: {
+      id: true,
+      reference: true,
+      status: true,
+      expiresAt: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  for (const order of matchingOrders) {
+    const currentOrder = await expireOrderIfNeeded(tx, order, now);
+
+    if (!GALA_BLOCKING_ORDER_STATUSES.has(currentOrder.status)) {
+      continue;
+    }
+
+    throw new HttpError(409, buildGalaDuplicateMessage(currentOrder.status), {
+      orderReference: currentOrder.reference,
+      orderStatus: currentOrder.status,
+      eventType: "GALA",
+    });
+  }
+};
+
 const isRetryableError = (error) => {
   if (error?.code && RETRYABLE_ERROR_CODES.has(error.code)) {
     return true;
@@ -240,6 +371,17 @@ const createOrder = async (payload, user = null) => {
 
   const customer = buildCustomerSnapshot(payload.customer, user);
   ensureCustomerSnapshot(customer);
+  const requestedTicketTypes = await loadRequestedTicketTypes(prismaTicketing, normalizedItems);
+  const includesGalaTickets = isGalaOrder(
+    normalizedItems.map((item) => ({
+      ticketType: requestedTicketTypes.get(item.ticketTypeId),
+      quantity: item.quantity,
+    })),
+  );
+
+  if (includesGalaTickets) {
+    await ensureNoLegacyGalaPurchase(customer.email);
+  }
 
   let lastError = null;
 
@@ -259,6 +401,19 @@ const createOrder = async (payload, user = null) => {
           await lockTicketTypes(tx, ticketTypeIds);
 
           const pricing = await buildOrderPricing(tx, normalizedItems, now);
+          const eventIds = Array.from(
+            new Set(pricing.lines.map((line) => line.ticketType.event.id)),
+          ).sort();
+
+          await lockEvents(tx, eventIds);
+
+          if (isGalaOrder(pricing.lines)) {
+            await ensureNoExistingGalaOrder(tx, {
+              customerEmail: customer.email,
+              userId: user?.id || null,
+              now,
+            });
+          }
 
           const order = await tx.order.create({
             data: {

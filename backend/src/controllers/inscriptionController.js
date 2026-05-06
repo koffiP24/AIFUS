@@ -149,7 +149,10 @@ const createInscription = async (req, res) => {
     const existing = await prisma.inscriptionGala.findUnique({ where: { userId } });
 
     if (existing) {
-      return res.status(400).json({ message: "Vous etes deja inscrit au gala" });
+      return res.status(400).json({
+        message:
+          "Un meme compte ne peut pas acheter plusieurs billets Gala. Ce compte est deja inscrit au gala.",
+      });
     }
 
     const places = await getValidatedPlaces();
@@ -379,7 +382,10 @@ const handleDirectPayment = async (req, res) => {
     const existing = await prisma.inscriptionGala.findUnique({ where: { userId } });
 
     if (existing) {
-      return res.status(400).json({ message: "Vous etes deja inscrit au gala" });
+      return res.status(400).json({
+        message:
+          "Un meme compte ne peut pas acheter plusieurs billets Gala. Ce compte est deja inscrit au gala.",
+      });
     }
 
     const places = await getValidatedPlaces();
