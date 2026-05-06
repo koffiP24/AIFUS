@@ -203,7 +203,7 @@ const Village = () => {
         <div className="relative px-8 py-16 md:py-20 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-sm mb-6">
             <MapPinIcon className="w-4 h-4 animate-spin" />
-            <span>Événement gratuit</span>
+            <span>Deux packs disponibles</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -243,6 +243,51 @@ const Village = () => {
           les universités, les entreprises partenaires et les institutions
           intéressés par la coopération entre la Côte d'Ivoire et la Russie.
         </p>
+      </section>
+
+      <section className="max-w-5xl mx-auto">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-3">Choisissez votre pack</h2>
+          <p className="text-slate-500">
+            Deux formules sont prévues pour l'accès au Village.
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg transition-all hover:-translate-y-1 hover:shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+            <div className="h-2 bg-gradient-to-r from-sky-500 to-blue-700"></div>
+            <div className="p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold">Pack Standard</h3>
+                  <p className="mt-2 text-slate-500 dark:text-slate-400">
+                    Accès standard au Village Opportunités Ivoiro-Russe.
+                  </p>
+                </div>
+                <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 dark:bg-slate-700 dark:text-white">
+                  3 000 Fcfa
+                </span>
+              </div>
+            </div>
+          </article>
+
+          <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg transition-all hover:-translate-y-1 hover:shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+            <div className="h-2 bg-gradient-to-r from-amber-500 to-orange-700"></div>
+            <div className="p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold">Pack VIP</h3>
+                  <p className="mt-2 text-slate-500 dark:text-slate-400">
+                    Accès VIP avec expérience premium sur l'événement.
+                  </p>
+                </div>
+                <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 dark:bg-slate-700 dark:text-white">
+                  5 000 Fcfa
+                </span>
+              </div>
+            </div>
+          </article>
+        </div>
       </section>
 
       {/* Contexte */}
@@ -423,7 +468,8 @@ const Village = () => {
         <div className="flex flex-col items-center justify-center text-center w-full">
           <p className="text-primary-100 mb-6 max-w-2xl mx-auto">
             Une journée exceptionnelle pour découverte, apprentissage et
-            networking. Entrée gratuite pour tous les membres AIFUS.
+            networking. Deux formules sont disponibles : Pack Standard à 3 000
+            Fcfa et Pack VIP à 5 000 Fcfa.
           </p>
         </div>
 
@@ -468,10 +514,9 @@ const Village = () => {
             <div className="flex items-start gap-3">
               <CheckCircleIcon className="w-5 h-5 text-green-500 mt-0.5" />
               <div>
-                <p className="font-medium">Entrée</p>
+                <p className="font-medium">Billetterie</p>
                 <p className="text-slate-500">
-                  Gratuit pour les membres AIFUS / 5 000 Fcfa pour les
-                  non-membres
+                  Pack Standard : 3 000 Fcfa / Pack VIP : 5 000 Fcfa
                 </p>
               </div>
             </div>

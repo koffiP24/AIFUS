@@ -28,6 +28,18 @@ const upsertEventWithTicketTypes = async (eventPayload, ticketTypes) => {
     });
   }
 
+  const activeCodes = ticketTypes.map((ticketType) => ticketType.code);
+
+  await prismaTicketing.ticketType.updateMany({
+    where: {
+      eventId: event.id,
+      code: { notIn: activeCodes },
+    },
+    data: {
+      isActive: false,
+    },
+  });
+
   return event;
 };
 
@@ -140,14 +152,24 @@ async function main() {
     },
     [
       {
-        name: "Pass village",
-        code: "VILLAGE_PASS",
-        description: "Acces standard au village",
-        priceAmount: 0,
+        name: "Pack Standard",
+        code: "VILLAGE_STANDARD",
+        description: "Acces standard au Village Opportunites",
+        priceAmount: 3000,
         currency: "XOF",
         stockTotal: null,
         maxPerOrder: 10,
         sortOrder: 1,
+      },
+      {
+        name: "Pack VIP",
+        code: "VILLAGE_VIP",
+        description: "Acces VIP au Village Opportunites",
+        priceAmount: 5000,
+        currency: "XOF",
+        stockTotal: null,
+        maxPerOrder: 10,
+        sortOrder: 2,
       },
     ],
   );

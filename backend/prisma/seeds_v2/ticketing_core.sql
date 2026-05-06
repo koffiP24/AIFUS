@@ -135,7 +135,9 @@ JOIN (
   UNION ALL
   SELECT 'gala-aifus-2026', 'Invite', 'GALA_INVITE', 'Billet gala invite', 20000, 'XOF', 50, 4, 4
   UNION ALL
-  SELECT 'village-ivoiro-russe-2026', 'Pass village', 'VILLAGE_PASS', 'Acces standard au village', 0, 'XOF', NULL, 10, 1
+  SELECT 'village-ivoiro-russe-2026', 'Pack Standard', 'VILLAGE_STANDARD', 'Acces standard au Village Opportunites', 3000, 'XOF', NULL, 10, 1
+  UNION ALL
+  SELECT 'village-ivoiro-russe-2026', 'Pack VIP', 'VILLAGE_VIP', 'Acces VIP au Village Opportunites', 5000, 'XOF', NULL, 10, 2
   UNION ALL
   SELECT 'tombola-aifus-2026', 'Ticket tombola', 'TOMBOLA_STD', 'Billet numerote de tombola', 10000, 'XOF', 100, 50, 1
 ) AS src
@@ -151,3 +153,9 @@ ON DUPLICATE KEY UPDATE
   `is_active` = VALUES(`is_active`),
   `sort_order` = VALUES(`sort_order`),
   `updated_at` = NOW(3);
+
+UPDATE `ticket_types`
+SET
+  `is_active` = false,
+  `updated_at` = NOW(3)
+WHERE `code` = 'VILLAGE_PASS';
