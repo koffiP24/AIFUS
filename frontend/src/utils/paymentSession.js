@@ -101,7 +101,7 @@ export const removePaymentSession = (orderReference) => {
 };
 
 export const buildPaymentReturnPath = ({
-  provider = "pawapay",
+  provider = "geniuspay",
   orderReference,
   paymentReference,
   providerPaymentId,

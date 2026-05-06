@@ -169,14 +169,14 @@ const Tombola = () => {
       const payment = await initiateTicketingPayment({
         orderReference: order.reference,
         customerEmail: customer.email,
-        provider: "PAWAPAY",
+        provider: "GENIUSPAY",
       });
 
       const paymentUrl =
         payment?.instructions?.paymentUrl || payment?.payment?.paymentUrl;
 
       if (!paymentUrl) {
-        throw new Error("Aucun lien de paiement pawaPay n'a été retourné.");
+        throw new Error("Aucun lien de paiement GeniusPay n'a été retourné.");
       }
 
       const session = {
@@ -190,14 +190,14 @@ const Tombola = () => {
 
       savePaymentSession(session);
       setRecentSession(session);
-      setMessage("Redirection vers pawaPay en cours...");
+      setMessage("Redirection vers GeniusPay en cours...");
       window.location.assign(paymentUrl);
     } catch (error) {
       setPaymentStep("details");
       setMessage(
         getApiErrorMessage(
           error,
-          "Impossible de lancer le paiement pawaPay pour la tombola.",
+          "Impossible de lancer le paiement GeniusPay pour la tombola.",
         ),
       );
     } finally {
@@ -387,7 +387,7 @@ const Tombola = () => {
             </div>
             <Link
               to={buildPaymentReturnPath({
-                provider: "pawapay",
+                provider: "geniuspay",
                 orderReference: recentSession.orderReference,
                 paymentReference: recentSession.paymentReference,
                 providerPaymentId: recentSession.providerPaymentId,
@@ -504,7 +504,7 @@ const Tombola = () => {
                 }
                 className="w-full btn-primary py-4 text-lg disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Acheter {quantite} billet{quantite > 1 ? "s" : ""} avec pawaPay
+                Acheter {quantite} billet{quantite > 1 ? "s" : ""} avec GeniusPay
               </button>
             </div>
           </div>
@@ -541,7 +541,7 @@ const Tombola = () => {
             {paymentStep === "details" && (
               <>
                 <h3 className="mb-4 text-xl font-bold">
-                  Paiement sécurisé pawaPay
+                  Paiement sécurisé GeniusPay
                 </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-purple-600 to-primary-700 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
@@ -563,7 +563,7 @@ const Tombola = () => {
                     />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    Le paiement mobile money sera proposé sur pawaPay.
+                    Le paiement sera proposé sur GeniusPay.
                   </p>
                 </div>
 
@@ -575,7 +575,7 @@ const Tombola = () => {
                 >
                   {loading
                     ? "Preparation du paiement..."
-                    : `Payer ${(quantite * prixBillet).toLocaleString()} Fcfa avec pawaPay`}
+                    : `Payer ${(quantite * prixBillet).toLocaleString()} Fcfa avec GeniusPay`}
                 </button>
               </>
             )}
@@ -585,7 +585,7 @@ const Tombola = () => {
                 <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
                 <p className="text-lg font-medium">Création du paiement...</p>
                 <p className="text-sm text-slate-500">
-                  Vous allez être redirigé vers pawaPay.
+                  Vous allez être redirigé vers GeniusPay.
                 </p>
               </div>
             )}

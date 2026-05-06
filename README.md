@@ -207,12 +207,12 @@ Variables Render a definir :
 - `EMAIL_USER`
 - `EMAIL_PASS`
 - `PAYMENT_WEBHOOK_SECRET`
-- `PAWAPAY_API_TOKEN`
-- `PAWAPAY_ENV`
-- `PAWAPAY_RETURN_URL`
-- `PAWAPAY_WEBHOOK_URL`
-- `PAWAPAY_COUNTRY`
-- `PAWAPAY_LANGUAGE`
+- `GENIUSPAY_API_KEY`
+- `GENIUSPAY_API_SECRET`
+- `GENIUSPAY_WEBHOOK_SECRET`
+- `GENIUSPAY_ENV`
+- `GENIUSPAY_RETURN_URL`
+- `GENIUSPAY_WEBHOOK_URL`
 - `QR_SIGNING_SECRET`
 
 Important :
@@ -261,8 +261,8 @@ Copiez `.env.docker.example` vers `.env.docker`, puis adaptez au minimum :
 - `JWT_SECRET`
 - `EMAIL_USER`
 - `EMAIL_PASS`
-- `PAWAPAY_API_TOKEN`
-- `FRONTEND_URL`, `PAWAPAY_RETURN_URL` et `PAWAPAY_WEBHOOK_URL` si vous exposez l'app sur un domaine public
+- `GENIUSPAY_API_KEY`, `GENIUSPAY_API_SECRET` et `GENIUSPAY_WEBHOOK_SECRET`
+- `FRONTEND_URL`, `GENIUSPAY_RETURN_URL` et `GENIUSPAY_WEBHOOK_URL` si vous exposez l'app sur un domaine public
 
 ### Commandes
 
@@ -301,8 +301,8 @@ npm run docker:down
 Important :
 
 - en Docker, le frontend appelle l'API via Nginx avec `VITE_API_BASE_URL=/api`
-- les callbacks pawaPay exigent une URL publique en `https`, donc `localhost` ne suffit pas pour un vrai test provider
-- si vous utilisez ngrok ou un domaine, alignez aussi `FRONTEND_URL`, `PAWAPAY_RETURN_URL` et `PAWAPAY_WEBHOOK_URL` dans `.env.docker`
+- les callbacks GeniusPay exigent une URL publique en `https`, donc `localhost` ne suffit pas pour un vrai test provider
+- si vous utilisez ngrok ou un domaine, alignez aussi `FRONTEND_URL`, `GENIUSPAY_RETURN_URL` et `GENIUSPAY_WEBHOOK_URL` dans `.env.docker`
 
 ## Scripts utiles
 
@@ -393,33 +393,32 @@ Notes d'acces :
 - les lectures invitees de commande et de billets demandent `customerEmail` si l'utilisateur n'est pas connecte
 - les routes de scan sont reservees aux roles `ADMIN` et `SCANNER`
 - `POST /api/v2/payments/simulate` permet de tester localement le flux complet sans prestataire reel
-- si `PAWAPAY_API_TOKEN` est renseigne, `POST /api/v2/payments/initiate` utilise pawaPay par defaut et renvoie une `paymentUrl` externe
-- `POST /api/v2/payments/webhook` accepte maintenant les callbacks pawaPay du dashboard
-- `POST /api/v2/payments/reconcile` permet de re-synchroniser une transaction pawaPay depuis votre backend si le retour navigateur ou le callback a manque
+- si `GENIUSPAY_API_KEY` et `GENIUSPAY_API_SECRET` sont renseignes, `POST /api/v2/payments/initiate` utilise GeniusPay par defaut et renvoie une `paymentUrl` externe
+- `POST /api/v2/payments/webhook` accepte maintenant les callbacks GeniusPay du dashboard
+- `POST /api/v2/payments/reconcile` permet de re-synchroniser une transaction GeniusPay depuis votre backend si le retour navigateur ou le callback a manque
 - `GET /api/v2/payments/webhook` permet de verifier rapidement que votre endpoint backend est publiquement joignable
 
-Configuration pawaPay importante :
+Configuration GeniusPay importante :
 
-- le callback pawaPay doit pointer vers votre backend public, ici `https://aifus.onrender.com/api/v2/payments/webhook`
-- n'utilisez jamais `http://localhost:5173` comme callback : c'est une URL frontend locale, inaccessible depuis les serveurs pawaPay
-- `PAWAPAY_RETURN_URL` sert au retour navigateur apres paiement, ici `https://aifus-1.onrender.com/payment-return`
-- si vous etes en local, exposez votre backend en `https` via un tunnel public avant de declarer l'URL callback dans le dashboard pawaPay
+- le callback GeniusPay doit pointer vers votre backend public, ici `https://aifus.onrender.com/api/v2/payments/webhook`
+- n'utilisez jamais `http://localhost:5173` comme callback : c'est une URL frontend locale, inaccessible depuis les serveurs GeniusPay
+- `GENIUSPAY_RETURN_URL` sert au retour navigateur apres paiement, ici `https://aifus-1.onrender.com/payment-return`
+- si vous etes en local, exposez votre backend en `https` via un tunnel public avant de declarer l'URL callback dans le dashboard GeniusPay
 
-Variables utiles pour pawaPay dans [backend/.env.example](backend/.env.example) :
+Variables utiles pour GeniusPay dans [backend/.env.example](backend/.env.example) :
 
-- `PAWAPAY_API_TOKEN`
-- `PAWAPAY_ENV=sandbox|live`
-- `PAWAPAY_RETURN_URL`
-- `PAWAPAY_WEBHOOK_URL`
-- `PAWAPAY_COUNTRY`
-- `PAWAPAY_LANGUAGE`
-- `PAWAPAY_CUSTOMER_MESSAGE`
+- `GENIUSPAY_API_KEY`
+- `GENIUSPAY_API_SECRET`
+- `GENIUSPAY_WEBHOOK_SECRET`
+- `GENIUSPAY_ENV=sandbox|live`
+- `GENIUSPAY_RETURN_URL`
+- `GENIUSPAY_WEBHOOK_URL`
 
 Smoke test sandbox :
 
-- `npm run smoke:pawapay:v2 --prefix backend`
-- la commande cree une commande `v2`, initialise une transaction pawaPay et renvoie la `paymentUrl`
-- si `PAWAPAY_API_TOKEN` manque, elle s'arrete avant toute creation
+- `npm run smoke:geniuspay:v2 --prefix backend`
+- la commande cree une commande `v2`, initialise une transaction GeniusPay et renvoie la `paymentUrl`
+- si `GENIUSPAY_API_KEY` ou `GENIUSPAY_API_SECRET` manquent, elle s'arrete avant toute creation
 
 Ordre d'activation recommande :
 

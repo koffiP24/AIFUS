@@ -25,8 +25,8 @@ import {
 const getProviderLabel = (provider) => {
   const normalizedProvider = String(provider || "").trim().toLowerCase();
 
-  if (normalizedProvider === "pawapay") {
-    return "pawaPay";
+  if (normalizedProvider === "geniuspay") {
+    return "GeniusPay";
   }
 
   return "le prestataire de paiement";
@@ -123,7 +123,7 @@ const PaymentReturn = () => {
   const [info, setInfo] = useState("");
 
   const searchParams = new URLSearchParams(location.search);
-  const provider = (searchParams.get("provider") || "pawapay").toLowerCase();
+  const provider = (searchParams.get("provider") || "geniuspay").toLowerCase();
   const orderReference = searchParams.get("orderReference") || "";
   const paymentReference = searchParams.get("paymentReference") || "";
   const providerPaymentId = searchParams.get("providerPaymentId") || "";
@@ -152,7 +152,7 @@ const PaymentReturn = () => {
       setInfo("");
 
       try {
-        if (reconcile && provider === "pawapay") {
+        if (reconcile && provider === "geniuspay") {
           try {
             await reconcileTicketingPayment({
               orderReference,

@@ -4,11 +4,11 @@ const { sendHttpError } = require("../common/httpError");
 const webhookHealth = async (_req, res) => {
   return res.json({
     ok: true,
-    provider: "PAWAPAY",
+    provider: "GENIUSPAY",
     route: "/api/v2/payments/webhook",
     method: "POST",
     message:
-      "Endpoint webhook accessible. Configurez cette URL cote pawaPay, pas votre frontend.",
+      "Endpoint webhook accessible. Configurez cette URL cote GeniusPay, pas votre frontend.",
   });
 };
 
@@ -25,12 +25,35 @@ const initiatePayment = async (req, res) => {
 
 const handleWebhook = async (req, res) => {
   try {
+    const geniusReference =
+      req.body?.data?.reference ||
+      req.body?.reference ||
+      req.body?.payment?.reference ||
+      null;
+    const geniusTimestamp =
+      req.headers["x-webhook-timestamp"] || req.body?.timestamp || null;
+
+    if (req.body?.event && !geniusReference) {
+      return res.json({
+        ok: true,
+        provider: "GENIUSPAY",
+        validation: true,
+        event: req.body.event,
+        message: "Webhook GeniusPay recu.",
+      });
+    }
+
     const payload =
-      req.body?.depositId && req.body?.status
-        ? await paymentsService.processPawapayWebhook({
+      req.body?.event &&
+      geniusReference &&
+      geniusTimestamp
+        ? await paymentsService.processGeniusPayWebhook({
             payload: req.body,
+            rawBody: req.rawBody || JSON.stringify(req.body),
+            signature: req.headers["x-webhook-signature"] || null,
+            timestamp: geniusTimestamp,
           })
-      : await paymentsService.processWebhook(
+        : await paymentsService.processWebhook(
           req.body,
           req.headers["x-signature"] || null,
         );

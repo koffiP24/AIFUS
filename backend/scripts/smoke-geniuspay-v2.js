@@ -6,22 +6,26 @@ const { prismaTicketing } = require("../src/lib/prismaTicketing");
 const ordersService = require("../src/modules/v2/orders/orders.service");
 const paymentsService = require("../src/modules/v2/payments/payments.service");
 
-const ensurePawapayConfig = () => {
+const ensureGeniusPayConfig = () => {
   const missing = [];
 
-  if (!process.env.PAWAPAY_API_TOKEN) {
-    missing.push("PAWAPAY_API_TOKEN");
+  if (!process.env.GENIUSPAY_API_KEY) {
+    missing.push("GENIUSPAY_API_KEY");
+  }
+
+  if (!process.env.GENIUSPAY_API_SECRET) {
+    missing.push("GENIUSPAY_API_SECRET");
   }
 
   if (missing.length > 0) {
     throw new Error(
-      `Configuration pawaPay manquante: ${missing.join(", ")}. Renseignez ces variables dans backend/.env avant de lancer le smoke test.`,
+      `Configuration GeniusPay manquante: ${missing.join(", ")}. Renseignez ces variables dans backend/.env avant de lancer le smoke test.`,
     );
   }
 };
 
 async function main() {
-  ensurePawapayConfig();
+  ensureGeniusPayConfig();
 
   await prismaTicketing.$connect();
 
@@ -35,13 +39,13 @@ async function main() {
   }
 
   const timestamp = Date.now();
-  const customerEmail = `smoke.pawapay.${timestamp}@example.com`;
+  const customerEmail = `smoke.geniuspay.${timestamp}@example.com`;
 
   const order = await ordersService.createOrder({
     items: [{ ticketTypeId: galaTicketType.id, quantity: 1 }],
     customer: {
       firstName: "Smoke",
-      lastName: "PawaPay",
+      lastName: "GeniusPay",
       email: customerEmail,
       phone: "0700000099",
     },
@@ -51,14 +55,14 @@ async function main() {
     {
       orderReference: order.reference,
       customerEmail,
-      provider: "PAWAPAY",
+      provider: "GENIUSPAY",
     },
     { user: null },
   );
 
   if (!payment?.payment?.paymentUrl) {
     throw new Error(
-      "Session pawaPay creee sans paymentUrl. Verifiez la reponse provider.",
+      "Session GeniusPay creee sans paymentUrl. Verifiez la reponse provider.",
     );
   }
 

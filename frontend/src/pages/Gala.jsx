@@ -279,14 +279,14 @@ const Gala = () => {
       const payment = await initiateTicketingPayment({
         orderReference: order.reference,
         customerEmail: customer.email,
-        provider: "PAWAPAY",
+        provider: "GENIUSPAY",
       });
 
       const paymentUrl =
         payment?.instructions?.paymentUrl || payment?.payment?.paymentUrl;
 
       if (!paymentUrl) {
-        throw new Error("Aucun lien de paiement pawaPay n'a été retourné.");
+        throw new Error("Aucun lien de paiement GeniusPay n'a été retourné.");
       }
 
       const session = {
@@ -300,14 +300,14 @@ const Gala = () => {
 
       savePaymentSession(session);
       setRecentSession(session);
-      setMessage("Redirection vers pawaPay en cours...");
+      setMessage("Redirection vers GeniusPay en cours...");
       window.location.assign(paymentUrl);
     } catch (error) {
       setPaymentStep("details");
       setMessage(
         getApiErrorMessage(
           error,
-          "Impossible de lancer le paiement pawaPay pour le moment.",
+          "Impossible de lancer le paiement GeniusPay pour le moment.",
         ),
       );
     } finally {
@@ -467,7 +467,7 @@ const Gala = () => {
 
         <div className="prose max-w-none text-sm text-amber-700 dark:prose-invert dark:text-amber-400">
           <p className="mb-4">
-            Le paiement est maintenant géré par un vrai tunnel pawaPay. La place
+            Le paiement est maintenant géré par un vrai tunnel GeniusPay. La place
             est réservée temporairement, puis confirmée seulement après
             validation du paiement.
           </p>
@@ -498,7 +498,7 @@ const Gala = () => {
           </ul>
 
           <p className="font-semibold text-amber-800 dark:text-amber-200">
-            Paiement sécurisé via pawaPay - premier payé, premier servi
+            Paiement sécurisé via GeniusPay - premier payé, premier servi
           </p>
         </div>
       </section>
@@ -519,7 +519,7 @@ const Gala = () => {
             </div>
             <Link
               to={buildPaymentReturnPath({
-                provider: "pawapay",
+                provider: "geniuspay",
                 orderReference: recentSession.orderReference,
                 paymentReference: recentSession.paymentReference,
                 providerPaymentId: recentSession.providerPaymentId,
@@ -550,7 +550,7 @@ const Gala = () => {
             <h2 className="mb-2 text-3xl font-bold">Reservation du Gala</h2>
             <p className="text-slate-500">
               Choisissez votre catégorie puis continuez vers le paiement
-              pawaPay.
+              GeniusPay.
             </p>
           </div>
 
@@ -655,7 +655,7 @@ const Gala = () => {
             >
               {catalogLoading
                 ? "Chargement du stock..."
-                : "Continuer vers pawaPay"}
+                : "Continuer vers GeniusPay"}
             </button>
           </form>
         </section>
@@ -695,7 +695,7 @@ const Gala = () => {
             {paymentStep === "details" && (
               <>
                 <h3 className="mb-4 text-xl font-bold">
-                  Paiement sécurisé pawaPay
+                  Paiement sécurisé GeniusPay
                 </h3>
                 <div className="mb-4 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white">
                   <p className="text-sm opacity-90">Montant a payer</p>
@@ -748,7 +748,7 @@ const Gala = () => {
                     />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    Le paiement mobile money sera proposé sur la page pawaPay.
+                    Le paiement sera proposé sur la page GeniusPay.
                   </p>
                 </div>
 
@@ -763,7 +763,7 @@ const Gala = () => {
                     : `Payer ${montant(
                         checkoutDraft.categorie,
                         checkoutDraft.nombreInvites,
-                      ).toLocaleString()} Fcfa avec pawaPay`}
+                      ).toLocaleString()} Fcfa avec GeniusPay`}
                 </button>
               </>
             )}
@@ -773,7 +773,7 @@ const Gala = () => {
                 <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
                 <p className="text-lg font-medium">Création du paiement...</p>
                 <p className="text-sm text-slate-500">
-                  Vous allez être redirigé vers pawaPay.
+                  Vous allez être redirigé vers GeniusPay.
                 </p>
               </div>
             )}

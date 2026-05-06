@@ -4,7 +4,7 @@ const initiatePaymentValidation = [
   body("orderReference").notEmpty().withMessage("orderReference requis"),
   body("provider")
     .optional()
-    .isIn(["SIMULATION", "PAWAPAY", "simulation", "pawapay"])
+    .isIn(["SIMULATION", "GENIUSPAY", "simulation", "geniuspay"])
     .withMessage("provider invalide"),
   body("customerEmail")
     .optional()
@@ -14,7 +14,20 @@ const initiatePaymentValidation = [
 
 const webhookValidation = [
   body().custom((value, { req }) => {
-    if (req.body?.depositId && req.body?.status) {
+    if (
+      req.body &&
+      typeof req.body === "object" &&
+      !Array.isArray(req.body) &&
+      req.body?.event
+    ) {
+      return true;
+    }
+
+    if (
+      req.body?.event &&
+      req.body?.data?.reference &&
+      (req.body?.timestamp || req.headers["x-webhook-timestamp"])
+    ) {
       return true;
     }
 

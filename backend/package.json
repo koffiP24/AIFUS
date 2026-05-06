@@ -15,7 +15,7 @@
     "seed:v2": "prisma db execute --file prisma/seeds_v2/ticketing_core.sql --schema prisma/schema.mysql.prisma",
     "seed:v2:js": "node scripts/seed-ticketing-v2.js",
     "smoke:v2": "node scripts/smoke-ticketing-v2.js",
-    "smoke:pawapay:v2": "node scripts/smoke-pawapay-v2.js",
+    "smoke:geniuspay:v2": "node scripts/smoke-geniuspay-v2.js",
     "render:build": "npm run build",
     "render:predeploy": "node scripts/render-predeploy.js"
   },

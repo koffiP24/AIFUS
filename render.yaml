@@ -27,20 +27,18 @@ services:
         sync: false
       - key: PAYMENT_WEBHOOK_SECRET
         sync: false
-      - key: PAWAPAY_API_TOKEN
+      - key: GENIUSPAY_API_KEY
         sync: false
-      - key: PAWAPAY_ENV
+      - key: GENIUSPAY_API_SECRET
+        sync: false
+      - key: GENIUSPAY_WEBHOOK_SECRET
+        sync: false
+      - key: GENIUSPAY_ENV
         value: sandbox
-      - key: PAWAPAY_RETURN_URL
+      - key: GENIUSPAY_RETURN_URL
         value: https://aifus-1.onrender.com/payment-return
-      - key: PAWAPAY_WEBHOOK_URL
+      - key: GENIUSPAY_WEBHOOK_URL
         value: https://aifus.onrender.com/api/v2/payments/webhook
-      - key: PAWAPAY_COUNTRY
-        value: CIV
-      - key: PAWAPAY_LANGUAGE
-        value: FR
-      - key: PAWAPAY_CUSTOMER_MESSAGE
-        value: AIFUS 2026
       - key: QR_SIGNING_SECRET
         sync: false
       - key: V2_ACCESS_TOKEN_EXPIRES_IN

@@ -31,7 +31,7 @@ export const createTicketingOrder = async ({ items, customer }) => {
 export const initiateTicketingPayment = async ({
   orderReference,
   customerEmail,
-  provider = "PAWAPAY",
+  provider = "GENIUSPAY",
 }) => {
   const { data } = await api.post("/v2/payments/initiate", {
     orderReference,

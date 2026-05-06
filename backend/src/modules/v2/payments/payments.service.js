@@ -11,14 +11,16 @@ const {
 } = require("../common/orderService");
 const { ensureOrderTickets } = require("../tickets/tickets.service");
 const {
-  hasPawapayConfig,
-  createPawapayPaymentSession,
-  retrievePawapayDepositStatus,
-  buildPawapayWebhookPayload,
+  hasGeniusPayConfig,
+  createGeniusPayPaymentSession,
+  retrieveGeniusPayPaymentStatus,
+  buildGeniusPayWebhookPayload,
+  verifyGeniusPayWebhookSignature,
   sanitizeForJson,
-} = require("./pawapay.client");
+} = require("./geniuspay.client");
 
 const SUCCESS_STATUSES = new Set([
+  "COMPLETED",
   "SUCCESS",
   "PAID",
   "SUCCEEDED",
@@ -60,7 +62,7 @@ const resolveProvider = (provider) => {
     return requestedProvider;
   }
 
-  return hasPawapayConfig() ? "PAWAPAY" : "SIMULATION";
+  return hasGeniusPayConfig() ? "GENIUSPAY" : "SIMULATION";
 };
 
 const toSerializableObject = (value) => sanitizeForJson(value);
@@ -123,10 +125,10 @@ const persistPaymentSession = async ({
     paymentUrl,
     providerStatus,
     callbackPayload: {
-      provider: "PAWAPAY",
-      createPaymentPage: toSerializableObject(rawResponse),
-      paymentPageUrl: paymentUrl,
-      returnUrl,
+    provider: "GENIUSPAY",
+    createCheckout: toSerializableObject(rawResponse),
+    paymentPageUrl: paymentUrl,
+    returnUrl,
     },
   };
 
@@ -193,7 +195,7 @@ const verifyWebhookSignature = (payload, signature) => {
 };
 
 const buildPaymentInstructions = (payment, orderReference) => {
-  if (payment.provider === "PAWAPAY") {
+  if (payment.provider === "GENIUSPAY") {
     return {
       provider: payment.provider,
       transactionReference: payment.transactionReference,
@@ -314,24 +316,23 @@ const markPaymentFailure = async (tx, { orderId, paymentId, status, providerPayl
 };
 
 const createExternalPaymentSession = async ({ provider, order, paymentId, transactionReference }) => {
-  if (provider !== "PAWAPAY") {
+  if (provider !== "GENIUSPAY") {
     return null;
   }
 
   try {
-    const session = await createPawapayPaymentSession({
+    const session = await createGeniusPayPaymentSession({
       order,
       paymentReference: transactionReference,
-      providerPaymentId: paymentId,
     });
 
     const updatedPayment = await persistPaymentSession({
       paymentId,
-      depositId: session.depositId,
+      depositId: session.reference,
       paymentUrl: session.paymentUrl,
       providerStatus: normalizeStatus(session.status || "PENDING"),
       rawResponse: session.rawResponse,
-      returnUrl: session.returnUrl,
+      returnUrl: session.successUrl,
     });
 
     return {
@@ -341,7 +342,7 @@ const createExternalPaymentSession = async ({ provider, order, paymentId, transa
   } catch (error) {
     const failureReason = formatProviderError(
       error,
-      "Impossible d'initialiser le paiement pawaPay.",
+      "Impossible d'initialiser le paiement GeniusPay.",
     );
 
     await prismaTicketing.$transaction(
@@ -355,7 +356,7 @@ const createExternalPaymentSession = async ({ provider, order, paymentId, transa
             providerStatus: "INIT_ERROR",
             failureReason,
             callbackPayload: {
-              provider: "PAWAPAY",
+              provider: "GENIUSPAY",
               initError: {
                 message: failureReason,
               },
@@ -481,7 +482,7 @@ const initiatePayment = async (payload, { user = null } = {}) => {
   if (
     response &&
     !response.alreadyPaid &&
-    provider === "PAWAPAY" &&
+    provider === "GENIUSPAY" &&
     pendingExternalSession &&
     response.payment?.status === "PENDING"
   ) {
@@ -775,11 +776,22 @@ const processWebhook = async (payload, signature = null, options = {}) => {
   return response;
 };
 
-const processPawapayWebhook = async ({ payload }) => {
-  const providerPaymentId = String(payload?.depositId || "").trim();
+const processGeniusPayWebhook = async ({
+  payload,
+  rawBody,
+  signature,
+  timestamp,
+}) => {
+  verifyGeniusPayWebhookSignature({
+    rawBody,
+    signature,
+    timestamp,
+  });
+
+  const providerPaymentId = String(payload?.data?.reference || "").trim();
 
   if (!providerPaymentId) {
-    throw new HttpError(400, "Webhook pawaPay sans depositId");
+    throw new HttpError(400, "Webhook GeniusPay sans reference de transaction");
   }
 
   const localPayment = await prismaTicketing.payment.findFirst({
@@ -788,10 +800,8 @@ const processPawapayWebhook = async ({ payload }) => {
     },
   });
 
-  const statusPayload = await retrievePawapayDepositStatus(providerPaymentId);
-  const normalizedPayload = buildPawapayWebhookPayload({
+  const normalizedPayload = buildGeniusPayWebhookPayload({
     callbackPayload: payload,
-    statusPayload,
     fallbackTransactionReference: localPayment?.transactionReference || "",
     fallbackAmount: localPayment?.amount || 0,
     fallbackCurrency: localPayment?.currency || "XOF",
@@ -836,7 +846,7 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
     payment = await prismaTicketing.payment.findFirst({
       where: {
         orderId: order.id,
-        provider: "PAWAPAY",
+        provider: "GENIUSPAY",
       },
       orderBy: { createdAt: "desc" },
       include: { order: true },
@@ -844,7 +854,7 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
   }
 
   if (!payment) {
-    throw new HttpError(404, "Paiement pawaPay introuvable");
+    throw new HttpError(404, "Paiement GeniusPay introuvable");
   }
 
   await loadAndAuthorizeOrder(prismaTicketing, payment.order.reference, {
@@ -852,26 +862,19 @@ const reconcilePayment = async (payload, { user = null } = {}) => {
     customerEmail: payload.customerEmail,
   });
 
-  if (payment.provider !== "PAWAPAY") {
-    throw new HttpError(409, "La reconciliation n'est disponible que pour pawaPay");
+  if (payment.provider !== "GENIUSPAY") {
+    throw new HttpError(409, "La reconciliation n'est disponible que pour GeniusPay");
   }
 
   if (!payment.providerPaymentId) {
     throw new HttpError(
       409,
-      "Aucun identifiant pawaPay n'est enregistre pour ce paiement",
+      "Aucune reference GeniusPay n'est enregistree pour ce paiement",
     );
   }
 
-  const statusPayload = await retrievePawapayDepositStatus(payment.providerPaymentId);
-  const normalizedPayload = buildPawapayWebhookPayload({
-    callbackPayload: {
-      depositId: payment.providerPaymentId,
-      status:
-        statusPayload?.status === "FOUND"
-          ? statusPayload?.data?.status
-          : "NOT_FOUND",
-    },
+  const statusPayload = await retrieveGeniusPayPaymentStatus(payment.providerPaymentId);
+  const normalizedPayload = buildGeniusPayWebhookPayload({
     statusPayload,
     fallbackTransactionReference: payment.transactionReference,
     fallbackAmount: payment.amount,
@@ -950,7 +953,7 @@ const simulatePayment = async (payload, { user = null } = {}) => {
 module.exports = {
   initiatePayment,
   processWebhook,
-  processPawapayWebhook,
+  processGeniusPayWebhook,
   reconcilePayment,
   simulatePayment,
   buildWebhookSignature,
