@@ -5,6 +5,27 @@ const mysql = require("mysql2/promise");
 const backendRoot = path.resolve(__dirname, "..");
 const npxCommand = process.platform === "win32" ? "npx.cmd" : "npx";
 
+const runNodeScript = (scriptPath, { allowFailure = false } = {}) => {
+  try {
+    execFileSync(process.execPath, [scriptPath], {
+      cwd: backendRoot,
+      stdio: "inherit",
+      env: process.env,
+    });
+    return true;
+  } catch (error) {
+    if (!allowFailure) {
+      throw error;
+    }
+
+    console.warn(
+      "[render-predeploy] Script failed but recovery will continue:",
+      scriptPath,
+    );
+    return false;
+  }
+};
+
 const runNpx = (args, { allowFailure = false } = {}) => {
   try {
     execFileSync(npxCommand, args, {
@@ -244,15 +265,7 @@ const runDeployPreparation = async () => {
   }
 
   console.log("[render-predeploy] Seeding ticketing v2 catalog...");
-  runNpx([
-    "prisma",
-    "db",
-    "execute",
-    "--file",
-    "prisma/seeds_v2/ticketing_core.sql",
-    "--schema",
-    "prisma/schema.mysql.prisma",
-  ]);
+  runNodeScript(path.join("scripts", "seed-ticketing-v2.js"));
 
   console.log("[render-predeploy] Done.");
 };
