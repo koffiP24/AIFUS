@@ -19,6 +19,14 @@ const GALA_BLOCKING_ORDER_STATUSES = new Set([
   "PAYMENT_PROCESSING",
   "PAID",
 ]);
+const LEGACY_SCHEMA_OPTIONAL_ERROR_MARKERS = [
+  "inscriptiongala",
+  "unknown table",
+  "table doesn't exist",
+  "does not exist",
+  "p2021",
+  "p2022",
+];
 
 const isSaleWindowOpen = (entity, now) => {
   if (entity.saleStartsAt && entity.saleStartsAt > now) {
@@ -255,6 +263,30 @@ const buildGalaDuplicateMessage = (status) => {
   return "Un meme compte ne peut pas acheter plusieurs billets Gala. Une commande Gala est deja en cours sur ce compte.";
 };
 
+const hasOptionalLegacySchemaError = (error) => {
+  const message = String(error?.message || "").toLowerCase();
+  return LEGACY_SCHEMA_OPTIONAL_ERROR_MARKERS.some((marker) =>
+    message.includes(marker),
+  );
+};
+
+const findLegacyUserTableName = async () => {
+  const [canonicalRows] = await Promise.all([
+    prisma.$queryRawUnsafe("SHOW TABLES LIKE 'User'"),
+  ]);
+
+  if (Array.isArray(canonicalRows) && canonicalRows.length > 0) {
+    return "User";
+  }
+
+  const lowercaseRows = await prisma.$queryRawUnsafe("SHOW TABLES LIKE 'user'");
+  if (Array.isArray(lowercaseRows) && lowercaseRows.length > 0) {
+    return "user";
+  }
+
+  return null;
+};
+
 const ensureNoLegacyGalaPurchase = async (customerEmail) => {
   const normalizedCustomerEmail = normalizeEmail(customerEmail);
 
@@ -262,36 +294,57 @@ const ensureNoLegacyGalaPurchase = async (customerEmail) => {
     return;
   }
 
-  const legacyInscription = await prisma.inscriptionGala.findFirst({
-    where: {
-      statutPaiement: {
-        not: "ANNULE",
-      },
-      user: {
-        email: normalizedCustomerEmail,
-      },
-    },
-    select: {
-      id: true,
-      statutPaiement: true,
-      referencePaiement: true,
-    },
-  });
+  try {
+    const inscriptionTableRows = await prisma.$queryRawUnsafe(
+      "SHOW TABLES LIKE 'InscriptionGala'",
+    );
+    const userTableName = await findLegacyUserTableName();
 
-  if (!legacyInscription) {
-    return;
+    if (
+      !Array.isArray(inscriptionTableRows) ||
+      inscriptionTableRows.length === 0 ||
+      !userTableName
+    ) {
+      return;
+    }
+
+    const legacyInscription = await prisma.$queryRawUnsafe(
+      `
+        SELECT ig.id, ig.statutPaiement, ig.referencePaiement
+        FROM \`InscriptionGala\` ig
+        INNER JOIN \`${userTableName}\` u ON u.id = ig.userId
+        WHERE LOWER(TRIM(u.email)) = ?
+          AND ig.statutPaiement <> 'ANNULE'
+        LIMIT 1
+      `,
+      normalizedCustomerEmail,
+    );
+
+    const existingInscription = Array.isArray(legacyInscription)
+      ? legacyInscription[0]
+      : null;
+
+    if (!existingInscription) {
+      return;
+    }
+
+    throw new HttpError(
+      409,
+      "Un meme compte ne peut pas acheter plusieurs billets Gala. Ce compte dispose deja d'une inscription Gala.",
+      {
+        source: "legacy",
+        inscriptionId: existingInscription.id,
+        paymentStatus: existingInscription.statutPaiement,
+        paymentReference: existingInscription.referencePaiement || null,
+      },
+    );
+  } catch (error) {
+    if (hasOptionalLegacySchemaError(error)) {
+      return;
+    }
+
+    throw error;
   }
-
-  throw new HttpError(
-    409,
-    "Un meme compte ne peut pas acheter plusieurs billets Gala. Ce compte dispose deja d'une inscription Gala.",
-    {
-      source: "legacy",
-      inscriptionId: legacyInscription.id,
-      paymentStatus: legacyInscription.statutPaiement,
-      paymentReference: legacyInscription.referencePaiement || null,
-    },
-  );
 };
 
 const ensureNoExistingGalaOrder = async (
